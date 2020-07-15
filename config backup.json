@@ -1,0 +1,11 @@
+{
+  "main": {
+    "adminChannel": "millitary-lab"
+  },
+  "waifu": {
+    "kurisutina": {
+      "alertChannel": "millitary-lab",
+      "alertList": []
+    }
+  }
+}

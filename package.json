@@ -1,0 +1,12 @@
+{
+  "name": "belle-delphine",
+  "version": "0.0.1",
+  "description": "The best girl",
+  "main": "bot.js",
+  "author": "NATHIAS LAIER",
+  "dependencies": {
+    "discord.js": "^12.0.2",
+    "eslint": "^7.4.0",
+    "fs": "0.0.1-security"
+  }
+}
