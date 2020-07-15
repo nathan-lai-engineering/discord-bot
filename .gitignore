@@ -10,6 +10,7 @@ npm-debug.*
 web-build/
 web-report/
 run.bat
+auth.json
 
 # macOS
 .DS_Store
