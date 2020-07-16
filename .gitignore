@@ -11,6 +11,7 @@ web-build/
 web-report/
 run.bat
 auth.json
+.eslintrc.json
 
 
 # macOS

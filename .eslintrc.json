@@ -29,6 +29,15 @@
     ],
     "no-shadow": ["error", { "allow": ["err", "resolve", "reject"] }],
     "no-trailing-spaces": ["error"],
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "args",
+        "args": "after-used",
+        "ignoreRestSiblings": false
+      }
+    ],
     "no-var": "error",
     "object-curly-spacing": ["error", "always"],
     "prefer-const": "error",

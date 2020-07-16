@@ -13,11 +13,27 @@ const config = JSON.parse(fs.readFileSync("./config.json"));
 // =============================================================
 // MISC GLOBAL VARIABLES
 // =============================================================
-const client = new Discord.Client();
 
 // =============================================================
-// CLIENT INTIALIZING
+// INTIALIZING CLIENT
 // =============================================================
+const client = new Discord.Client();
+
+// Creates a collection intended to store commands
+client.commands = new Discord.Collection();
+
+// Reads every file in the commands folder and creates an array of them
+const commandFiles = fs
+  .readdirSync("./commands")
+  .filter((file) => file.endsWith(".js"));
+
+// Adds the array of commands to the commands collection
+for (const file of commandFiles) {
+  const command = require(`./commands/${file}`);
+  client.commands.set(command.name, command);
+}
+
+// Connecting the bot after initializing all other modules
 client.on("ready", () => {
   console.log("Connected!");
   client.user.setActivity("nathan", { type: "ACTIVE AND WATCHING" });
@@ -51,12 +67,19 @@ client.on("message", (msg) => {
   const args = msg.content.slice(prefix.length).trim().split(" ");
   const command = args.shift().toLowerCase();
 
+  try {
+    client.commands.get(command).execute(msg, args);
+  } catch (error) {
+    console.log("Invalid command executed!");
+  }
+
+  /*
   if (command != null) {
     switch (command) {
       // TEST
       // Simple test command
       case "test":
-        msg.channel.send("**test** test");
+        client.commands.get("test").execute(msg, args);
         break;
 
       // PUPPET
@@ -71,6 +94,7 @@ client.on("message", (msg) => {
         break;
     }
   }
+  */
 });
 
 // =============================================================
