@@ -9,10 +9,13 @@ const config = JSON.parse(fs.readFileSync("./config.json"));
 // =============================================================
 // CONFIG VARIABLES
 // =============================================================
+const prefix = config.main.prefix;
+const debugMode = config.main.debugMode;
 
 // =============================================================
 // MISC GLOBAL VARIABLES
 // =============================================================
+const currDate = new Date();
 
 // =============================================================
 // INTIALIZING CLIENT
@@ -44,21 +47,8 @@ client.on("ready", () => {
 // COMMAND AND MESSAGE CONTROL
 // =============================================================
 client.on("message", (msg) => {
-  const prefix = config.main.prefix;
-
   // Messages by bots or without a prefix are ignored
   if (msg.author.bot || !msg.content.startsWith(prefix)) return;
-
-  // Logs any commands with information in the console
-  console.log({
-    username: msg.author.username,
-    userid: msg.author.id,
-    server: msg.guild.name,
-    serverid: msg.guild.id,
-    channel: msg.channel.name,
-    channelid: msg.channel.id,
-    message: msg.content,
-  });
 
   // COMMAND HANDLER
   // Handles all message commands and arguments
@@ -67,34 +57,20 @@ client.on("message", (msg) => {
   const args = msg.content.slice(prefix.length).trim().split(" ");
   const command = args.shift().toLowerCase();
 
+  // Dynamic command handler using commands stored in commands folder
   try {
     client.commands.get(command).execute(msg, args);
   } catch (error) {
-    console.log("Invalid command executed!");
-  }
-
-  /*
-  if (command != null) {
-    switch (command) {
-      // TEST
-      // Simple test command
-      case "test":
-        client.commands.get("test").execute(msg, args);
-        break;
-
-      // PUPPET
-      // User can send a message through the bot as if the bot is the one talking
-      case "puppet":
-        if (args.length > 0) {
-          const puppetMsg = args.join();
-          console.log(puppetMsg);
-          msg.channel.send(puppetMsg);
-        }
-        msg.delete();
-        break;
+    console.log("Invalid command!");
+    if (!debugMode) {
+      console.log(msgInfo(msg));
+    }
+  } finally {
+    // Logs any commands with information in the console
+    if (debugMode) {
+      console.log(msgInfo(msg));
     }
   }
-  */
 });
 
 // =============================================================
@@ -104,4 +80,20 @@ try {
   client.login(auth.token);
 } catch (error) {
   console.log(error);
+}
+
+// =============================================================
+// DEBUG MODE
+// =============================================================
+function msgInfo(msg) {
+  return {
+    date: currDate,
+    username: msg.author.username,
+    userid: msg.author.id,
+    server: msg.guild.name,
+    serverid: msg.guild.id,
+    channel: msg.channel.name,
+    channelid: msg.channel.id,
+    message: msg.content,
+  };
 }
