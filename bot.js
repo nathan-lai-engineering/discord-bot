@@ -5,7 +5,6 @@ const fs = require("fs");
 const Discord = require("discord.js");
 const auth = require("./auth.json");
 const config = JSON.parse(fs.readFileSync("./config.json"));
-
 // =============================================================
 // CONFIG VARIABLES
 // =============================================================
@@ -62,9 +61,6 @@ client.on("message", (msg) => {
     client.commands.get(command).execute(msg, args);
   } catch (error) {
     console.log("Invalid command!");
-    if (!debugMode) {
-      console.log(msgInfo(msg));
-    }
   } finally {
     // Logs any commands with information in the console
     if (debugMode) {

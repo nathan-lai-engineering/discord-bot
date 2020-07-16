@@ -1,6 +1,6 @@
 {
   "main": {
     "prefix": "$",
-    "debugMode": false
+    "debugMode": true
   }
 }

@@ -1,6 +1,8 @@
 module.exports = {
   name: "spoof",
   description: "Spoofs text as the bot",
+  syntax: "spoof <message>",
+  example: "spoof Hi! This is the bot talking!",
   execute(msg, args) {
     const channel = msg.channel;
     msg.delete();
