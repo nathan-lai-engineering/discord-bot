@@ -1,8 +1,15 @@
+/*
+Discord bot created for funsies.
+https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
+*/
+
 // =============================================================
 // EXTERNAL FILES
 // =============================================================
 const fs = require("fs");
 const Discord = require("discord.js");
+const sqlite3 = require("sqlite3");
+
 const auth = require("./auth.json");
 const config = JSON.parse(fs.readFileSync("./config.json"));
 // =============================================================
@@ -46,6 +53,11 @@ client.on("ready", () => {
 // COMMAND AND MESSAGE CONTROL
 // =============================================================
 client.on("message", (msg) => {
+  // CLOWN HANDLER
+  if (msg.member.roles.cache.some((role) => role.name === "Clown")) {
+    msg.react("💩");
+  }
+
   // Messages by bots or without a prefix are ignored
   if (msg.author.bot || !msg.content.startsWith(prefix)) return;
 
@@ -61,6 +73,7 @@ client.on("message", (msg) => {
     client.commands.get(command).execute(msg, args);
   } catch (error) {
     console.log("Invalid command!");
+    console.log(error);
   } finally {
     // Logs any commands with information in the console
     if (debugMode) {
