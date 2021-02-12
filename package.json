@@ -1,16 +1,25 @@
 {
-  "name": "belle-delphine",
-  "version": "0.0.1",
-  "description": "The best girl",
+  "name": "amadeus",
+  "version": "1.0.0",
+  "description": "cool bot",
   "main": "bot.js",
-  "author": "NATHIAS LAIER",
   "dependencies": {
-    "@keyv/mysql": "^1.1.4",
-    "@keyv/sqlite": "^2.0.2",
     "discord.js": "^12.3.1",
     "eslint": "^7.11.0",
-    "fs": "0.0.1-security",
-    "keyv": "^4.0.3",
-    "sqlite3": "^5.0.0"
-  }
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blazeris/first-discord-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blazeris/first-discord-bot/issues"
+  },
+  "homepage": "https://github.com/blazeris/first-discord-bot#readme"
 }

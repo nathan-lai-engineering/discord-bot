@@ -8,7 +8,6 @@ https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
 // =============================================================
 const fs = require("fs");
 const Discord = require("discord.js");
-const sqlite3 = require("sqlite3");
 
 const auth = require("./auth.json");
 const config = JSON.parse(fs.readFileSync("./config.json"));
