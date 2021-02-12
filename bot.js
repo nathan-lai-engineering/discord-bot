@@ -53,13 +53,41 @@ client.on("ready", () => {
 // COMMAND AND MESSAGE CONTROL
 // =============================================================
 client.on("message", (msg) => {
-  // CLOWN HANDLER
-  if (msg.member.roles.cache.some((role) => role.name === "Clown")) {
-    msg.react("💩");
+
+
+
+  // Messages by bots are ignored
+  if (msg.author.bot) return;
+
+  // MUTED HANDLER
+  if (msg.member.roles.cache.some((role) => role.name === "Muted")) {
+    if (debugMode) console.log(msg.author.username + ": " + msg.content);
+    msg.delete();
+    return;
+  }
+
+  if(!msg.content.startsWith(prefix) && msg.channel.name.toLowerCase() === "counting"){
+    fs.readFile("count.txt", "utf-8", (err,data) => {
+      if(err) console.log(err);
+      data = parseInt(data);
+      if(Number.isInteger(data)){
+        fs.writeFile("count.txt", data + 1, (err) => {
+          if(err) console.log(err);
+        });
+        if(!Number.isInteger(parseInt(msg.content)) || msg.content != data + 1){
+          msg.channel.send(data + 1);
+          msg.delete();
+          return;
+        }
+      }
+      else{
+        if(debugMode) console.log("Error reading count.txt");
+      }
+    });
   }
 
   // Messages by bots or without a prefix are ignored
-  if (msg.author.bot || !msg.content.startsWith(prefix)) return;
+  if (!msg.content.startsWith(prefix)) return;
 
   // COMMAND HANDLER
   // Handles all message commands and arguments

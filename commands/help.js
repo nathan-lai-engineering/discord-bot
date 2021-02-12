@@ -11,7 +11,7 @@ module.exports = {
     const commandFiles = fs
       .readdirSync("./commands")
       .filter((file) => file.endsWith(".js"));
-    if (args.isEmpty()) {
+    if (args.length < 1) {
       const helpList = new Discord.MessageEmbed()
         .setTitle("List of Commands")
         .addFields(commandFiles);
