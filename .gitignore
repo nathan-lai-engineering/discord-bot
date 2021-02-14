@@ -12,6 +12,7 @@ web-report/
 run.bat
 auth.json
 .eslintrc.json
+.idea/
 
 
 # macOS

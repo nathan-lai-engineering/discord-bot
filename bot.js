@@ -53,14 +53,19 @@ client.on("ready", () => {
 // =============================================================
 client.on("message", (msg) => {
 
-
-
   // Messages by bots are ignored
   if (msg.author.bot) return;
 
   // MUTED HANDLER
   if (msg.member.roles.cache.some((role) => role.name === "Muted")) {
     if (debugMode) console.log(msg.author.username + ": " + msg.content);
+    msg.delete();
+    return;
+  }
+
+  // BRR DELETER
+  if(msg.content.toLowerCase().includes("brr") || msg.content === "br"){
+    console.log(msg.author.username + ": " + msg.content);
     msg.delete();
     return;
   }
