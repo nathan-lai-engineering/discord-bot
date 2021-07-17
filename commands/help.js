@@ -4,6 +4,7 @@ module.exports = {
     "Gives list for all commands or gives syntax for specific commands",
   syntax: "help <empty, or specific command>",
   example: "help spoof",
+  database: false,
   execute(msg, args) {
     const Discord = require("discord.js");
     const fs = require("fs");

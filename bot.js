@@ -8,9 +8,11 @@ https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
 // =============================================================
 const fs = require("fs");
 const Discord = require("discord.js");
+const firebase = require("firebase");
 
 const auth = require("./auth.json");
 const config = JSON.parse(fs.readFileSync("./config.json"));
+const database_config = JSON.parse(fs.readFileSync("./database.json"));
 // =============================================================
 // CONFIG VARIABLES
 // =============================================================
@@ -21,6 +23,13 @@ const debugMode = config.main.debugMode;
 // MISC GLOBAL VARIABLES
 // =============================================================
 const currDate = new Date();
+
+// =============================================================
+// MISC GLOBAL VARIABLES
+// =============================================================
+firebase.initializeApp(database_config);
+var database = firebase.database();
+console.log("Database connected!")
 
 // =============================================================
 // INTIALIZING CLIENT
@@ -43,7 +52,7 @@ for (const file of commandFiles) {
 
 // Connecting the bot after initializing all other modules
 client.on("ready", () => {
-  console.log("Connected!");
+  console.log("Bot connected!");
   client.user.setActivity("nathan", { type: "ACTIVE AND WATCHING" });
   console.log(config);
 });
@@ -77,6 +86,13 @@ client.on("message", (msg) => {
           fs.writeFile("data/count.txt", data + 1, (err) => {
             if (err) console.log(err);
           });
+          if (Math.random() <= config.counting.chance) {
+            let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
+            //console.log(getMoney(msg.guild.id, msg.author.id));
+            addMoney(msg.guild.id, msg.author.id, money);
+            msg.react("<:damasiodollar:865942969089785876>");
+            msg.channel.send(`${msg.author} won ${money} <:damasiodollar:865942969089785876> damasio dollars!`);
+          }
         }
       }
       else {
@@ -97,7 +113,12 @@ client.on("message", (msg) => {
 
   // Dynamic command handler using commands stored in commands folder
   try {
-    client.commands.get(command).execute(msg, args);
+    if (client.commands.get(command).database) {
+      client.commands.get(command).execute(msg, args, database);
+    }
+    else {
+      client.commands.get(command).execute(msg, args);
+    }
   } catch (error) {
     console.log("Invalid command!");
     console.log(error);
@@ -132,4 +153,32 @@ function msgInfo(msg) {
     channelid: msg.channel.id,
     message: msg.content,
   };
+}
+
+// =============================================================
+// OTHER FUNCTIONS
+// =============================================================
+function addMoney(serverid, userid, amt) {
+  let path = serverid + '/users/' + userid + '/balance/';
+  getMoney(serverid, userid).then(currBal => {
+    if (currBal == NaN || currBal == null)
+      currBal = 0;
+    if (debugMode)
+      console.log("Adding " + amt + " to " + userid + "'s current balance of " + currBal);
+    database.ref((String)(path)).set(amt + currBal, function (error) {
+      if (error) {
+        console.log("Write failed with error: " + error)
+      }
+    })
+  })
+}
+
+function getMoney(serverid, userid) {
+  let path = serverid + '/users/' + userid + '/balance/';
+  return new Promise((resolve, reject) => {
+    resolve(database.ref(path).once('value').then(snapshot => {
+      let money = snapshot.val();
+      return money;
+    }))
+  });
 }

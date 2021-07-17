@@ -3,6 +3,7 @@ module.exports = {
   description: "Forces the bot to leave",
   syntax: "leave",
   example: "leave",
+  database: false,
   execute(msg, args) {
     const code = Math.random().toString(36).substr(2, 10);
     console.log(code);
@@ -16,9 +17,9 @@ module.exports = {
     collector.on("collect", (m) => {
       console.log(
         "Code confirmed, bot leaving server " +
-          msg.guild.name +
-          "  " +
-          msg.guild.id
+        msg.guild.name +
+        "  " +
+        msg.guild.id
       );
       msg.channel.send("Code confirmed, bot leaving");
       msg.guild.leave();

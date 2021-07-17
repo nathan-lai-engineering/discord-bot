@@ -2,5 +2,10 @@
   "main": {
     "prefix": "$$",
     "debugMode": true
+  },
+  "counting": {
+    "chance": 0.02,
+    "min": 10,
+    "max": 50
   }
 }
