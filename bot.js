@@ -63,29 +63,24 @@ client.on("message", (msg) => {
     return;
   }
 
-  // BRR DELETER
-  if(msg.content.toLowerCase().includes("brr") || msg.content === "br"){
-    console.log(msg.author.username + ": " + msg.content);
-    msg.delete();
-    return;
-  }
-
-  if(!msg.content.startsWith(prefix) && msg.channel.name.toLowerCase() === "counting"){
-    fs.readFile("count.txt", "utf-8", (err,data) => {
-      if(err) console.log(err);
+  // COUNTING CHANNEL
+  if (msg.channel.name.toLowerCase().includes("counting") && !msg.content.startsWith(prefix)) {
+    fs.readFile("data/count.txt", "utf-8", (err, data) => {
+      if (err) console.log(err);
       data = parseInt(data);
-      if(Number.isInteger(data)){
-        fs.writeFile("count.txt", data + 1, (err) => {
-          if(err) console.log(err);
-        });
-        if(!Number.isInteger(parseInt(msg.content)) || msg.content != data + 1){
-          msg.channel.send(data + 1);
+      if (Number.isInteger(data)) {
+        if (!msg.content.startsWith((String)(data + 1))) {
           msg.delete();
           return;
         }
+        else {
+          fs.writeFile("data/count.txt", data + 1, (err) => {
+            if (err) console.log(err);
+          });
+        }
       }
-      else{
-        if(debugMode) console.log("Error reading count.txt");
+      else {
+        if (debugMode) console.log("Error reading count.txt");
       }
     });
   }

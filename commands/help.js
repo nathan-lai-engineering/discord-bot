@@ -9,13 +9,35 @@ module.exports = {
     const fs = require("fs");
     const prefix = msg.content.slice(0, msg.content.indexOf("help"));
     const commandFiles = fs
-      .readdirSync("./commands")
+      .readdirSync("./")
       .filter((file) => file.endsWith(".js"));
+
+
+
+
     if (args.length < 1) {
       const helpList = new Discord.MessageEmbed()
-        .setTitle("List of Commands")
-        .addFields(commandFiles);
+        .setTitle("List of Commands");
+      for (var i = 0; i < commandFiles.length; i++) {
+        if (commandFiles[i] != "help.js") {
+          var commandSplit = commandFiles[i].split('.');
+          var commandName = commandSplit[0];
+
+          var fileDir = commandName + ".js";
+          var fileData = require(fileDir);
+
+          helpList.addField(commandName, fileData.description);
+        }
+      }
       msg.channel.send(helpList);
+    }
+    else {
+      var fileDir = args[0] + ".js";
+      var fileData = require(fileDir);
+      const helpCommand = new Discord.MessageEmbed()
+        .setTitle(fileData.description)
+        .addField(fileData.syntax, fileData.example);
+      msg.channel.send(helpCommand);
     }
   },
 };
