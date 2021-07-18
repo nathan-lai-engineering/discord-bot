@@ -7,7 +7,13 @@ module.exports = {
   execute(msg, args, database) {
     var utils = require("../utils.js")
     msg.react("👍");
-    utils.getMoney(database, msg.guild.id, msg.author.id)
+
+    var target = msg.author.id;
+    if (args.length >= 1) {
+      target = args[0].replace("<", "").replace("!", "").replace("@", "").replace(">", "");
+      console.log(target);
+    }
+    utils.getMoney(database, msg.guild.id, target)
       .then(money => {
         let bal = money;
         if (bal == null || bal == NaN) {

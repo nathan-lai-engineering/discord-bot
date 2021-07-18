@@ -37,7 +37,11 @@ console.log("Database connected!")
 // =============================================================
 // INTIALIZING CLIENT
 // =============================================================
-const client = new Discord.Client();
+const intents = new Discord.Intents([
+  Discord.Intents.NON_PRIVILEGED,
+  "GUILD_MEMBERS"
+]);
+const client = new Discord.Client({ ws: { intents } });
 
 // Creates a collection intended to store commands
 client.commands = new Discord.Collection();
@@ -109,7 +113,13 @@ client.on("message", (msg) => {
         if (debugMode)
           console.log(`Updated count: ${currentCount + 1}`);
         utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
-        if (Math.random() <= config.counting.chance) {
+
+        let chance = config.counting.chance;
+        if (msg.member.roles.cache.some((role) => role.name === "Bot Developer")) {
+          chance = 1;
+        }
+
+        if (Math.random() <= chance) {
           let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
           utils.addMoney(database, msg.guild.id, msg.author.id, money);
           msg.react("<:damasiodollar:865942969089785876>");
