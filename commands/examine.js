@@ -1,8 +1,8 @@
 module.exports = {
   name: "examine",
   description: "Gives info on server",
-  syntax: "$examine",
-  example: "$examine",
+  syntax: "examine",
+  example: "examine",
   database: false,
   execute(msg, args) {
     if (args.length > 0) {

@@ -1,8 +1,8 @@
 module.exports = {
     name: "top",
-    description: "acquires top 5 users",
-    syntax: "$$top",
-    example: "$$top",
+    description: "Acquire a list of the top 5 users in the server",
+    syntax: "top",
+    example: "top",
     database: true,
     execute(msg, args, database) {
         var utils = require("../utils.js")

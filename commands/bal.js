@@ -1,8 +1,8 @@
 module.exports = {
   name: "bal",
-  description: "acquires balance of user",
-  syntax: "$$balance",
-  example: "$$balance",
+  description: "Acquires balance of user",
+  syntax: "bal",
+  example: "bal",
   database: true,
   execute(msg, args, database) {
     var utils = require("../utils.js")

@@ -2,7 +2,7 @@ module.exports = {
   name: "help",
   description:
     "Gives list for all commands or gives syntax for specific commands",
-  syntax: "help <empty, or specific command>",
+  syntax: "help [command name]",
   example: "help spoof",
   database: false,
   execute(msg, args) {
@@ -10,34 +10,32 @@ module.exports = {
     const fs = require("fs");
     const prefix = msg.content.slice(0, msg.content.indexOf("help"));
     const commandFiles = fs
-      .readdirSync("./")
+      .readdirSync("./commands")
       .filter((file) => file.endsWith(".js"));
 
-
-
-
+    msg.react("👍");
     if (args.length < 1) {
       const helpList = new Discord.MessageEmbed()
-        .setTitle("List of Commands");
+        .setTitle("❓List of Commands❓");
       for (var i = 0; i < commandFiles.length; i++) {
-        if (commandFiles[i] != "help.js") {
-          var commandSplit = commandFiles[i].split('.');
-          var commandName = commandSplit[0];
+        var commandSplit = commandFiles[i].split('.');
+        var commandName = commandSplit[0];
 
-          var fileDir = commandName + ".js";
-          var fileData = require(fileDir);
+        var fileDir = `./${commandName}.js`;
+        var fileData = require(fileDir);
 
-          helpList.addField(commandName, fileData.description);
-        }
+        helpList.addField(fileData.syntax, fileData.description);
+
       }
       msg.channel.send(helpList);
     }
     else {
-      var fileDir = args[0] + ".js";
+      var fileDir = `./${args[0]}.js`;
       var fileData = require(fileDir);
       const helpCommand = new Discord.MessageEmbed()
-        .setTitle(fileData.description)
-        .addField(fileData.syntax, fileData.example);
+        .setTitle(fileData.name)
+        .setDescription(fileData.description)
+        .addField(`Syntax: ${fileData.syntax}`, `Usage: ${fileData.example}`);
       msg.channel.send(helpCommand);
     }
   },

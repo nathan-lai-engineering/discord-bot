@@ -2,7 +2,7 @@
 
 module.exports = {
   name: "setcount",
-  description: "sets the count value",
+  description: "ADMIN-ONLY command that sets the count of the counting channel",
   syntax: "setcount <integer>",
   example: "setcount 500",
   database: false,

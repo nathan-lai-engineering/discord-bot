@@ -1,6 +1,6 @@
 module.exports = {
   name: "amadeusleave",
-  description: "Forces the bot to leave",
+  description: "Admin command that allows the bot to leave without needing guild permissions",
   syntax: "leave",
   example: "leave",
   database: false,
@@ -8,7 +8,7 @@ module.exports = {
     const code = Math.random().toString(36).substr(2, 10);
     console.log(code);
     msg.channel.send(
-      "User not admin, confirmation code sent in console, reply with code to force bot to leave"
+      "Confirmation code sent in console, reply with code to force bot to leave"
     );
     const filter = (m) => m.content == code;
     const collector = msg.channel.createMessageCollector(filter, {

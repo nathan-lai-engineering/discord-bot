@@ -1,8 +1,8 @@
 module.exports = {
   name: "spam",
-  description: "spam pings a single user",
+  description: "Spams a message a set number of times",
   syntax: "spam <integer> <message>",
-  example: "spam 100 @vaine",
+  example: "spam 100 @blazeris",
   database: false,
   execute(msg, args) {
     var count = args[0];
