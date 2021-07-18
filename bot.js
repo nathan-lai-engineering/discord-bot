@@ -9,6 +9,7 @@ https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
 const fs = require("fs");
 const Discord = require("discord.js");
 const firebase = require("firebase");
+const utils = require("./utils.js");
 
 const auth = require("./auth.json");
 const config = JSON.parse(fs.readFileSync("./config.json"));
@@ -62,6 +63,9 @@ client.on("ready", () => {
 // =============================================================
 client.on("message", (msg) => {
 
+  // Private messages by bots are ignored
+  if (msg.channel.type == "dm") return;
+
   // Messages by bots are ignored
   if (msg.author.bot) return;
 
@@ -79,32 +83,23 @@ client.on("message", (msg) => {
       return;
     }
     if (!msg.content.startsWith(prefix)) {
-      fs.readFile("data/count.txt", "utf-8", (err, data) => {
-        if (err) console.log(err);
-        data = parseInt(data);
-        if (Number.isInteger(data)) {
-          if (msg.content.split(' ')[0] != (String)(data + 1)) {
-            //if (!msg.content.startsWith((String)(data + 1))) {
-            msg.delete();
-            return;
-          }
-          else {
-            fs.writeFile("data/count.txt", data + 1, (err) => {
-              if (err) console.log(err);
-            });
-            if (Math.random() <= config.counting.chance) {
-              let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
-              //console.log(getMoney(msg.guild.id, msg.author.id));
-              addMoney(msg.guild.id, msg.author.id, money);
-              msg.react("<:damasiodollar:865942969089785876>");
-              msg.channel.send(`${msg.author} won ${money} <:damasiodollar:865942969089785876> damasio dollars!`);
-            }
-          }
+      utils.readDatabase((String)(msg.guild.id) + "/count", database).then(currentCount => {
+        console.log(currentCount);
+        if (msg.content.split(' ')[0] != (String)(currentCount + 1)) {
+          msg.delete();
+          return;
         }
-        else {
-          if (debugMode) console.log("Error reading count.txt");
+        utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
+        if (Math.random() <= config.counting.chance) {
+          let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
+          addMoney(msg.guild.id, msg.author.id, money);
+          msg.react("<:damasiodollar:865942969089785876>");
+          msg.channel.send(`${msg.author} won ${money} <:damasiodollar:865942969089785876> damasio dollars!`);
         }
-      });
+      })
+        .catch(() => {
+          console.log("Error in counting");
+        });
     }
   }
 

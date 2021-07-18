@@ -1,4 +1,4 @@
-var fs = require("fs")
+
 
 module.exports = {
   name: "setcount",
@@ -7,6 +7,7 @@ module.exports = {
   example: "setcount 500",
   database: false,
   execute(msg, args) {
+    var fs = require("fs")
     if (msg.channel.name.toLowerCase().includes("counting") && msg.member.hasPermission("ADMINISTRATOR")) {
       var integer = args[0];
       integer = parseInt(integer);

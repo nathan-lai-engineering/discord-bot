@@ -24,7 +24,23 @@ function getMoney(database, serverid, userid) {
     });
 }
 
+function readDatabase(path, database) {
+    return new Promise((resolve, reject) => {
+        resolve(database.ref(path).once('value').then(snapshot => snapshot.val()))
+    });
+}
+
+function writeDatabase(path, value, database) {
+    database.ref((String)(path)).set(value, function (error) {
+        if (error) {
+            console.log("Write failed with error: " + error);
+        }
+    });
+}
+
 module.exports = {
     addMoney,
-    getMoney
+    getMoney,
+    readDatabase,
+    writeDatabase
 }
