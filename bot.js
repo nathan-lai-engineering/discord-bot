@@ -12,7 +12,8 @@ const firebase = require("firebase");
 const utils = require("./utils.js");
 
 const auth = require("./auth.json");
-const { debug } = require("console");
+const { debug, count } = require("console");
+const { finished } = require("stream");
 const config = JSON.parse(fs.readFileSync("./config.json"));
 const database_config = JSON.parse(fs.readFileSync("./database.json"));
 // =============================================================
@@ -57,6 +58,22 @@ client.on("ready", () => {
   console.log("Bot connected!");
   client.user.setActivity("nathan", { type: "ACTIVE AND WATCHING" });
   console.log(config);
+
+  // Updating topic of counting channel to match config
+  client.guilds.cache.forEach((key, value) => {
+    let countingChannel = key.channels.cache.find(channel => channel.name.includes("counting"));
+    if (debugMode)
+      console.log(countingChannel.name);
+    let newTopic = `${config.counting.chance * 100}% of earning ${config.counting.min} - ${config.counting.max} <:damasiodollar:865942969089785876> damasio dollars`
+    if (countingChannel.topic != newTopic) {
+      countingChannel.setTopic(newTopic)
+        .then(newChannel => {
+          if (debugMode)
+            console.log(`Changed counting topic to ${newChannel.topic}`)
+        })
+        .catch(console.error);
+    }
+  });
 });
 
 // =============================================================
@@ -89,10 +106,9 @@ client.on("message", (msg) => {
           msg.delete();
           return;
         }
-        utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
-        msg.channel.setTopic(`Current count: ${currentCount + 1} | ${config.counting.chance}% of earning ${config.counting.min} - ${config.counting.max} <:damasiodollar:865942969089785876> damasio dollars`);
         if (debugMode)
-          console.log(`Updated count: ${currentCount}`);
+          console.log(`Updated count: ${currentCount + 1}`);
+        utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
         if (Math.random() <= config.counting.chance) {
           let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
           utils.addMoney(database, msg.guild.id, msg.author.id, money);
