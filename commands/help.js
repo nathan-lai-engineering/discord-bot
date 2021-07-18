@@ -14,6 +14,8 @@ module.exports = {
       .filter((file) => file.endsWith(".js"));
 
     msg.react("👍");
+
+    // Default help command, sends a list of all commands
     if (args.length < 1) {
       const helpList = new Discord.MessageEmbed()
         .setTitle("❓List of Commands❓");
@@ -25,10 +27,11 @@ module.exports = {
         var fileData = require(fileDir);
 
         helpList.addField(fileData.syntax, fileData.description);
-
       }
       msg.channel.send(helpList);
     }
+
+    // Argument help commands, sends more details regarding a single command
     else {
       var fileDir = `./${args[0]}.js`;
       var fileData = require(fileDir);

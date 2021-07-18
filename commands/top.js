@@ -9,14 +9,14 @@ module.exports = {
         var Discord = require("discord.js");
         msg.react("👍");
         utils.readDatabase(`${msg.guild.id}/users`, database).then(users => {
-            console.log(Object.keys(users).length);
+            // Deletes dev entries, so devs aren't included in leaderboard
             Object.keys(users).forEach(key => {
                 if (users[key]["dev"] == true) {
                     delete users[key];
                 }
             });
-            console.log(Object.keys(users).length);
 
+            // Sort by balance
             sorted = Array.from(Object.keys(users)).sort((a, b) => {
                 if (users[a]["balance"] < users[b]["balance"]) {
                     return 1;
@@ -24,14 +24,11 @@ module.exports = {
                 return -1;
             });
 
-            const leaderboard = new Discord.MessageEmbed()
-                .setTitle("🏆Top 5 Money Makers🏆");
-
-            console.log(sorted);
-
+            // Creates entries for embed message
             const promises = [];
             let fields = [];
             for (let i = 0; i < 5; i++) {
+                // Skips if there are less people than 5
                 if (i >= Object.keys(users).length)
                     continue;
                 promises.push(
@@ -49,7 +46,10 @@ module.exports = {
                 );
             }
 
+            // Waits until all promises are resolved to create the leaderboard
             Promise.all(promises).then(() => {
+                const leaderboard = new Discord.MessageEmbed()
+                    .setTitle("🏆Top 5 Money Makers🏆");
                 leaderboard.addFields(fields);
                 msg.channel.send(leaderboard);
             });
