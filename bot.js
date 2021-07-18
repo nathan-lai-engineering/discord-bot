@@ -12,6 +12,7 @@ const firebase = require("firebase");
 const utils = require("./utils.js");
 
 const auth = require("./auth.json");
+const { debug } = require("console");
 const config = JSON.parse(fs.readFileSync("./config.json"));
 const database_config = JSON.parse(fs.readFileSync("./database.json"));
 // =============================================================
@@ -83,16 +84,18 @@ client.on("message", (msg) => {
       return;
     }
     if (!msg.content.startsWith(prefix)) {
-      utils.readDatabase((String)(msg.guild.id) + "/count", database).then(currentCount => {
-        console.log(currentCount);
+      utils.readDatabase(`${msg.guild.id}/count`, database).then(currentCount => {
         if (msg.content.split(' ')[0] != (String)(currentCount + 1)) {
           msg.delete();
           return;
         }
         utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
+        msg.channel.setTopic(`Current count: ${currentCount + 1} | ${config.counting.chance}% of earning ${config.counting.min} - ${config.counting.max} <:damasiodollar:865942969089785876> damasio dollars`);
+        if (debugMode)
+          console.log(`Updated count: ${currentCount}`);
         if (Math.random() <= config.counting.chance) {
           let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
-          addMoney(msg.guild.id, msg.author.id, money);
+          utils.addMoney(database, msg.guild.id, msg.author.id, money);
           msg.react("<:damasiodollar:865942969089785876>");
           msg.channel.send(`${msg.author} won ${money} <:damasiodollar:865942969089785876> damasio dollars!`);
         }
@@ -155,32 +158,4 @@ function msgInfo(msg) {
     channelid: msg.channel.id,
     message: msg.content,
   };
-}
-
-// =============================================================
-// OTHER FUNCTIONS
-// =============================================================
-function addMoney(serverid, userid, amt) {
-  let path = serverid + '/users/' + userid + '/balance/';
-  getMoney(serverid, userid).then(currBal => {
-    if (currBal == NaN || currBal == null)
-      currBal = 0;
-    if (debugMode)
-      console.log("Adding " + amt + " to " + userid + "'s current balance of " + currBal);
-    database.ref((String)(path)).set(amt + currBal, function (error) {
-      if (error) {
-        console.log("Write failed with error: " + error)
-      }
-    })
-  })
-}
-
-function getMoney(serverid, userid) {
-  let path = serverid + '/users/' + userid + '/balance/';
-  return new Promise((resolve, reject) => {
-    resolve(database.ref(path).once('value').then(snapshot => {
-      let money = snapshot.val();
-      return money;
-    }))
-  });
 }

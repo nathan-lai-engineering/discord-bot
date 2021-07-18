@@ -4,7 +4,7 @@
     "debugMode": true
   },
   "counting": {
-    "chance": 0.99,
+    "chance": 0.03,
     "min": 10,
     "max": 50
   }
