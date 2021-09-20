@@ -46,6 +46,14 @@ const client = new Discord.Client({ ws: { intents } });
 // Creates a collection intended to store commands
 client.commands = new Discord.Collection();
 
+// Creates a list intended to store a queue for music
+client.queue = {
+  data: {},
+  order: [],
+  current: "",
+  loop: false
+};
+
 // Reads every file in the commands folder and creates an array of them
 const commandFiles = fs
   .readdirSync("./commands")
@@ -85,11 +93,10 @@ client.on("ready", () => {
 // =============================================================
 client.on("message", (msg) => {
 
-  // Private messages by bots are ignored
-  if (msg.channel.type == "dm") return;
-
-  // Messages by bots are ignored
-  if (msg.author.bot) return;
+  // Ignore these messages
+  if (msg.author.bot ||
+    msg.channel.type == "dm")
+    return;
 
   // MUTED HANDLER
   if (msg.member.roles.cache.some((role) => role.name === "Muted")) {
@@ -132,7 +139,7 @@ client.on("message", (msg) => {
     }
   }
 
-  // Messages by bots or without a prefix are ignored
+  // Messages without a prefix are ignored
   if (!msg.content.startsWith(prefix)) return;
 
   // COMMAND HANDLER
@@ -146,6 +153,9 @@ client.on("message", (msg) => {
   try {
     if (client.commands.get(command).database) {
       client.commands.get(command).execute(msg, args, database);
+    }
+    if (client.commands.get(command).memory) {
+      client.commands.get(command).execute(msg, args, client);
     }
     else {
       client.commands.get(command).execute(msg, args);
