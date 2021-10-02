@@ -5,6 +5,7 @@ module.exports = {
     example: "loop",
     memory: true,
     execute(msg, args, client) {
+        msg.react("👍");
         if (client.queue.loop) {
             client.queue.loop = false;
             msg.channel.send("The queue will stop looping");

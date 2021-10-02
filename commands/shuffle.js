@@ -12,6 +12,6 @@ module.exports = {
             [msg.client.queue.order[currentIndex], msg.client.queue.order[randomIndex]] =
                 [msg.client.queue.order[randomIndex], msg.client.queue.order[currentIndex]];
         }
-        msg.channel.send("Queue has been randomly shuffled!");
+        msg.channel.send(`${msg.client.queue.order.length} songs have been randomly shuffled!`);
     },
 };
