@@ -6,16 +6,51 @@ https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
 // =============================================================
 // EXTERNAL FILES
 // =============================================================
-const fs = require("fs");
 const Discord = require("discord.js");
-const firebase = require("firebase");
-const utils = require("./utils.js");
+const firebase = require("firebase-admin");
 
-const auth = require("./auth.json");
-const { debug, count } = require("console");
-const { finished } = require("stream");
-const config = JSON.parse(fs.readFileSync("./config.json"));
-const database_config = JSON.parse(fs.readFileSync("./database.json"));
+const FIREBASE_AUTH = require("./firebase.json");
+
+// =============================================================
+// CLIENT INITIALIZATION
+// =============================================================
+const client = new Discord.Client({
+  intents:[
+    "Guilds",
+    "GuildMessages",
+    "MessageContent"
+]
+});
+
+// =============================================================
+// BOT OPERATION
+// =============================================================
+
+// INITIALIZE DATABASE
+firebase.initializeApp({
+  credential: firebase.credential.cert(FIREBASE_AUTH.credential),
+  databaseURL: FIREBASE_AUTH.databaseURL
+});
+console.log("Database intialized.");
+
+// LOAD GLOBAL VARIABLES FROM DATABASE
+firebase.database().ref('global').once('value').then((snapshot) => {
+  let global = snapshot.val();
+  let debugMode = global.config.debugMode;
+  console.log("Global config loaded.");
+  if(debugMode) {
+    console.log("Global config:\n", global.config);
+  }
+
+  // BOT LOGIN
+  try {
+    client.login(global.auth).then(() => console.log("Bot connected."));
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+/*
 // =============================================================
 // CONFIG VARIABLES
 // =============================================================
@@ -28,20 +63,15 @@ const debugMode = config.main.debugMode;
 const currDate = new Date();
 
 // =============================================================
-// MISC GLOBAL VARIABLES
-// =============================================================
-firebase.initializeApp(database_config);
-var database = firebase.database();
-console.log("Database connected!")
-
-// =============================================================
 // INTIALIZING CLIENT
 // =============================================================
-const intents = new Discord.Intents([
-  Discord.Intents.NON_PRIVILEGED,
-  "GUILD_MEMBERS"
-]);
-const client = new Discord.Client({ ws: { intents } });
+const client = new Discord.Client({
+    intents:[
+      "Guilds",
+      "GuildMessages",
+      "MessageContent"
+  ]
+});
 
 // Creates a collection intended to store commands
 client.commands = new Discord.Collection();
@@ -68,7 +98,7 @@ for (const file of commandFiles) {
 // Connecting the bot after initializing all other modules
 client.on("ready", () => {
   console.log("Bot connected!");
-  client.user.setActivity("nathan", { type: "ACTIVE AND WATCHING" });
+  client.user.setActivity("nathan", { type: "ACTIVE" });
   console.log(config);
 });
 
@@ -123,3 +153,4 @@ try {
   console.log(error);
 }
 
+*/
