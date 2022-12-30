@@ -70,22 +70,6 @@ client.on("ready", () => {
   console.log("Bot connected!");
   client.user.setActivity("nathan", { type: "ACTIVE AND WATCHING" });
   console.log(config);
-
-  // Updating topic of counting channel to match config
-  client.guilds.cache.forEach((key, value) => {
-    let countingChannel = key.channels.cache.find(channel => channel.name.includes("counting"));
-    if (debugMode)
-      console.log(countingChannel.name);
-    let newTopic = `${config.counting.chance * 100}% of earning ${config.counting.min} - ${config.counting.max} <:damasiodollar:865942969089785876> damasio dollars`
-    if (countingChannel.topic != newTopic) {
-      countingChannel.setTopic(newTopic)
-        .then(newChannel => {
-          if (debugMode)
-            console.log(`Changed counting topic to ${newChannel.topic}`)
-        })
-        .catch(console.error);
-    }
-  });
 });
 
 // =============================================================
@@ -97,47 +81,6 @@ client.on("message", (msg) => {
   if (msg.author.bot ||
     msg.channel.type == "dm")
     return;
-
-  // MUTED HANDLER
-  if (msg.member.roles.cache.some((role) => role.name === "Muted")) {
-    if (debugMode) console.log(msg.author.username + ": " + msg.content);
-    msg.delete();
-    return;
-  }
-
-  // COUNTING CHANNEL
-  if (msg.channel.name.toLowerCase().includes("counting")) {
-    if (!msg.member.hasPermission("ADMINISTRATOR") && msg.content.startsWith(prefix)) {
-      msg.delete();
-      return;
-    }
-    if (!msg.content.startsWith(prefix)) {
-      utils.readDatabase(`${msg.guild.id}/count`, database).then(currentCount => {
-        if (msg.content.split(' ')[0] != (String)(currentCount + 1)) {
-          msg.delete();
-          return;
-        }
-        if (debugMode)
-          console.log(`Updated count: ${currentCount + 1}`);
-        utils.writeDatabase(`${msg.guild.id}/count`, currentCount + 1, database);
-
-        let chance = config.counting.chance;
-        if (msg.member.roles.cache.some((role) => role.name === "Bot Developer")) {
-          chance = 1;
-        }
-
-        if (Math.random() <= chance) {
-          let money = Math.ceil(Math.random() * (config.counting.max - 9) + config.counting.min);
-          utils.addMoney(database, msg.guild.id, msg.author.id, money);
-          msg.react("<:damasiodollar:865942969089785876>");
-          msg.channel.send(`${msg.author} won ${money} <:damasiodollar:865942969089785876> damasio dollars!`);
-        }
-      })
-        .catch(() => {
-          console.log("Error in counting");
-        });
-    }
-  }
 
   // Messages without a prefix are ignored
   if (!msg.content.startsWith(prefix)) return;
@@ -180,18 +123,3 @@ try {
   console.log(error);
 }
 
-// =============================================================
-// DEBUG MODE
-// =============================================================
-function msgInfo(msg) {
-  return {
-    date: currDate,
-    username: msg.author.username,
-    userid: msg.author.id,
-    server: msg.guild.name,
-    serverid: msg.guild.id,
-    channel: msg.channel.name,
-    channelid: msg.channel.id,
-    message: msg.content,
-  };
-}
