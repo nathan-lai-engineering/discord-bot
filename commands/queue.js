@@ -25,7 +25,9 @@ module.exports = {
                 }
             }
         }
-        embed.setFooter({text:`Songs in queue: ${songsInQueue}`});
+        embed.setFooter({text:`Songs in queue: ${songsInQueue}\t
+                                Looping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\t
+                                AutoPlay: ${queue.autoplay ? 'On' : 'Off'}`});
         interaction.channel.send({embeds: [embed]});
 	},
 };
