@@ -15,6 +15,7 @@ run.bat
 .idea/
 
 firebase.json
+discordconfig.json
 
 # macOS
 .DS_Store
