@@ -26,7 +26,6 @@ const client = new Discord.Client({
 ]
 });
 
-
 client.commands = new Discord.Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -34,7 +33,7 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	const command = require(filePath);
-	// Set a new item in the Collection with the key as the command name and the value as the exported module
+	
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
     if(client.debugMode)
@@ -63,9 +62,9 @@ firebase.database().ref('global').once('value').then((snapshot) => {
   }
 
   // DISTUBE INTEGRATION
-  const distubeIntegration = require("./distube_integration.js")
+  const distubeEvents = require("./distube_events.js")
   client.distube = new distube.DisTube(client, global.config.distube);
-  distubeIntegration.loadDistube(client);
+  distubeEvents.load(client);
   
 
   // READY
