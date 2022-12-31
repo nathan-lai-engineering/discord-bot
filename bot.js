@@ -38,14 +38,17 @@ console.log("Database intialized.");
 // LOAD GLOBAL VARIABLES FROM DATABASE
 firebase.database().ref('global').once('value').then((snapshot) => {
   let global = snapshot.val();
-  let debugMode = global.config.debugMode;
+  client.debugMode = global.config.debugMode;
   console.log("Global config loaded.");
-  if(debugMode) {
+  if(client.debugMode) {
     console.log("Global config:\n", global.config);
   }
 
   // DISTUBE INTEGRATION
+  const distubeIntegration = require("./distube_integration.js")
   client.distube = new distube.DisTube(client, global.config.distube);
+  distubeIntegration.loadDistubeEventHandlers(client);
+  
 
   // READY
   client.on("ready", () => {
@@ -75,13 +78,6 @@ firebase.database().ref('global').once('value').then((snapshot) => {
       default:
         break;
     }
-  });
-
-  client.distube.on("playSong", (queue, song) => {
-    let nowPlaying = "NOW PLAYING: " + song.name;
-    queue.textChannel.send(nowPlaying);
-    if(debugMode)
-      console.log(nowPlaying);
   });
 
   // BOT LOGIN
