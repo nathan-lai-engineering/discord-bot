@@ -10,7 +10,7 @@ module.exports = {
             queue.songs.length <= 0)
                 return interaction.channel.send("You'd need a song playing to enable autoplay");
         const autoplay = queue.toggleAutoplay()
-        interaction.channel.send(`AutoPlay is now ${autoplay ? 'on' : 'off'}.`);
+        interaction.reply(`AutoPlay is now ${autoplay ? 'on' : 'off'}.`);
 	},
 };
 

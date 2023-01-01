@@ -14,8 +14,9 @@ module.exports = {
             await interaction.client.distube.stop(interaction.guildId);
             if(interaction.client.debugMode)
                 console.log("Stopping music player.");
+            return interaction.reply("No more songs, removing queue.");
         }
- 
+        interaction.reply("Skipping to the next song");
         queue.skip();
 	},
 };

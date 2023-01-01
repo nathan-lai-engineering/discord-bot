@@ -10,7 +10,6 @@ const fs = require("fs");
 const path = require("path");
 const Discord = require("discord.js");
 const firebase = require("firebase-admin");
-const distube = require("distube");
 
 const FIREBASE_AUTH = require("./firebase.json");
 
@@ -56,16 +55,23 @@ console.log("Database intialized.");
 firebase.database().ref('global').once('value').then((snapshot) => {
   let global = snapshot.val();
   client.debugMode = global.config.debugMode;
+  client.trigger = global.config.trigger;
+  client.enabledModules = [];
   console.log("Global config loaded.");
   if(client.debugMode) {
     console.log("Global config:\n", global.config);
   }
 
-  // DISTUBE INTEGRATION
-  const distubeEvents = require("./distube_events.js")
-  client.distube = new distube.DisTube(client, global.config.distube);
-  distubeEvents.load(client);
-  
+  // DISTUBE MODULE
+  const distubeEvents = require("./distube_events.js");
+  distubeEvents.load(client, global.config.distube);
+
+  // SPEECH DETECTION MODULE
+  const speechDetection = require("./speechDetection.js");
+  speechDetection.load(client);
+
+  if(client.debugMode)
+    console.log(`Enabled modules: ${client.enabledModules}`);
 
   // READY
   client.on("ready", () => {

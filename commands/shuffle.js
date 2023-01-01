@@ -8,9 +8,9 @@ module.exports = {
         let queue = interaction.client.distube.getQueue(interaction.guildId);
         if( !queue ||
             queue.songs.length <= 0)
-                return interaction.channel.send("You'd need a song playing to shuffle.");
+                return interaction.reply("You'd need a song playing to shuffle.");
         queue.shuffle();
-        interaction.channel.send("Shuffled the queue.");
+        interaction.reply("Shuffled the queue.");
 	},
 };
 

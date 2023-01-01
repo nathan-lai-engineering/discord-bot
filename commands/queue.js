@@ -19,14 +19,14 @@ module.exports = {
                     .setDescription(`${queue.songs[0].uploader.name} - ${new Date(queue.songs[0].duration * 1000).toISOString().slice(11, 19)}`)
                     .setURL(queue.songs[0].url)
                     .setThumbnail(queue.songs[0].thumbnail);
-                for(let i = 1; i < songsInQueue; i++){
+                for(let i = 1; i < Math.min(songsInQueue, 27); i++){
                     embed.addFields({name: `[${i}] ${queue.songs[i].name}`, 
                                     value: `${queue.songs[i].uploader.name} - ${new Date(queue.songs[i].duration * 1000).toISOString().slice(11, 19)}`});
                 }
             }
         }
         embed.setFooter({text:`Songs in queue: ${songsInQueue}\tLooping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\tAutoPlay: ${queue.autoplay ? 'On' : 'Off'}`});
-        interaction.channel.send({embeds: [embed]});
+        interaction.reply({embeds: [embed]});
 	},
 };
 

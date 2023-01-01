@@ -13,13 +13,14 @@ module.exports = {
         if(!interaction.member.voice.channel){
             if(interaction.client.debugMode)
                 console.log("User not in a voice channel!");
-            interaction.channel.send("Shouldn't you be in a voice channel?");
+            interaction.reply("Shouldn't you be in a voice channel?");
             return;
         }
 
         interaction.client.distube.play(interaction.member.voice.channel, interaction.options.getString('song'), {
             member: interaction.member,
-            textChannel: interaction.channel
+            textChannel: interaction.channel,
+            metadata: {i: interaction}
         }); 
 	},
 };

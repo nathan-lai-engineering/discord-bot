@@ -10,7 +10,7 @@ module.exports = {
             (!queue.autoplay && queue.songs.length <= 1))
                 return;
         await interaction.client.distube.stop(interaction.guildId);
-        interaction.channel.send("Queue and settings cleared");
+        interaction.reply("Queue and settings cleared");
         if(interaction.client.debugMode)
             console.log("Stopping music player.");
 	},

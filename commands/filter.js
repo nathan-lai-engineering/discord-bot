@@ -21,7 +21,7 @@ module.exports = {
         let queue = interaction.client.distube.getQueue(interaction.guildId);
         if( !queue ||
             queue.songs.length <= 0)
-                return interaction.channel.send("You'd need a song playing to apply a filter.");
+                return interaction.reply("You'd need a song playing to apply a filter.");
         const filter = interaction.options.getString('filter');
         if(!filter){
             const embed = new EmbedBuilder()
@@ -29,21 +29,21 @@ module.exports = {
             .setTitle("Current filters");
             for(let f in queue.filters.names)
                 embed.addFields({name: queue.filters.names[f], value: '\u200B'});
-            interaction.channel.send({embeds:[embed]});
+            interaction.reply({embeds:[embed]});
         }
         else if(filter == 'clear'){
             queue.filters.clear();
-            interaction.channel.send("Filters have been cleared.");
+            interaction.reply("Filters have been cleared.");
         }
         else {
             if(queue.filters.has(filter)){
                 queue.filters.remove(filter);
-                interaction.channel.send(`${filter} filter has been removed.`);
+                interaction.reply(`${filter} filter has been removed.`);
             }
                 
             else {
                 queue.filters.add(filter);
-                interaction.channel.send(`${filter} filter has been added.`);
+                interaction.reply(`${filter} filter has been added.`);
             }
         }
 	},
