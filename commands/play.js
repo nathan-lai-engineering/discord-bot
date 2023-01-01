@@ -19,8 +19,8 @@ module.exports = {
 
         interaction.client.distube.play(interaction.member.voice.channel, interaction.options.getString('song'), {
             member: interaction.member,
-            textChannel: interaction.channel,
-            metadata: {i: interaction}
+            textChannel: interaction.channel
         }); 
+        interaction.reply({content:'Added to queue', ephemeral: true});
 	},
 };

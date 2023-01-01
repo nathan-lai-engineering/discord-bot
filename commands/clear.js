@@ -6,11 +6,10 @@ module.exports = {
 		.setDescription('no more songs!'),
 	async execute(interaction) {
         let queue = interaction.client.distube.getQueue(interaction.guildId);
-        if( !queue ||
-            (!queue.autoplay && queue.songs.length <= 1))
-                return;
-        await interaction.client.distube.stop(interaction.guildId);
-        interaction.reply("Queue and settings cleared");
+        if(!queue)
+            return;
+        interaction.reply(`CLEARED: ${interaction.client.distube.getQueue(interaction.guildId).songs.length} song(s).`);
+        interaction.client.distube.stop(interaction.guildId);
         if(interaction.client.debugMode)
             console.log("Stopping music player.");
 	},

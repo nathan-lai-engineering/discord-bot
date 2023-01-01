@@ -3,10 +3,9 @@ const { DisTube } = require('distube');
 function createEvent(client, event, eventText){
     client.distube.on(event, (queue, song) => {
         replyMessage = eventText + String(song.name);
-        //queue.textChannel.send(replyMessage);
+        queue.textChannel.send(replyMessage);
         if(client.debugMode)
           console.log(replyMessage);
-        song.metadata.i.reply(replyMessage);
     });
 }
 

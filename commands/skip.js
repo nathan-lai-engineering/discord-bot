@@ -16,7 +16,7 @@ module.exports = {
                 console.log("Stopping music player.");
             return interaction.reply("No more songs, removing queue.");
         }
-        interaction.reply("Skipping to the next song");
+        interaction.reply("SKIPPING SONG");
         queue.skip();
 	},
 };
