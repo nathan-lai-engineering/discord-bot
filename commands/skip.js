@@ -6,11 +6,9 @@ module.exports = {
 		.setDescription('skips the current song'),
 	async execute(interaction) {
         let queue = interaction.client.distube.getQueue(interaction.guildId);
-        if( !queue ||
-            (!queue.autoplay && queue.songs.length <= 1))
+        if( !queue)
                 return;
-
-        if(queue.songs.length == 1){
+        if(queue.songs.length == 1 && !queue.autoplay){
             await interaction.client.distube.stop(interaction.guildId);
             if(interaction.client.debugMode)
                 console.log("Stopping music player.");
