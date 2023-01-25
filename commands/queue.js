@@ -11,6 +11,7 @@ module.exports = {
 
         let songsInQueue = 0;
         let queue = interaction.client.distube.getQueue(interaction.guildId);
+        let totalDuration = 0;
         if(queue) {
             songsInQueue = queue.songs.length;
             if(songsInQueue > 0){
@@ -23,9 +24,12 @@ module.exports = {
                     embed.addFields({name: `[${i}] ${queue.songs[i].name}`, 
                                     value: `${queue.songs[i].uploader.name} - ${new Date(queue.songs[i].duration * 1000).toISOString().slice(11, 19)}`});
                 }
+                queue.songs.forEach((song) => {
+                    totalDuration += song.duration;
+                });
             }
         }
-        embed.setFooter({text:`Songs in queue: ${songsInQueue}\tLooping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\tAutoPlay: ${queue.autoplay ? 'On' : 'Off'}`});
+        embed.setFooter({text:`Songs in queue: ${songsInQueue}\tLooping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\tAutoPlay: ${queue.autoplay ? 'On' : 'Off'}\tTotal Duration: ${new Date(totalDuration * 1000).toISOString().slice(11, 19)}`});
         interaction.reply({embeds: [embed]});
 	},
 };
