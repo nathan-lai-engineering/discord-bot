@@ -45,10 +45,12 @@ for (const file of commandFiles) {
 // =============================================================
 
 // INITIALIZE DATABASE
+
 firebase.initializeApp({
   credential: firebase.credential.cert(FIREBASE_AUTH.credential),
   databaseURL: FIREBASE_AUTH.databaseURL
 });
+
 console.log("Database intialized.");
 
 // LOAD GLOBAL VARIABLES FROM DATABASE
@@ -65,13 +67,6 @@ firebase.database().ref('global').once('value').then((snapshot) => {
   // DISTUBE MODULE
   const distubeEvents = require("./distube_events.js");
   distubeEvents.load(client, global.config.distube);
-
-  // SPEECH DETECTION MODULE
-  const speechDetection = require("./speechDetection.js");
-  speechDetection.load(client);
-
-  if(client.debugMode)
-    console.log(`Enabled modules: ${client.enabledModules}`);
 
   // READY
   client.on("ready", () => {
