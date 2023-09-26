@@ -72,7 +72,7 @@ firebase.database().ref('global').once('value').then((snapshot) => {
   client.on("ready", () => {
     console.log("Bot connected!");
     client.user.setPresence({
-      activities: [{name: 'Praising Zeta'}],
+      activities: [{name: 'Doing a little trolling'}],
       status: 'online'
     });
   });
