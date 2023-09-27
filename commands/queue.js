@@ -28,8 +28,8 @@ module.exports = {
                     totalDuration += song.duration;
                 });
             }
+            embed.setFooter({text:`Songs in queue: ${songsInQueue}\tLooping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\tAutoPlay: ${queue.autoplay ? 'On' : 'Off'}\tTotal Duration: ${new Date(totalDuration * 1000).toISOString().slice(11, 19)}`});
         }
-        embed.setFooter({text:`Songs in queue: ${songsInQueue}\tLooping: ${queue.repeatMode != 0 ? 'On' : 'Off'}\tAutoPlay: ${queue.autoplay ? 'On' : 'Off'}\tTotal Duration: ${new Date(totalDuration * 1000).toISOString().slice(11, 19)}`});
         interaction.reply({embeds: [embed]});
 	},
 };
