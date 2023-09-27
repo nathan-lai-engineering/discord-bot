@@ -53,8 +53,9 @@ firebase.initializeApp({
 });
 
 console.log("Database intialized.");
-const db = firebase.firestore();
-db.collection('global').get().then((document) => {
+client.db = firebase.firestore();
+
+client.db.collection('global').get().then((document) => {
   const docs = document.docs;
   let auth = docs[0].data()['discord']
   let debugMode = docs[1].data()['debugMode'];
