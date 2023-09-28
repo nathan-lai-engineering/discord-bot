@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const {logDebug} = require('../utils/log');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -89,8 +90,7 @@ module.exports = {
     async playOutro(client, member, guild){
         const distube = client.distube;
         client.db.collection('users').doc(member.id).get().then(snapshot => {
-            if(client.debugMode)
-                console.log('[%s] Outro data acquired from Firestore', Date.now());
+            logDebug(client, 'Outro data acquired from Firestore');
             
             let outroData = snapshot.data().outro;
 
@@ -105,7 +105,7 @@ module.exports = {
             }
             else {
                 playSongPriority(outroData.url, member, distube);
-                delayedSkip(outroData, distube, guild);
+                delayedSkip(outroData, client, guild);
             }
 
             return 'Successful';
@@ -123,21 +123,21 @@ function playSongPriority(url, member, distube){
     }); 
 };
 
-function delayedSkip(outroData, distube, guild){
-    
-
-    distube.addSongFunctions.push(
+function delayedSkip(outroData, client, guild){
+    logDebug(client, 'Queueing delayed skip');
+    client.distube.addSongFunctions.push(
         function(){setTimeout(()=>{
-            const currentQueue = distube.queues.get(guild);
-            console.log(currentQueue);
+            logDebug(client, 'Executing delayed skip');
+            const currentQueue = client.distube.queues.get(guild);
+            //console.log(currentQueue);
             if(currentQueue != undefined){
                 if(currentQueue.songs.length <= 1)
-                    distube.clear(guild);
+                    client.distube.stop(guild);
                 else
-                    distube.skip(guild);
+                    client.distube.skip(guild);
             }
             else{
-                console.log("ERROR: no queue?");
+                logDebug(client, 'Error on delayedSkip, no queue');
             }
         }, 
             outroData.duration * 1000)});
