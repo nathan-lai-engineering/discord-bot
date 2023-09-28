@@ -31,7 +31,7 @@ module.exports = {
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
             case 'play':
-                this.playOutro(interaction);
+                this.playOutro(interaction.client, interaction.member, interaction.guild);
                 interaction.reply({content: 'Your outro is playing, gg gn', ephemeral: true});
                 break;
 
@@ -86,55 +86,59 @@ module.exports = {
         }
 	},
 
-    async playOutro(interaction){
-        const distube = interaction.client.distube;
-        interaction.client.db.collection('users').doc(interaction.user.id).get().then(snapshot => {
+    async playOutro(client, member, guild){
+        const distube = client.distube;
+        client.db.collection('users').doc(member.id).get().then(snapshot => {
+            if(client.debugMode)
+                console.log('[%s] Outro data acquired from Firestore', Date.now());
+            
             let outroData = snapshot.data().outro;
 
             if(outroData == null || outroData.url == null || outroData.start == null || outroData.duration == null){
-                interaction.reply({content:'You do not have an outro set up my guy', ephemeral: true});
-                return;
+                return 'You do not have an outro set up my guy';
             }
 
-            let currentQueue = distube.queues.get(interaction.guild);
+            let currentQueue = distube.queues.get(guild);
 
             if(currentQueue != null && currentQueue.playing){
          
             }
             else {
-                playSongPriority(outroData.url, interaction);
-                delayedSkip(outroData, interaction);
+                playSongPriority(outroData.url, member, distube);
+                delayedSkip(outroData, distube, guild);
             }
 
+            return 'Successful';
         });
     }
 };
 
-function playSongPriority(url, interaction){
-    if(!interaction.member.voice.channel){
-        if(interaction.client.debugMode)
-            console.log("User not in a voice channel!");
-        interaction.reply("Shouldn't you be in a voice channel?");
+function playSongPriority(url, member, distube){
+    if(!member.voice.channel){
         return;
     }
 
-    interaction.client.distube.play(interaction.member.voice.channel, url, {
-        member: interaction.member,
-        textChannel: interaction.channel,
+    distube.play(member.voice.channel, url, {
         position: 1
     }); 
 };
 
-function delayedSkip(outroData, interaction){
-    const distube = interaction.client.distube;
-    const currentQueue = distube.queues.get(interaction.guild);
+function delayedSkip(outroData, distube, guild){
+    
 
     distube.addSongFunctions.push(
         function(){setTimeout(()=>{
-            if(currentQueue != null && currentQueue.songs.length == 1)
-                distube.clear(interaction.guild);
-            else
-                distube.skip(interaction.guild);
+            const currentQueue = distube.queues.get(guild);
+            console.log(currentQueue);
+            if(currentQueue != undefined){
+                if(currentQueue.songs.length <= 1)
+                    distube.clear(guild);
+                else
+                    distube.skip(guild);
+            }
+            else{
+                console.log("ERROR: no queue?");
+            }
         }, 
             outroData.duration * 1000)});
 }

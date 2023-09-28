@@ -5,7 +5,8 @@ const {playOutro} = require('./commands/outro.js');
 function createEvent(client, event, eventText){
     client.distube.on(event, (queue, song) => {
         replyMessage = eventText + String(song.name);
-        queue.textChannel.send(replyMessage);
+        if(queue.textChannel != undefined)
+            queue.textChannel.send(replyMessage);
         if(client.debugMode)
           console.log(replyMessage);
     });
@@ -14,7 +15,8 @@ function createEvent(client, event, eventText){
 function createPlaySongEvent(client){
     client.distube.on("playSong", (queue, song) => {
         replyMessage = "NOW PLAYING: " + String(song.name);
-        queue.textChannel.send(replyMessage);
+        if(queue.textChannel != undefined)
+            queue.textChannel.send(replyMessage);
         if(client.debugMode)
           console.log(replyMessage);
         if(client.distube.addSongFunctions.length > 0){
@@ -35,9 +37,17 @@ exports.load = (client, disConfig) => {
     createEvent(client, "searchNoResult", "COULD NOT FIND SONG: ");
 
     client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
-        let guildid = oldState.guild.id;
-        if(client.voice.adapters.guildid.channelId == oldState.channelId && oldState.channelId != newState.channelId){
-            playOutro();
+        const member = oldState.member;
+        const guild = oldState.guild;
+       
+        if(oldState.channel != undefined
+            && oldState.channel.members.has(client.user.id)
+            && oldState.channelId != newState.channelId){
+            
+            if(client.debugMode)
+                console.log('Playing outro for ', member.user.username);
+            playOutro(client, member, guild);
         }
+        
     });
 }
