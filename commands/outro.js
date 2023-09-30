@@ -105,7 +105,8 @@ module.exports = {
             }
             else {
                 playSongPriority(outroData.url, channel, distube);
-                delayedSkip(outroData, client, guild);
+                logDebug(client, client.distube.queues);
+                delayedSkipGradual(outroData, client, guild);
             }
 
             return true;
@@ -136,4 +137,40 @@ function delayedSkip(outroData, client, guild){
             }
         }, 
             outroData.duration * 1000)});
+}
+
+function delayedSkipGradual(outroData, client, guild){
+    logDebug(client, 'Queueing delayed skip');
+    client.distube.addSongFunctions.push(
+        function(){setTimeout(()=>{
+            logDebug(client, 'Executing delayedSkipGradual');
+
+            let volume = 50;
+            let interval = (outroData.duration + 4) / 400; // the gradual lower volume will be little more than 1/4 of total duration
+            delayedSkipGradualHelper(client, guild, interval, volume);
+
+        }, 
+            outroData.duration * 1000)});
+}
+
+function delayedSkipGradualHelper(client, guild, interval, volume){
+    if(volume > 0){
+        setTimeout(() => {
+            client.distube.setVolume(guild, volume);
+            delayedSkipGradualHelper(client, guild, interval, volume - 1)
+        },
+            interval * 1000);
+    }
+    else {
+        const currentQueue = client.distube.queues.get(guild);
+        if(currentQueue != undefined){
+            if(currentQueue.songs.length <= 1)
+                client.distube.stop(guild);
+            else
+                client.distube.skip(guild);
+        }
+        else{
+            logDebug(client, 'Error on delayedSkipGradual, no queue');
+        }
+    }
 }
