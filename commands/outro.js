@@ -24,7 +24,7 @@ module.exports = {
                 .addNumberOption(option => 
                     option
                         .setName('duration')
-                        .setDescription('integer, the seconds you want music to last, max of 20')))
+                        .setDescription('integer, the seconds you want music to last, max of 15')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('toggle')
@@ -41,14 +41,16 @@ module.exports = {
                 let url = interaction.options.getString('url');
                 let start = interaction.options.getNumber('start');
                 if(start < 0){
+                    logDebug(client, interaction.member + ' failed /outro set parameters');
                     interaction.reply({content: 'Start is atleast 0 seconds...', ephemeral: true});
                     return;
                 }
 
 
                 let duration = interaction.options.getNumber('duration');
-                if(duration <= 0 || duration > 20){
-                    interaction.reply({content: 'Duration is atleast 0 seconds and at most 20 seconds', ephemeral: true});
+                if(duration <= 0 || duration > 15){
+                    logDebug(client, interaction.member + ' failed /outro set parameters');
+                    interaction.reply({content: 'Duration is atleast 0 seconds and at most 15 seconds', ephemeral: true});
                     return;
                 }
 
@@ -104,7 +106,7 @@ module.exports = {
          
             }
             else {
-                playSongPriority(outroData.url, channel, distube);
+                playSongPriority(outroData.url, channel, client, outroData);
                 delayedSkipGradual(outroData, client, guild);
             }
 
@@ -113,42 +115,34 @@ module.exports = {
     }
 };
 
-function playSongPriority(url, channel, distube){
-    distube.play(channel, url, {
+function playSongPriority(url, channel, client, outroData){
+    client.distube.eventFunctionsQueue['playSong'].push(
+        function(){
+            logDebug(client, 'Seeking to ' + outroData.start + 's');
+            client.distube.seek(channel.guild, outroData.start);
+            return true; //continue to next in queue
+        }
+    );
+    client.distube.play(channel, url, {
         position: 1
-    }); 
+    });
 };
-
-function delayedSkip(outroData, client, guild){
-    logDebug(client, 'Queueing delayed skip');
-    client.distube.addSongFunctions.push(
-        function(){setTimeout(()=>{
-            logDebug(client, 'Executing delayed skip');
-            const currentQueue = client.distube.queues.get(guild);
-            if(currentQueue != undefined){
-                if(currentQueue.songs.length <= 1)
-                    client.distube.stop(guild);
-                else
-                    client.distube.skip(guild);
-            }
-            else{
-                logDebug(client, 'Error on delayedSkip, no queue');
-            }
-        }, 
-            outroData.duration * 1000)});
-}
 
 function delayedSkipGradual(outroData, client, guild){
     logDebug(client, 'Queueing delayed skip');
     client.distube.eventFunctionsQueue['playSong'].push(
-        function(){setTimeout(()=>{
-            logDebug(client, 'Executing delayedSkipGradual');
+        function(){
+            setTimeout(()=>{
+                logDebug(client, 'Executing delayedSkipGradual');
 
-            let volume = 50;
-            let interval = (outroData.duration + 4) / 400; // the gradual lower volume will be little more than 1/4 of total duration
-            delayedSkipGradualHelper(client, guild, interval, volume);
-        }, 
-            outroData.duration * 1000)});
+                let volume = 50;
+                let interval = (outroData.duration + 4) / 400; // the gradual lower volume will be little more than 1/4 of total duration
+                delayedSkipGradualHelper(client, guild, interval, volume);
+            }, 
+                outroData.duration * 1000);
+            return false; // end of list of actions
+        }
+    );
 }
 
 function delayedSkipGradualHelper(client, guild, interval, volume){
