@@ -74,7 +74,7 @@ module.exports = {
                         toggle = !toggle;
                         docRef.update({'outro.toggle': toggle}).then(result => {
                             let message = 'Outro ';
-                            message += toggle ? 'disabled.' : 'enabled.';
+                            message += toggle ? 'enabled.' : 'disabled.';
                             interaction.reply({content: message, ephemeral: true})
                         });
                     }
