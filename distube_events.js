@@ -43,7 +43,7 @@ exports.load = (client, disConfig) => {
             && oldState.channel.members.has(client.user.id)
             && oldState.channelId != newState.channelId){
             logDebug(client, 'Playing disconnect outro for ' + member.user.username);
-            playOutro(client, member, guild);
+            playOutro(client, member, guild, oldState.channel);
         }
         
     });

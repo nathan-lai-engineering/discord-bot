@@ -32,7 +32,7 @@ module.exports = {
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
             case 'play':
-                this.playOutro(interaction.client, interaction.member, interaction.guild);
+                this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel);
                 interaction.reply({content: 'Your outro is playing, gg gn', ephemeral: true});
                 break;
 
@@ -87,7 +87,7 @@ module.exports = {
         }
 	},
 
-    async playOutro(client, member, guild){
+    async playOutro(client, member, guild, channel){
         const distube = client.distube;
         client.db.collection('users').doc(member.id).get().then(snapshot => {
             logDebug(client, 'Outro data acquired from Firestore');
@@ -104,7 +104,7 @@ module.exports = {
          
             }
             else {
-                playSongPriority(outroData.url, member, distube);
+                playSongPriority(outroData.url, channel, distube);
                 delayedSkip(outroData, client, guild);
             }
 
@@ -113,12 +113,8 @@ module.exports = {
     }
 };
 
-function playSongPriority(url, member, distube){
-    if(!member.voice.channel){
-        return;
-    }
-
-    distube.play(member.voice.channel, url, {
+function playSongPriority(url, channel, distube){
+    distube.play(channel, url, {
         position: 1
     }); 
 };
@@ -129,7 +125,6 @@ function delayedSkip(outroData, client, guild){
         function(){setTimeout(()=>{
             logDebug(client, 'Executing delayed skip');
             const currentQueue = client.distube.queues.get(guild);
-            //console.log(currentQueue);
             if(currentQueue != undefined){
                 if(currentQueue.songs.length <= 1)
                     client.distube.stop(guild);
