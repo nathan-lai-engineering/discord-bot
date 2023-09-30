@@ -3,12 +3,28 @@ const Discord = require("discord.js");
 const {playOutro} = require('./commands/outro.js');
 const {logDebug} = require('./utils/log.js');
 
+/*
 function createEvent(client, event, eventText){
     client.distube.on(event, (queue, song) => {
         replyMessage = eventText + String(song.name);
         if(queue.textChannel != undefined)
             queue.textChannel.send(replyMessage);
         logDebug(client, replyMessage);
+    });
+}
+*/
+
+function createEvent(client, event, eventText){
+    client.distube.eventFunctionsQueue[event] = [];
+
+    client.distube.on(event, (queue, song) => {
+        replyMessage = eventText + String(song.name);
+        if(queue.textChannel != undefined)
+            queue.textChannel.send(replyMessage);
+        logDebug(client, replyMessage);
+        if(client.distube.eventFunctionsQueue[event].length > 0){
+            client.distube.eventFunctionsQueue[event].pop()();
+        };
     });
 }
 
@@ -28,11 +44,12 @@ exports.load = (client, disConfig) => {
     logDebug(client, 'Loading Distube module');
     client.distube = new DisTube(client, disConfig);
     client.enabledModules.push("distube");
-    client.distube.addSongFunctions = [];
+    //client.distube.addSongFunctions = [];
+    client.distube.eventFunctionsQueue = {};
 
-    createPlaySongEvent(client);
+    //createPlaySongEvent(client);
     createEvent(client, "addSong", "ADDED SONG TO QUEUE: ");
-    //createEvent(client, "playSong", "NOW PLAYING: ");
+    createEvent(client, "playSong", "NOW PLAYING: ");
     createEvent(client, "searchNoResult", "COULD NOT FIND SONG: ");
 
     client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {

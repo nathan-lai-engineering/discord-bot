@@ -105,7 +105,6 @@ module.exports = {
             }
             else {
                 playSongPriority(outroData.url, channel, distube);
-                logDebug(client, client.distube.queues);
                 delayedSkipGradual(outroData, client, guild);
             }
 
@@ -141,14 +140,13 @@ function delayedSkip(outroData, client, guild){
 
 function delayedSkipGradual(outroData, client, guild){
     logDebug(client, 'Queueing delayed skip');
-    client.distube.addSongFunctions.push(
+    client.distube.eventFunctionsQueue['playSong'].push(
         function(){setTimeout(()=>{
             logDebug(client, 'Executing delayedSkipGradual');
 
             let volume = 50;
             let interval = (outroData.duration + 4) / 400; // the gradual lower volume will be little more than 1/4 of total duration
             delayedSkipGradualHelper(client, guild, interval, volume);
-
         }, 
             outroData.duration * 1000)});
 }
