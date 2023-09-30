@@ -3,16 +3,25 @@ const Discord = require("discord.js");
 const {playOutro} = require('./commands/outro.js');
 const {logDebug} = require('./utils/log.js');
 
+/**
+ * Creates a debug logger for an event and sets up a queue for functions to trigger on event
+ * @param {*} client 
+ * @param {*} event 
+ * @param {*} eventText 
+ */
 function createEvent(client, event, eventText){
     client.distube.eventFunctionsQueue[event] = [];
 
     client.distube.on(event, (queue, song) => {
+        // logging
         replyMessage = eventText + String(song.name);
         if(queue.textChannel != undefined)
             queue.textChannel.send(replyMessage);
         logDebug(client, replyMessage);
-        continueFunction = true;
 
+
+        // event queue handler
+        continueFunction = true;
         while(client.distube.eventFunctionsQueue[event].length > 0 && continueFunction){
             logDebug(client, event + ' queue length: ' + client.distube.eventFunctionsQueue[event].length);
             continueFunction = client.distube.eventFunctionsQueue[event].shift()();

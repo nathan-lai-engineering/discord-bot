@@ -1,4 +1,8 @@
 module.exports = {
+    /**
+     * Get a human readable time at the current time
+     * @returns 
+     */
     humanTimeNow(){
         let date = new Date();
         const format = {

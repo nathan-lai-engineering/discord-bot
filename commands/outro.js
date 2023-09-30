@@ -31,12 +31,20 @@ module.exports = {
                 .setDescription('toggles your outro')),
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
+            /**
+             * Play the outro
+             */
             case 'play':
                 this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel) ? 
                     interaction.reply({content:'Your outro is playing, gg gn', ephemeral: true}) : interaction.reply({content:'Your outro is off or you do not have one set up', ephemeral: true});
                 break;
 
-
+            /**
+             * Sets the outro
+             * @param url
+             * @param start
+             * @param duration
+             */
             case 'set':
                 let url = interaction.options.getString('url');
                 let start = interaction.options.getNumber('start');
@@ -65,7 +73,9 @@ module.exports = {
                     .then(interaction.reply({content:'Successfully saved.', ephemeral: true}));
                 break;
 
-
+            /**
+             * Toggles whether the outro is played or not
+             */
             case 'toggle':
                 let docRef = interaction.client.db.collection('users').doc(interaction.user.id);
                 docRef.get().then(snapshot => {
@@ -89,6 +99,13 @@ module.exports = {
         }
 	},
 
+    /**
+     * Plays the outro if it is toggled and there is no current song playing
+     * @param {*} client 
+     * @param {*} member 
+     * @param {*} guild 
+     * @param {*} channel 
+     */
     async playOutro(client, member, guild, channel){
         const distube = client.distube;
         client.db.collection('users').doc(member.id).get().then(snapshot => {
@@ -115,6 +132,13 @@ module.exports = {
     }
 };
 
+/**
+ * Plays a song at a certain point, skipping the queue
+ * @param {*} url 
+ * @param {*} channel 
+ * @param {*} client 
+ * @param {*} outroData 
+ */
 function playSongPriority(url, channel, client, outroData){
     client.distube.eventFunctionsQueue['playSong'].push(
         function(){
@@ -128,6 +152,12 @@ function playSongPriority(url, channel, client, outroData){
     });
 };
 
+/**
+ * After a duration, lowers the volume gradually until silence
+ * @param {*} outroData 
+ * @param {*} client 
+ * @param {*} guild 
+ */
 function delayedSkipGradual(outroData, client, guild){
     logDebug(client, 'Queueing delayed skip');
     client.distube.eventFunctionsQueue['playSong'].push(
@@ -145,6 +175,13 @@ function delayedSkipGradual(outroData, client, guild){
     );
 }
 
+/**
+ * Recursive helper function to lower volume
+ * @param {*} client 
+ * @param {*} guild 
+ * @param {*} interval 
+ * @param {*} volume 
+ */
 function delayedSkipGradualHelper(client, guild, interval, volume){
     if(volume > 0){
         setTimeout(() => {
