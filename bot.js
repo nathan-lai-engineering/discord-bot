@@ -12,7 +12,7 @@ const Discord = require("discord.js");
 const firebase = require("firebase-admin");
 
 const FIREBASE_AUTH = require("./firebase.json");
-const { getDefaultHighWaterMark } = require("stream");
+const {log, logDebug} = require('./utils/log');
 
 // =============================================================
 // CLIENT INITIALIZATION
@@ -95,6 +95,7 @@ client.db.collection('global').get().then((document) => {
     }
   
     try {
+      logDebug(client, 'EXECUTING COMMAND: ' + interaction.user.username + " => " + interaction.commandName);
       await command.execute(interaction);
     } catch (error) {
       console.error(error);

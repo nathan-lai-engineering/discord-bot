@@ -185,8 +185,10 @@ function delayedSkipGradual(outroData, client, guild){
 function delayedSkipGradualHelper(client, guild, interval, volume){
     if(volume > 0){
         setTimeout(() => {
-            client.distube.setVolume(guild, volume);
-            delayedSkipGradualHelper(client, guild, interval, volume - 1)
+            if(client.distube.getQueue(guild.id) != undefined){
+                client.distube.setVolume(guild, volume);
+                delayedSkipGradualHelper(client, guild, interval, volume - 1)
+            }
         },
             interval * 1000);
     }
