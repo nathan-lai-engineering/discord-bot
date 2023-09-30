@@ -6,12 +6,7 @@ module.exports = {
 		.setName('join')
 		.setDescription('joins current vc'),
 	async execute(interaction) {
-        let vc = interaction.member.voice.channel;
-        joinVoiceChannel({
-            channelId: vc.id,
-            guildId: vc.guild.id,
-            adapterCreator: vc.guild.voiceAdapterCreator,
-        });
+        interaction.client.distube.voices.join(interaction.member.voice.channel);
         interaction.reply({content:'Joined the channel!', ephemeral: true});
 	},
 };
