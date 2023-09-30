@@ -20,11 +20,11 @@ module.exports = {
                 .addNumberOption(option => 
                     option
                         .setName('start')
-                        .setDescription('start time in seconds'))
+                        .setDescription('integer, the seconds when you want to start video from'))
                 .addNumberOption(option => 
                     option
                         .setName('duration')
-                        .setDescription('max 20')))
+                        .setDescription('integer, the seconds you want music to last, max of 20')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('toggle')
@@ -32,8 +32,8 @@ module.exports = {
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
             case 'play':
-                this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel);
-                interaction.reply({content: 'Your outro is playing, gg gn', ephemeral: true});
+                this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel) ? 
+                    interaction.reply({content:'Your outro is playing, gg gn', ephemeral: true}) : interaction.reply({content:'Your outro is off or you do not have one set up', ephemeral: true});
                 break;
 
 
@@ -90,12 +90,12 @@ module.exports = {
     async playOutro(client, member, guild, channel){
         const distube = client.distube;
         client.db.collection('users').doc(member.id).get().then(snapshot => {
-            logDebug(client, 'Outro data acquired from Firestore');
-            
             let outroData = snapshot.data().outro;
+            logDebug(client, 'Outro data acquired from Firestore');
 
-            if(outroData == null || outroData.url == null || outroData.start == null || outroData.duration == null){
-                return 'You do not have an outro set up my guy';
+            if(outroData == null || outroData.url == null || outroData.start == null || outroData.duration == null || !outroData.toggle){
+                logDebug(client, 'Outro play denied');
+                return false;
             }
 
             let currentQueue = distube.queues.get(guild);
@@ -108,7 +108,7 @@ module.exports = {
                 delayedSkip(outroData, client, guild);
             }
 
-            return 'Successful';
+            return true;
         });
     }
 };
