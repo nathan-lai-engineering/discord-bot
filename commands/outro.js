@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const {logDebug} = require('../utils/log');
 
+let maxDuration = 10;
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('outro')
@@ -24,7 +26,7 @@ module.exports = {
                 .addNumberOption(option => 
                     option
                         .setName('duration')
-                        .setDescription('integer, the seconds you want music to last, max of 15')))
+                        .setDescription(`integer, the seconds you want music to last, max of ${maxDuration}`)))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('toggle')
@@ -56,9 +58,9 @@ module.exports = {
 
 
                 let duration = interaction.options.getNumber('duration');
-                if(duration <= 0 || duration > 15){
+                if(duration <= 0 || duration > maxDuration){
                     logDebug(interaction.client, interaction.member + ' failed /outro set parameters');
-                    interaction.reply({content: 'Duration is atleast 0 seconds and at most 15 seconds, try again.', ephemeral: true});
+                    interaction.reply({content: `Duration is atleast 0 seconds and at most ${maxDuration} seconds, try again.`, ephemeral: true});
                     return;
                 }
 
@@ -111,7 +113,7 @@ module.exports = {
         client.db.collection('users').doc(member.id).get().then(snapshot => {
             
             logDebug(client, 'Outro data acquired from Firestore');
-            if(!('outro' in snapshot.data())){
+            if(!snapshot && !snapshot.data() && !('outro' in snapshot.data())){
                 return false;
             }
 
@@ -205,10 +207,7 @@ function delayedSkipGradualHelper(client, guild, interval, volume){
     else {
         const currentQueue = client.distube.queues.get(guild);
         if(currentQueue != undefined){
-            if(currentQueue.songs.length <= 1)
-                client.distube.stop(guild);
-            else
-                client.distube.skip(guild);
+            client.distube.stop(guild);
         }
         else{
             logDebug(client, 'Error on delayedSkipGradual, no queue');

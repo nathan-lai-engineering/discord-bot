@@ -65,10 +65,7 @@ client.db.collection('global').get().then((document) => {
   client.enabledModules = [];
 
   console.log("Global config loaded.");
-  if(client.debugMode) {
-    console.log('Auth:', auth);
-    console.log('Distube config:', distubeConfig);
-  }
+  logDebug(client, 'Auth: ' + auth);
 
   // DISTUBE MODULE
   const distubeEvents = require("./distube_events.js");
@@ -109,55 +106,3 @@ client.db.collection('global').get().then((document) => {
     console.log(error);
   }
 });
-
-/*
-// LOAD GLOBAL VARIABLES FROM DATABASE
-firebase.database().ref('global').once('value').then((snapshot) => {
-  let global = snapshot.val();
-  client.debugMode = global.config.debugMode;
-  client.trigger = global.config.trigger;
-  client.enabledModules = [];
-  console.log("Global config loaded.");
-  if(client.debugMode) {
-    console.log("Global config:\n", global.config);
-  }
-
-  // DISTUBE MODULE
-  const distubeEvents = require("./distube_events.js");
-  distubeEvents.load(client, global.config.distube);
-
-  // READY
-  client.on("ready", () => {
-    console.log("Bot connected!");
-    client.user.setPresence({
-      activities: [{name: 'Doing a little trolling'}],
-      status: 'online'
-    });
-  });
-  
-  // COMMAND HANDLER
-  client.on(Discord.Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-  
-    const command = interaction.client.commands.get(interaction.commandName);
-  
-    if (!command) {
-      console.error(`No command matching ${interaction.commandName} was found.`);
-      return;
-    }
-  
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-    }
-  });
-
-  // BOT LOGIN
-  try {
-    client.login(global.auth);
-  } catch (error) {
-    console.log(error);
-  }
-});
-*/
