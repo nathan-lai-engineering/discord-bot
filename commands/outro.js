@@ -57,8 +57,8 @@ module.exports = {
 
                 let duration = interaction.options.getNumber('duration');
                 if(duration <= 0 || duration > 15){
-                    logDebug(client, interaction.member + ' failed /outro set parameters');
-                    interaction.reply({content: 'Duration is atleast 0 seconds and at most 15 seconds', ephemeral: true});
+                    logDebug(interaction.client, interaction.member + ' failed /outro set parameters');
+                    interaction.reply({content: 'Duration is atleast 0 seconds and at most 15 seconds, try again.', ephemeral: true});
                     return;
                 }
 
@@ -109,13 +109,23 @@ module.exports = {
     async playOutro(client, member, guild, channel){
         const distube = client.distube;
         client.db.collection('users').doc(member.id).get().then(snapshot => {
-            let outroData = snapshot.data().outro;
+            
             logDebug(client, 'Outro data acquired from Firestore');
+            if(!('outro' in snapshot.data())){
+                return false;
+            }
 
-            if(outroData == null || outroData.url == null || outroData.start == null || outroData.duration == null || !outroData.toggle){
+            let outroData = snapshot.data().outro;
+
+            if( outroData == null ||  
+                outroData.url == null ||  
+                outroData.start == null ||  
+                outroData.duration == null || ! 
+                outroData.toggle){
                 logDebug(client, 'Outro play denied');
                 return false;
             }
+            
 
             let currentQueue = distube.queues.get(guild);
 
