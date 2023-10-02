@@ -26,7 +26,7 @@ module.exports = {
                 .addNumberOption(option => 
                     option
                         .setName('duration')
-                        .setDescription(`integer, the seconds you want music to last, max of ${maxDuration}`)))
+                        .setDescription(`decimal, the seconds you want music to last, max of ${maxDuration}`)))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('toggle')
@@ -178,7 +178,7 @@ function delayedSkipGradual(outroData, client, guild){
                 logDebug(client, 'Executing delayedSkipGradual');
 
                 let volume = 50;
-                let interval = (outroData.duration + 4) / 400; // the gradual lower volume will be little more than 1/4 of total duration
+                let interval = (outroData.duration + 4) / 200; // the gradual lower volume will be little more than 1/4 of total duration
                 delayedSkipGradualHelper(client, guild, interval, volume);
             }, 
                 outroData.duration * 1000);
