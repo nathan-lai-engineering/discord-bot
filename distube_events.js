@@ -69,11 +69,13 @@ function leaveOnEmpty(oldState){
 }
 
 function channelEmpty(channel){
+    //let empty = true;
     let empty = true;
-    for(let member in channel.members){
-        if(!member.bot)
+    channel.members.every(member => {
+        if(!member.user.bot){
             empty = false;
-    }
+        }
+    });
     return empty;
 }
 
