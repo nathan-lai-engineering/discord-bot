@@ -36,20 +36,21 @@ exports.load = (client, disConfig) => {
     client.distube = new DisTube(client, disConfig);
     client.enabledModules.push("distube");
     client.distube.eventFunctionsQueue = {};
+    client.distube.lastJoined = Date.now();
 
     createEvent(client, "addSong", "ADDED SONG TO QUEUE: ");
     createEvent(client, "playSong", "NOW PLAYING: ");
     createEvent(client, "searchNoResult", "COULD NOT FIND SONG: ");
 
     client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
-        if(oldState.channel != undefined){
-            leaveOnEmpty(client, oldState);
-            joinOnUnjoined(client, oldState);
+        if(!oldState.member.user.bot){
+            leaveOnEmpty(oldState);
+            joinOnUnjoined(newState);
     
             const member = oldState.member;
             const guild = oldState.guild;
-
-            if(oldState.channel.members.has(client.user.id) && oldState.channelId != newState.channelId && !channelEmpty(oldState.channel)){
+    
+            if(oldState.channel != undefined && oldState.channel.members.has(client.user.id) && oldState.channelId != newState.channelId && !channelEmpty(oldState.channel)){
                 logDebug(client, 'Playing disconnect outro for ' + member.user.username);
                 playOutro(client, member, guild, oldState.channel);
             }
@@ -57,8 +58,10 @@ exports.load = (client, disConfig) => {
     });
 }
 
-function leaveOnEmpty(client, oldState){
-    if(channelEmpty(oldState.channel)){
+function leaveOnEmpty(oldState){
+    let client = oldState.client;
+    if(oldState.channel != null && channelEmpty(oldState.channel)){
+        logDebug(client, "Left on empty " + oldState.channel.id);
         let voice = client.distube.voices.get(oldState.guild.id)
         if(voice != undefined)
             voice.leave();
@@ -74,6 +77,15 @@ function channelEmpty(channel){
     return empty;
 }
 
-function joinOnUnjoined(oldState){
-
+function joinOnUnjoined(newState){
+    let client = newState.client;
+    if(Date.now() - client.distube.lastJoined > 100){
+        if(newState.channel != null){
+            logDebug(client, "Join followed " + newState.channel.id);
+            let voice = client.distube.voices.get(newState.guild)
+            if(voice == undefined || voice == null)
+                client.distube.voices.join(newState.channel);
+        }
+    }
+    client.distube.lastJoined = Date.now();
 }
