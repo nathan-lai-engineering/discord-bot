@@ -42,15 +42,38 @@ exports.load = (client, disConfig) => {
     createEvent(client, "searchNoResult", "COULD NOT FIND SONG: ");
 
     client.on(Discord.Events.VoiceStateUpdate, (oldState, newState) => {
-        const member = oldState.member;
-        const guild = oldState.guild;
-       
-        if(oldState.channel != undefined
-            && oldState.channel.members.has(client.user.id)
-            && oldState.channelId != newState.channelId){
-            logDebug(client, 'Playing disconnect outro for ' + member.user.username);
-            playOutro(client, member, guild, oldState.channel);
+        if(oldState.channel != undefined){
+            leaveOnEmpty(client, oldState);
+            joinOnUnjoined(client, oldState);
+    
+            const member = oldState.member;
+            const guild = oldState.guild;
+
+            if(oldState.channel.members.has(client.user.id) && oldState.channelId != newState.channelId && !channelEmpty(oldState.channel)){
+                logDebug(client, 'Playing disconnect outro for ' + member.user.username);
+                playOutro(client, member, guild, oldState.channel);
+            }
         }
-        
     });
+}
+
+function leaveOnEmpty(client, oldState){
+    if(channelEmpty(oldState.channel)){
+        let voice = client.distube.voices.get(oldState.guild.id)
+        if(voice != undefined)
+            voice.leave();
+    }
+}
+
+function channelEmpty(channel){
+    let empty = true;
+    for(let member in channel.members){
+        if(!member.bot)
+            empty = false;
+    }
+    return empty;
+}
+
+function joinOnUnjoined(oldState){
+
 }
