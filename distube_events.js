@@ -50,7 +50,8 @@ exports.load = (client, disConfig) => {
             const member = oldState.member;
             const guild = oldState.guild;
     
-            if(oldState.channel != undefined && oldState.channel.members.has(client.user.id) && !channelEmpty(oldState.channel)){
+            if(oldState.channel != undefined && oldState.channel.members.has(client.user.id) && !channelEmpty(oldState.channel) && 
+            (client.distube.getQueue(oldState.guild) == undefined || client.distube.getQueue(oldState.guild).songs.length <= 0)){
                 logDebug(client, 'Playing disconnect outro for ' + member.user.username);
                 playOutro(client, member, guild, oldState.channel);
             }
