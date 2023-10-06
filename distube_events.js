@@ -70,14 +70,13 @@ function leaveOnEmpty(oldState){
 }
 
 function channelEmpty(channel){
-    //let empty = true;
-    let empty = true;
     channel.members.every(member => {
+        console.log(member);
         if(!member.user.bot){
-            empty = false;
+            return false;
         }
     });
-    return empty;
+    return true;
 }
 
 function joinOnUnjoined(newState){
