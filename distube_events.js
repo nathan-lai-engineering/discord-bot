@@ -72,14 +72,17 @@ function leaveOnEmpty(oldState){
 function channelEmpty(channel){
     console.log(channel.members);
     let empty = true;
+    let botPresent = false;
     channel.members.every(member => {
         console.log(member.user.username, member.user.bot);
         if(member.user.bot == false){
             empty = false;
             console.log('its false!');
         }
+        else
+            botPresent = true;
     });
-    return empty;
+    return (botPresent && empty);
 }
 
 function joinOnUnjoined(newState){
@@ -87,7 +90,8 @@ function joinOnUnjoined(newState){
     if(Date.now() - client.distube.lastJoined > 100){
         if(newState.channel != null){
             logDebug(client, "Join followed " + newState.channel.id);
-            let voice = client.distube.voices.get(newState.guild)
+            let voice = client.distube.voices.get(newState.guild.id)
+            console.log(voice);
             if(voice == undefined || voice == null)
                 client.distube.voices.join(newState.channel);
         }
