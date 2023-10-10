@@ -113,7 +113,7 @@ module.exports = {
         client.db.collection('users').doc(member.id).get().then(snapshot => {
             
             logDebug(client, 'Outro data acquired from Firestore');
-            if(!snapshot && !snapshot.data() && !(snapshot.data().hasOwnProperty('outro'))){
+            if(!snapshot || !snapshot.data() || !(snapshot.data().hasOwnProperty('outro'))){
                 return false;
             }
 
