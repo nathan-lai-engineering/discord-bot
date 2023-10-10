@@ -68,8 +68,8 @@ client.db.collection('global').get().then((document) => {
   logDebug(client, 'Auth: ' + auth);
 
   // DISTUBE MODULE
-  const distubeEvents = require("./distube_events.js");
-  distubeEvents.load(client, distubeConfig);
+  const distubeInitialize = require("./distube_initialize.js");
+  distubeInitialize.load(client, distubeConfig);
 
   // READY
   client.on("ready", () => {
