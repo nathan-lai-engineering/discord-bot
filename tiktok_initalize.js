@@ -10,11 +10,22 @@ exports.load = (client) => {
     client.enabledModules.push("tiktok_embed");
 
     function messageListener(message){
-        if(isTikTokLink(message.content)){
+        if(isTikTokLink(message)){
+            logDebug(client, 'TikTok link detected, working...');
             message.channel.send("Working...").then((toEdit) => {
                 try{
-                    
-                
+                    downloadTikTok(client, message.content).then(videoData => {
+                        if(videoData != null || videoData != undefined){
+                            let videoPath = videoData[0];
+                            let caption = videoData[1];
+                            let avatar = videoData[2];
+                            let posterName = videoData[3];
+        
+                            logDebug(client, videoData.toString());
+                        }
+                        toEdit.delete();
+                        message.delete();
+                    });
                 }
                 catch(error){
 
@@ -25,7 +36,6 @@ exports.load = (client) => {
 
     client.messageListeners.push(messageListener);
 }
-
 
 /**
  * Checks if the message has tiktok in it, and removes spaces
@@ -52,7 +62,7 @@ function isTikTokLink(message){
  * Largely adapted from https://github.com/dumax315/Tiktok-Auto-Embed/blob/main/main.py
  * @param {*} client 
  * @param {*} url 
- * @returns localPath to downloaded video, caption, thumbnail link, original poster name
+ * @returns localPath to downloaded video, caption, avatar link, original poster name
  */
 async function downloadTikTok(client, url){
     let localPath = './temp/tiktok.mp4';
@@ -62,7 +72,7 @@ async function downloadTikTok(client, url){
         logDebug(client, 'Beginning TikTok download process for URL: ' + url);
 
         browser = await Puppeteer.launch({
-            'headless': True,
+            'headless': true,
 			"args": ['--no-sandbox', '--disable-setuid-sandbox']
         });
 
@@ -72,32 +82,30 @@ async function downloadTikTok(client, url){
         logDebug(client, 'Page created, setting usage agent...');
         await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36');
 
-        logDebug(client, 'User agent set, going to url...');
-        await page.goto(url, {"waitUntil": 'load', "timeout": 1000000});
+        logDebug(client, 'User agent set');
 
-        // gets video url
+        // gets video url with 3 attempts
         let videoUrl = null;
+
+        async function acquireVideoUrl(page){
+            logDebug(client, 'Going to URL...')
+            await page.goto(url, {"waitUntil": 'load', "timeout": 1000000});
+            let videoUrl = await page.$eval('video', e => e.src);
+            logDebug(client, "Video URL acquired");
+            return videoUrl;
+        }
+
         try {
-            let element = await page.querySelector('video');
-            videoUrl = await page.evaluate('(element) => element.src', element);
+            videoUrl = await acquireVideoUrl(page);
         }
         catch(error) {
             logDebug(client, error);
             try{
-                logDebug(client, 'Going to url...');
-                await page.goto(url, {"waitUntil": 'load', "timeout": 1000000})
-				await page.waitForSelector('video')
-				let element = await page.querySelector('video')
-				videoUrl = await page.evaluate('(element) => element.src', element)
-                logDebug(client, "Video URL acquired");
+                videoUrl = await acquireVideoUrl(page);
             }
             catch(error2) {
                 logDebug(client, error2);
-                logDebug(client, 'Going to url...');
-                await page.goto(url, {"waitUntil": 'load', "timeout": 1000000})
-                let element = await page.querySelector('video')
-				videoUrl = await page.evaluate('(element) => element.src', element);
-                logDebug(client, "Video URL acquired");
+                videoUrl = await acquireVideoUrl(page);
             }
         }
 
@@ -105,19 +113,17 @@ async function downloadTikTok(client, url){
         let caption = "No caption";
         try {
             logDebug(client, 'Acquiring caption...');
-            let cap = await page.querySelector('.tiktok-1ejylhp-DivContainer.e11995xo0')
-			caption = await page.evaluate('(element) => element.innerText', cap)
+            caption = await page.$eval('.tiktok-1fbzdvh-H1Container.ejg0rhn1', e => e.innerText);
         }
         catch(error){
             logDebug(client, error);
         }
 
-        // gets thumbnail url
-        let thumbnail = "";
+        // gets avatar url
+        let avatar = "";
         try{
-            logDebug(client, 'Acquiring thumbnail...');
-            let imgobj = await page.querySelector('.tiktok-1zpj2q-ImgAvatar.e1e9er4e1')
-			thumbnail = await page.evaluate('(element) => element.src', imgobj)
+            logDebug(client, 'Acquiring avatar...');
+            avatar = await page.$eval('.tiktok-1zpj2q-ImgAvatar.e1e9er4e1', e => e.src);
         }
         catch(error){
             logDebug(client, error);
@@ -128,14 +134,16 @@ async function downloadTikTok(client, url){
         let posterName = "";
         try{
             logDebug(client, 'Acquiring poster username...');
-            let posternameObj = await page.querySelector('h3.tiktok-debnpy-H3AuthorTitle.e10yw27c0')
-			posterName = await page.evaluate('(element) => element.innerText', posternameObj)
+            posterName = await page.$eval('.tiktok-1c7urt-SpanUniqueId.evv7pft1', e => e.textContent);
         }
         catch(error){
             logDebug(client, error);
         }
 
         logDebug(client, 'Closing browser...');
+        logDebug(client, `Video URL : ${videoUrl}, Caption: ${caption}, Avatar: ${avatar}, Original Poster: ${posterName}`);
+        console.log(caption);
+        console.log(posterName);
         let cookies = await page.cookies()
         await browser.close()
         let chunk_size = 4096;
@@ -160,7 +168,7 @@ async function downloadTikTok(client, url){
             compressVideo(client, localPath);
             localPath = './temp/comp_tiktok.mp4'
         }
-        return [localPath, caption, thumbnail, posterName];
+        return [localPath, caption, avatar, posterName];
 
 
 
@@ -180,5 +188,5 @@ async function downloadTikTok(client, url){
 
 function compressVideo(client, localPath){
     logDebug(client, "Beginning compression");
-    
+
 }
