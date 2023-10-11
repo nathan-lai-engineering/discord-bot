@@ -17,24 +17,74 @@ exports.load = (client) => {
                     downloadTikTok(client, message.content).then(videoData => {
                         if(videoData != null || videoData != undefined){
                             let videoPath = videoData[0];
-                            let caption = videoData[1];
-                            let avatar = videoData[2];
-                            let posterName = videoData[3];
-        
-                            logDebug(client, videoData.toString());
+                            let embed = createTikTokEmbed(message, videoData);
+                            message.channel.send({
+                                embeds: [embed]
+                            })
+                            logDebug(client, 'TikTok Embed sent!');
                         }
                         toEdit.delete();
                         message.delete();
+                        logDebug(client, 'TikTok old messages deleted');
                     });
                 }
                 catch(error){
-
+                    logDebug(client, error);
                 }
             });
         }
     }
 
     client.messageListeners.push(messageListener);
+}
+
+function createTikTokEmbed(message, videoData){
+
+    let caption = videoData[1];
+    if(caption.length <= 1)
+        caption = " ";
+
+    let avatar = videoData[2];
+
+    let posterName = videoData[3];
+    if(posterName.length <= 1)
+        posterName = " ";
+
+    let embed = new Discord.EmbedBuilder()
+        .setURL(message.content)
+        .setDescription(message.content);
+        //.setColor(Discord.Color.Aqua);
+
+    // footer
+    try{
+        embed.setFooter({
+            text: 'Requested by: ' + message.author.username, 
+            iconURL: message.author.avatarURL()
+        });
+    }
+    catch(error){
+        logDebug(message.client, 'Failed setting footer for TikTok embed' + error);
+        console.log(error)
+    }
+
+    // video data
+    try{
+        embed.addFields([{
+            name: caption,
+            value:' ',
+            inline: true
+        }]);
+        embed.setAuthor({
+            name: posterName,
+            iconURL: avatar,
+            url:'https://www.tiktok.com/@' + posterName
+        });
+    }
+    catch(error){
+        logDebug(message.client, 'Failed setting videoData for TikTok embed' + error);
+        console.log(error)
+    }
+    return embed;
 }
 
 /**
@@ -73,6 +123,7 @@ async function downloadTikTok(client, url){
 
         browser = await Puppeteer.launch({
             'headless': true,
+            'slowMo': 100,
 			"args": ['--no-sandbox', '--disable-setuid-sandbox']
         });
 
@@ -88,7 +139,7 @@ async function downloadTikTok(client, url){
         let videoUrl = null;
 
         async function acquireVideoUrl(page){
-            logDebug(client, 'Going to URL...')
+            logDebug(client, 'Going to URL...' + url);
             await page.goto(url, {"waitUntil": 'load', "timeout": 1000000});
             let videoUrl = await page.$eval('video', e => e.src);
             logDebug(client, "Video URL acquired");
@@ -141,9 +192,6 @@ async function downloadTikTok(client, url){
         }
 
         logDebug(client, 'Closing browser...');
-        logDebug(client, `Video URL : ${videoUrl}, Caption: ${caption}, Avatar: ${avatar}, Original Poster: ${posterName}`);
-        console.log(caption);
-        console.log(posterName);
         let cookies = await page.cookies()
         await browser.close()
         let chunk_size = 4096;
@@ -162,11 +210,13 @@ async function downloadTikTok(client, url){
          * TO DO DOWNLOAD THE VIDEO
          */
 
-        let stats = fs.statSync(localPath);
-        if(stats.size >= 8388000){
-            logDebug(client, "File too big, compressing...");
-            compressVideo(client, localPath);
-            localPath = './temp/comp_tiktok.mp4'
+        if(fs.existsSync(localPath)){
+            let stats = fs.statSync(localPath);
+            if(stats.size >= 8388000){
+                logDebug(client, "File too big, compressing...");
+                compressVideo(client, localPath);
+                localPath = './temp/comp_tiktok.mp4'
+            }
         }
         return [localPath, caption, avatar, posterName];
 
