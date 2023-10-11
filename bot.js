@@ -63,6 +63,7 @@ client.db.collection('global').get().then((document) => {
 
   client.debugMode = debugMode;
   client.enabledModules = [];
+  client.messageListeners = [];
 
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + auth);
@@ -70,6 +71,12 @@ client.db.collection('global').get().then((document) => {
   // DISTUBE MODULE
   const distubeInitialize = require("./distube_initialize.js");
   distubeInitialize.load(client, distubeConfig);
+
+  // TikTok Embed MODULE
+  const tiktokInitalize = require("./tiktok_initalize.js");
+  tiktokInitalize.load(client);
+
+  logDebug(client, "Modules loaded: " + client.enabledModules.toString());
 
   // READY
   client.on("ready", () => {
@@ -82,20 +89,31 @@ client.db.collection('global').get().then((document) => {
 
   // COMMAND HANDLER
   client.on(Discord.Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-  
+    // read the message
+    if (!interaction.isChatInputCommand())
+      return;
+
+    
+    // check for existing command
     const command = interaction.client.commands.get(interaction.commandName);
-  
     if (!command) {
       console.error(`No command matching ${interaction.commandName} was found.`);
       return;
     }
   
+    // try executing command
     try {
       logDebug(client, 'EXECUTING COMMAND: ' + interaction.user.username + " => " + interaction.commandName);
       await command.execute(interaction);
     } catch (error) {
       console.error(error);
+    }
+  });
+
+  // MESSAGE CONTENT READER
+  client.on(Discord.Events.MessageCreate, async message => {  
+    for(listener in client.messageListeners){
+      listener(message);
     }
   });
 
