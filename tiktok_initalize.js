@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 const { default: puppeteer } = require('puppeteer');
 const Puppeteer = require('puppeteer');
 const Session = require('express-session');
-const fs = require('fs';)
+const fs = require('fs');
 
 exports.load = (client) => {
     logDebug(client, 'Loading TikTok Embed module');
@@ -52,14 +52,16 @@ function isTikTokLink(message){
  * Largely adapted from https://github.com/dumax315/Tiktok-Auto-Embed/blob/main/main.py
  * @param {*} client 
  * @param {*} url 
+ * @returns localPath to downloaded video, caption, thumbnail link, original poster name
  */
 async function downloadTikTok(client, url){
     let localPath = './temp/tiktok.mp4';
+    let browser = null;
 
     try{
         logDebug(client, 'Beginning TikTok download process for URL: ' + url);
 
-        let browser = await Puppeteer.launch({
+        browser = await Puppeteer.launch({
             'headless': True,
 			"args": ['--no-sandbox', '--disable-setuid-sandbox']
         });
@@ -152,13 +154,31 @@ async function downloadTikTok(client, url){
          * TO DO DOWNLOAD THE VIDEO
          */
 
-
-
+        let stats = fs.statSync(localPath);
+        if(stats.size >= 8388000){
+            logDebug(client, "File too big, compressing...");
+            compressVideo(client, localPath);
+            localPath = './temp/comp_tiktok.mp4'
+        }
+        return [localPath, caption, thumbnail, posterName];
 
 
 
     }
     catch(error){
         logDebug(client, error)
+        if(browser != null){
+            try{
+                await browser.close();
+            }
+            catch(error2){
+                logDebug(client, error);
+            }     
+        }
     }
+}
+
+function compressVideo(client, localPath){
+    logDebug(client, "Beginning compression");
+    
 }
