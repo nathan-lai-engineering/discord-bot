@@ -13,6 +13,7 @@ web-report/
 run.bat
 .eslintrc.json
 .idea/
+temp
 
 firebase.json
 discordconfig.json

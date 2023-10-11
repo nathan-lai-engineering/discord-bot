@@ -112,8 +112,8 @@ client.db.collection('global').get().then((document) => {
 
   // MESSAGE CONTENT READER
   client.on(Discord.Events.MessageCreate, async message => {  
-    for(listener in client.messageListeners){
-      listener(message);
+    for(key in client.messageListeners){
+      client.messageListeners[key](message);
     }
   });
 
