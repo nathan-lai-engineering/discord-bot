@@ -12,6 +12,7 @@
     "firebase-admin": "^11.4.1",
     "fs": "^0.0.1-security",
     "opusscript": "^0.1.0",
+    "puppeteer": "^21.3.8",
     "sodium": "^3.0.2",
     "ytdl-core": "^4.9.1"
   },
