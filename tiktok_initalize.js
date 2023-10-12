@@ -14,6 +14,11 @@ exports.load = (client) => {
             message.channel.send("Working...").then((toEdit) => {
                 try{
                     tikVM(client, message.content).then(videoData => {
+                        if(videoData == null){
+                            logDebug(client, "Invalid video data, probably bad link");
+                            toEdit.delete();
+                            return;
+                        }
                         let videoPath = './temp/tiktok.mp4'
                         downloadVideoUrl(client, videoData.videoUrl, videoPath).then(() => {
                             logDebug(client, 'Starting embed creation');
@@ -164,6 +169,9 @@ function tikVM(client, tiktokUrl){
             let data = res.data.data;
             let videoData = {};
             videoData.videoUrl = data.play;
+            if(videoData.videoUrl == undefined || videoData.videoUrl == null){
+                return null;
+            }
             videoData.caption = data.title;
             videoData.size = data.size;
             videoData.viewCount = data.play_count;
