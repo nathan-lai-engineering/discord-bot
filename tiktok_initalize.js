@@ -111,11 +111,11 @@ function createTikTokEmbed(message, videoData){
  */
 function isTikTokLink(message){
     let content = message.content;
-    if(content.search('\.tiktok\.') >= 0){
+    if(content.search('\.www.tiktok.com\.') >= 0){
         if(content.search(' ') >= 0){
             let splitContent = content.split(' ');
             for(contentPiece in splitContent){
-                if(contentPiece.search('\.tiktok\.') >= 0){
+                if(contentPiece.search('\.www.tiktok.com\.') >= 0){
                     message.content = contentPiece;
                 }
             }
