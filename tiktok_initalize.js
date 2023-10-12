@@ -17,10 +17,18 @@ exports.load = (client) => {
                     downloadTikTok(client, message.content).then(videoData => {
                         if(videoData != null || videoData != undefined){
                             let videoPath = videoData[0];
-                            let embed = createTikTokEmbed(message, videoData);
-                            message.channel.send({
-                                embeds: [embed]
-                            })
+
+                            let messagePayload = {};
+
+                            messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
+                            
+                            if(videoPath != null){
+                                if(fs.existsSync(videoPath)){
+                                    messagePayload['files'] = [Discord.File(videoPath)];
+                                }
+                            }
+
+                            message.channel.send(messagePayload)
                             logDebug(client, 'TikTok Embed sent!');
                         }
                         toEdit.delete();
@@ -52,7 +60,7 @@ function createTikTokEmbed(message, videoData){
 
     let embed = new Discord.EmbedBuilder()
         .setURL(message.content)
-        .setDescription(message.content);
+        .setDescription(message.content.split('?')[0]);
         //.setColor(Discord.Color.Aqua);
 
     // footer
@@ -116,6 +124,7 @@ function isTikTokLink(message){
  */
 async function downloadTikTok(client, url){
     let localPath = './temp/tiktok.mp4';
+    
     let browser = null;
 
     try{
@@ -139,7 +148,7 @@ async function downloadTikTok(client, url){
         let videoUrl = null;
 
         async function acquireVideoUrl(page){
-            logDebug(client, 'Going to URL...' + url);
+            logDebug(client, 'Going to URL: ' + url);
             await page.goto(url, {"waitUntil": 'load', "timeout": 1000000});
             let videoUrl = await page.$eval('video', e => e.src);
             logDebug(client, "Video URL acquired");
@@ -210,6 +219,8 @@ async function downloadTikTok(client, url){
          * TO DO DOWNLOAD THE VIDEO
          */
 
+        //await downloadVideo(client, videoUrl, localPath);
+
         if(fs.existsSync(localPath)){
             let stats = fs.statSync(localPath);
             if(stats.size >= 8388000){
@@ -234,6 +245,22 @@ async function downloadTikTok(client, url){
             }     
         }
     }
+}
+
+async function downloadVideo(client, videoUrl, videoPath){
+    logDebug(client, 'Downloading video to system...');
+    const response = await fetch(videoUrl);
+    if(response.ok){
+        const writeStream = fs.createWriteStream(videoPath);
+        const readable = Readable.fromWeb(response.body);
+        readable.pipe(writeStream);
+
+        await new Promise((resolve, reject) => {
+            readable.on('end', resolve);
+            readable.on('error', reject);
+        });
+    }
+    await new Promise((resolve, reject) => reject);
 }
 
 function compressVideo(client, localPath){
