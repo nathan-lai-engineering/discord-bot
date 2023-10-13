@@ -107,7 +107,14 @@ client.db.collection('global').get().then((document) => {
   
     // try executing command
     try {
-      logDebug(client, 'EXECUTING COMMAND: ' + interaction.user.username + " => " + interaction.commandName);
+      let commandString = interaction.commandName;
+      if(interaction.options.getSubcommand() != null)
+        commandString += " " + interaction.options.getSubcommand();
+      for(index in interaction.options.data[0].options){
+        let option = interaction.options.data[0].options[index];
+        commandString += ` ${option.name}:${option.value}`;
+      }
+      logDebug(client, `EXECUTING COMMAND: ${interaction.user.username} => ${commandString}`);
       await command.execute(interaction);
     } catch (error) {
       console.error(error);
