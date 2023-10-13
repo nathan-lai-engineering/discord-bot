@@ -68,27 +68,27 @@ client.db.collection('global').get().then((document) => {
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + auth);
 
-  // DISTUBE MODULE
-  const distubeModule = require("./distube_module.js");
-  distubeModule.load(client, distubeConfig);
-
-  // TikTok Embed MODULE
-  const tiktokModule = require("./tiktok_module.js");
-  tiktokModule.load(client);
-
-  // RIOT tracker module
-  const riotModule = require("./riot_module.js");
-  riotModule.load(client, docs[0].data()['riot']);
-
-  logDebug(client, "Modules loaded: " + client.enabledModules.toString());
-
   // READY
   client.on("ready", () => {
-    console.log("Bot connected!");
+    log('Bot connected!');
     client.user.setPresence({
       activities: [{name: 'Doing a little trolling'}],
       status: 'online'
     });
+
+    // DISTUBE MODULE
+    const distubeModule = require("./distube_module.js");
+    distubeModule.load(client, distubeConfig);
+
+    // TikTok Embed MODULE
+    const tiktokModule = require("./tiktok_module.js");
+    tiktokModule.load(client);
+
+    // RIOT tracker module
+    const riotModule = require("./riot_module.js");
+    riotModule.load(client, docs[0].data()['riot']);
+
+    logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
 
   // COMMAND HANDLER
