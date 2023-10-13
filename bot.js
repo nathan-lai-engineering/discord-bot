@@ -76,6 +76,10 @@ client.db.collection('global').get().then((document) => {
   const tiktokModule = require("./tiktok_module.js");
   tiktokModule.load(client);
 
+  // RIOT tracker module
+  const riotModule = require("./riot_module.js", docs[0].data()['riot']);
+  riotModule.load(client);
+
   logDebug(client, "Modules loaded: " + client.enabledModules.toString());
 
   // READY
