@@ -12,7 +12,7 @@ exports.load = (client, apiKey) => {
 
 
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 24 * 2;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 12;
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -20,6 +20,7 @@ exports.load = (client, apiKey) => {
             let matches = {league: {}, tft: {}};
 
             // acquire list of matches from every player
+            logDebug(client, 'Acquiring list of matches from every member');
             for(let gameType in matches){
                 let apiStringPartial = null;
                 if(gameType == 'league'){
@@ -34,7 +35,6 @@ exports.load = (client, apiKey) => {
 
                 for(index in puuids){
                     let riotId = puuids[index].riot;
-                    
                     let res = await axios({
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
@@ -52,7 +52,10 @@ exports.load = (client, apiKey) => {
                 }
             }
 
+            let guildChannels = await getGuildChannels(client, matches);
+
             // acquire data for each match
+            logDebug(client, 'Acquiring match data from every match');
             for(let gameType in matches){
                 let apiStringPartial = null;
                 if(gameType == 'league'){
@@ -72,7 +75,7 @@ exports.load = (client, apiKey) => {
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
             }
-
+            
             console.log(matches);
         });
         
@@ -81,6 +84,11 @@ exports.load = (client, apiKey) => {
     setTimeout(checkRiotData, 10000);
 }
 
+/**
+ * Utility function
+ * @param {*} ms 
+ * @returns 
+ */
 function sleep(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -108,4 +116,28 @@ function getPUUIDs(client){
         return puuids;
 
     })
+}
+
+/**
+ * Gets an object of guild ids and their riot notification channels
+ * @param {*} client 
+ * @returns 
+ */
+function getGuildChannels(client){
+    logDebug(client, 'Getting guild Riot channels from Firestore');
+    return client.db.collection('guilds').get().then(snapshot => {
+        let guildChannels = {};
+        snapshot.forEach(docSnapshot => {
+            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels']){
+                guildChannels[docSnapshot.id] = {channelId: docSnapshot.data()['channels']['riot']};
+            }
+        })
+        return guildChannels;
+    })
+}
+
+function createTftEmbed(client, tftMatch){
+    let members = tftMatch['members'];
+    let matchData = tftMatch['matchData'];
+
 }
