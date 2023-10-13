@@ -4,7 +4,7 @@ const axios = require('axios')
 const firebase = require("firebase-admin");
 
 exports.load = (client, apiKey) => {
-    logDebug(client, 'Loading riot module');
+    logDebug(client, 'Loading Riot Games module');
     client.enabledModules.push("riot");
 
     let interval = 10 * 60 * 1000;
@@ -12,8 +12,7 @@ exports.load = (client, apiKey) => {
 
 
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval));
-        console.log(lastChecked)
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 24 * 2;
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -21,7 +20,6 @@ exports.load = (client, apiKey) => {
             let matches = {league: {}, tft: {}};
 
             for(index in puuids){
-                let discordId = puuids[index].discord;
                 let riotId = puuids[index].riot;
 
                 let apiString1 = `https://americas.api.riotgames.com`
@@ -29,39 +27,58 @@ exports.load = (client, apiKey) => {
 
                 
 
-                axios({
+                let leagueRes = await axios({
                     method: 'get',
                     url: `${apiString1}/lol/match/v5/matches/by-puuid/${apiString2}`
                 })
-                .then(res => {
-                    for(index in res.data){
-                        if(!(res.data[index] in matches['league'])){
-                            matches['league'][res.data[index]] = [];
-                        }
-                        matches['league'][res.data[index]].push(riotId);
+                let leagueData = leagueRes.data;
+                for(i in leagueData){
+                    let match = leagueData[i];
+                    if(!(match in matches['league'])){
+                        matches['league'][match] = {members:[]};
                     }
-                })
-                .catch(error => {
-                    logDebug(client, error);
-                });
+                    matches['league'][match]['members'].push(riotId);
+                }
+
+
                 
-                axios({
+                let tftRes = await axios({
                     method: 'get',
                     url: `${apiString1}/tft/match/v1/matches/by-puuid/${apiString2}`
                 })
-                .then(res => {
-                    for(index in res.data){
-                        if(!(res.data[index] in matches['tft'])){
-                            matches['tft'][res.data[index]] = [];
-                        }
-                        matches['tft'][res.data[index]].push(riotId);
+
+                let tftData = tftRes.data;
+                for(i in tftData){
+                    let match = tftData[i];
+                    if(!(match in matches['tft'])){
+                        matches['tft'][match] = {members:[]};
                     }
-                })
-                .catch(error => {
-                    logDebug(client, error);
-                });
-                await sleep(150); // artificial slow down to avoid api cap (2 api calls per iteration every 110ms < 20 api calls every 1000ms)
+                    matches['tft'][match]['members'].push(riotId);
+                }
+
+                await sleep(100); // artificial slow down to avoid api cap (2 api calls per iteration every 110ms < 20 api calls every 1000ms)
             }
+
+            for(let gameType in matches){
+                let apiStringPartial = null;
+                if(gameType == 'league'){
+                    apiStringPartial = '/lol/match/v5/matches/'
+                }
+                else if(gameType == 'tft'){
+                    apiStringPartial = '/tft/match/v1/matches/'
+                }
+                else{
+                    continue;
+                }
+                for(let match in matches[gameType]){
+                    matches[gameType][match]['matchData'] = await axios({
+                        method: 'get',
+                        url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
+                    });
+                    await sleep(50);
+                }
+            }
+
             console.log(matches);
         });
         
