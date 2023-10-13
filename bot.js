@@ -69,12 +69,12 @@ client.db.collection('global').get().then((document) => {
   logDebug(client, 'Auth: ' + auth);
 
   // DISTUBE MODULE
-  const distubeInitialize = require("./distube_initialize.js");
-  distubeInitialize.load(client, distubeConfig);
+  const distubeModule = require("./distube_module.js");
+  distubeModule.load(client, distubeConfig);
 
   // TikTok Embed MODULE
-  const tiktokInitalize = require("./tiktok_initalize.js");
-  tiktokInitalize.load(client);
+  const tiktokModule = require("./tiktok_module.js");
+  tiktokModule.load(client);
 
   logDebug(client, "Modules loaded: " + client.enabledModules.toString());
 
