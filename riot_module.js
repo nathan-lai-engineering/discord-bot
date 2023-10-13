@@ -19,46 +19,40 @@ exports.load = (client, apiKey) => {
         getPUUIDs(client).then(async puuids => {
             let matches = {league: {}, tft: {}};
 
-            for(index in puuids){
-                let riotId = puuids[index].riot;
-
-                let apiString1 = `https://americas.api.riotgames.com`
-                let apiString2 = `${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
-
-                
-
-                let leagueRes = await axios({
-                    method: 'get',
-                    url: `${apiString1}/lol/match/v5/matches/by-puuid/${apiString2}`
-                })
-                let leagueData = leagueRes.data;
-                for(i in leagueData){
-                    let match = leagueData[i];
-                    if(!(match in matches['league'])){
-                        matches['league'][match] = {members:[]};
-                    }
-                    matches['league'][match]['members'].push(riotId);
+            // acquire list of matches from every player
+            for(let gameType in matches){
+                let apiStringPartial = null;
+                if(gameType == 'league'){
+                    apiStringPartial = '/lol/match/v5/matches/by-puuid/'
+                }
+                else if(gameType == 'tft'){
+                    apiStringPartial = '/tft/match/v1/matches/by-puuid/'
+                }
+                else{
+                    continue;
                 }
 
+                for(index in puuids){
+                    let riotId = puuids[index].riot;
+                    
+                    let res = await axios({
+                        method: 'get',
+                        url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
+                    });
 
-                
-                let tftRes = await axios({
-                    method: 'get',
-                    url: `${apiString1}/tft/match/v1/matches/by-puuid/${apiString2}`
-                })
-
-                let tftData = tftRes.data;
-                for(i in tftData){
-                    let match = tftData[i];
-                    if(!(match in matches['tft'])){
-                        matches['tft'][match] = {members:[]};
+                    let matchList = res.data;
+                    for(i in matchList){
+                        let match = matchList[i];
+                        if(!(match in matches[gameType])){
+                            matches[gameType][match] = {members:[]};
+                        }
+                        matches[gameType][match]['members'].push(riotId);
                     }
-                    matches['tft'][match]['members'].push(riotId);
+                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
-
-                await sleep(100); // artificial slow down to avoid api cap (2 api calls per iteration every 110ms < 20 api calls every 1000ms)
             }
 
+            // acquire data for each match
             for(let gameType in matches){
                 let apiStringPartial = null;
                 if(gameType == 'league'){
@@ -75,7 +69,7 @@ exports.load = (client, apiKey) => {
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
                     });
-                    await sleep(50);
+                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
             }
 
