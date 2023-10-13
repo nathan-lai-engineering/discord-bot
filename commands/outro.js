@@ -37,6 +37,13 @@ module.exports = {
              * Play the outro
              */
             case 'play':
+                if(!interaction.member.voice.channel){
+                    if(interaction.client.debugMode)
+                        logDebug(interaction.client, 'User not in a voice channel!');
+                    interaction.reply({content:'Should you not be in a voice channel', ephemeral: true});
+                    return;
+                }
+
                 this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel) ? 
                     interaction.reply({content:'Your outro is playing, gg gn', ephemeral: true}) : interaction.reply({content:'Your outro is off or you do not have one set up', ephemeral: true});
                 break;

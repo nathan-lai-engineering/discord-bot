@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const {logDebug} = require('../utils/log');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,8 +13,8 @@ module.exports = {
 	async execute(interaction) {
         if(!interaction.member.voice.channel){
             if(interaction.client.debugMode)
-                console.log("User not in a voice channel!");
-            interaction.reply("Shouldn't you be in a voice channel?");
+                logDebug(interaction.client, 'User not in a voice channel!');
+            interaction.reply({content:'Should you not be in a voice channel', ephemeral: true});
             return;
         }
 
