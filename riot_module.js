@@ -2,6 +2,7 @@ const {log, logDebug} = require('./utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
+const {roundToString, secondsToTime, topTraits, timeToDate, position} = require('./utils/riotUtils.js');
 
 exports.load = (client, apiKey) => {
     logDebug(client, 'Loading Riot Games module');
@@ -33,6 +34,7 @@ exports.load = (client, apiKey) => {
                     continue;
                 }
 
+                // get match history of each tracked player
                 for(index in puuids){
                     let riotId = puuids[index].riot;
                     let res = await axios({
@@ -40,6 +42,7 @@ exports.load = (client, apiKey) => {
                         url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
                     });
 
+                    // map match history to player
                     let matchList = res.data;
                     for(i in matchList){
                         let match = matchList[i];
@@ -52,6 +55,7 @@ exports.load = (client, apiKey) => {
                 }
             }
             
+            // get channel data for each notification channel
             logDebug(client, 'Acquiring channel data');
             let guildChannels = await getGuildChannels(client);
             for(let guildId in guildChannels){
@@ -73,11 +77,13 @@ exports.load = (client, apiKey) => {
                 }
                 for(let match in matches[gameType]){
                     
+                    // get match data
                     let matchData = await axios({
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
                     });
                     matches[gameType][match]['matchData'] = matchData.data;
+
                     // check if a member of the match is in the channel
                     for(let guildId in guildChannels){
                         let memberPresent = false;
@@ -86,6 +92,8 @@ exports.load = (client, apiKey) => {
                                 memberPresent = true;
                             }
                         }
+
+                        // send embed message based on gametype
                         if(memberPresent){
                             let embed = 'This is supposed to be an embed message';
                             if(gameType == 'league'){
@@ -141,7 +149,6 @@ function getPUUIDs(client){
             }
         });
         return puuids;
-
     })
 }
 
@@ -199,14 +206,15 @@ function createTftEmbed(client, tftMatch){
 
 
     let embed = new Discord.EmbedBuilder();
-
     embed.setTitle('Teamfight Tactics');
+    embed.setDescription(timeToDate(matchData['info']['game_datetime']));
+    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
     for(let i in participants){
         let participant = participants[i];
         embed.addFields(
-            {name: `${participant['placement']} ~ username placeholder`, value: `Eliminated at ${participant['time_eliminated']} on round ${participant['last_round']}`},
-            {name: ' ', value: `Played trait place holder`},
-            {name: ' ', value: `Level: ${participant['level']} ~ Gold left: ${participant['gold_left']} ~ Damage dealt: ${participant['total_damage_to_players']}`},
+            {name: `${position(participant['placement'])} ~ username placeholder`, value: `Eliminated at ${secondsToTime(participant['time_eliminated'])} on round ${roundToString(participant['last_round'])}`},
+            {name: ' ', value: `Played ${topTraits(participant['traits'])}`},
+            {name: ' ', value: `Level: ${participant['level']} --- Gold left: ${participant['gold_left']} --- Damage dealt: ${participant['total_damage_to_players']}`},
         )
     }
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
@@ -214,3 +222,5 @@ function createTftEmbed(client, tftMatch){
     return embed;
 
 }
+
+
