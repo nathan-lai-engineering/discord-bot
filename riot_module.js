@@ -2,7 +2,7 @@ const {log, logDebug} = require('./utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
-const {roundToString, secondsToTime, topTraits, timeToDate, position} = require('./utils/riotUtils.js');
+const {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes} = require('./utils/riotUtils.js');
 
 exports.load = (client, apiKey) => {
     logDebug(client, 'Loading Riot Games module');
@@ -21,7 +21,7 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 12;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -228,16 +228,16 @@ function createTftEmbed(client, tftMatch, memberNames){
 
     // create embed
     let embed = new Discord.EmbedBuilder();
-    embed.setTitle('Teamfight Tactics');
+    embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
     embed.setDescription(timeToDate(matchData['info']['game_datetime']));
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
     for(let i in participants){
         let participant = participants[i];
         embed.addFields(
-            {name: ' ', value: '-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-'},
+            {name: ' ', value: '-~-~-~-'},
             {name: `**${position(participant['placement'])}** ~ ${memberNames[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
-            {name: ' ', value: `Level: ${participant['level']} --- Gold left: ${participant['gold_left']} --- Damage dealt: ${participant['total_damage_to_players']}`},
+            {name: ' ', value: `Level: ${participant['level']} . Gold left: ${participant['gold_left']} . Damage dealt: ${participant['total_damage_to_players']}`},
 
         )
     }

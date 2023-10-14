@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position};
+module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes};
 
 /**
  * converts a number to stage string
@@ -91,7 +91,7 @@ function timeToDate(unixTime){
     let dateData = datatimeData[0].split('-');
     let dateString = `${dateData[1]}/${dateData[2]}/${dateData[0]}`
     let timeData = datatimeData[1].split('.')[0];
-    return `${timeData} --- ${dateString}`;
+    return `${timeData} . ${dateString}`;
 }
 
 /**
@@ -111,4 +111,19 @@ function position(positionNumber){
             return `${positionNumber}th`;
 
     }
+}
+
+/**
+ * Converts web api game type to proper name
+ * @param {*} gametype 
+ * @returns 
+ */
+function tftGametypes(gametype){
+    const TFT_GAMETYPES = {
+        'pairs': 'Double up',
+        'standard': 'Ranked'
+    }
+    if(!(gametype in TFT_GAMETYPES))
+        return gametype;
+    return TFT_GAMETYPES[gametype];
 }
