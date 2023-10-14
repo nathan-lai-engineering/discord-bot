@@ -44,8 +44,8 @@ exports.load = (client, apiKey) => {
                 }
 
                 // get match history of each tracked player
-                for(index in puuids){
-                    let riotId = puuids[index].riot;
+                for(let discordId in puuids){
+                    let riotId = puuids[discordId];
                     let res = await axios({
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
@@ -98,9 +98,8 @@ exports.load = (client, apiKey) => {
                         let presentMembers = false;
                         for(let i in matches[gameType][match]['members']){
                             let matchMember = matches[gameType][match]['members'][i];
-                            console.log(matchMember);
-                            console.log(guildChannels[guildId]['members'])
-                            if(matchMember in guildChannels[guildId]['members']){
+                            let matchMemberDiscord = Object.keys(puuids).find(key => puuids[key] === matchMember);
+                            if(guildChannels[guildId]['members'].includes(matchMemberDiscord)){
                                 memberNames[matchMember] = null; // cache member data for embed
                                 presentMembers = true;
                             }
@@ -109,16 +108,17 @@ exports.load = (client, apiKey) => {
                         // send embed message based on gametype
                         if(presentMembers){
                             for(let memberId in memberNames){
-                                if(memberNames['memberId'] == null){
+                                if(memberNames[memberId] == null){
                                     let summonerResponse = await axios({
                                         method: 'get',
                                         url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${memberId}?api_key=${apiKey}`
                                     });
-                                    memberNames['memberId'] = summonerResponse.data.name;
+                                    memberNames[memberId] = summonerResponse.data.name;
                                     await sleep(50);
                                 }
                                 
                             }
+
                             
 
                             let embed = 'This is supposed to be an embed message';
@@ -136,8 +136,6 @@ exports.load = (client, apiKey) => {
                     
                 }
             }
-            
-            console.log(matches);
         });
         
 
@@ -165,13 +163,10 @@ function getPUUIDs(client){
     logDebug(client, 'Getting Riot Id from Firestore');
     
     return client.db.collection('users').get().then(snapshot => {
-        let puuids = [];
+        let puuids = {};
         snapshot.forEach(docSnapshot => {
             if('puuid' in docSnapshot.data()){
-                puuids.push({
-                    discord: docSnapshot.id,
-                    riot: docSnapshot.data().puuid
-                });
+                puuids[docSnapshot.id] = docSnapshot.data().puuid;
             }
         });
         return puuids;
