@@ -51,8 +51,12 @@ exports.load = (client, apiKey) => {
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
             }
-
-            let guildChannels = await getGuildChannels(client, matches);
+            
+            logDebug(client, 'Acquiring channel data');
+            let guildChannels = await getGuildChannels(client);
+            for(let guildId in guildChannels){
+                guildChannels[guildId]['channel'] = await client.channels.fetch(guildChannels[guildId]['channelId']);
+            }
 
             // acquire data for each match
             logDebug(client, 'Acquiring match data from every match');
@@ -68,10 +72,33 @@ exports.load = (client, apiKey) => {
                     continue;
                 }
                 for(let match in matches[gameType]){
-                    matches[gameType][match]['matchData'] = await axios({
+                    
+                    let matchData = await axios({
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
                     });
+                    matches[gameType][match]['matchData'] = matchData.data;
+                    // check if a member of the match is in the channel
+                    for(let guildId in guildChannels){
+                        let memberPresent = false;
+                        for(let matchMember in matches[gameType][match]['members']){
+                            if(matchMember in guildChannels[guildId]['members']){
+                                memberPresent = true;
+                            }
+                        }
+                        if(memberPresent){
+                            let embed = 'This is supposed to be an embed message';
+                            if(gameType == 'league'){
+                                
+                            }
+                            else if(gameType == 'tft'){
+                                embed = {embeds:[createTftEmbed(client, matches[gameType][match])]}
+                            }
+
+                            guildChannels[guildId]['channel'].send(embed);
+                        }
+                    }
+
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
             }
@@ -128,16 +155,62 @@ function getGuildChannels(client){
     return client.db.collection('guilds').get().then(snapshot => {
         let guildChannels = {};
         snapshot.forEach(docSnapshot => {
-            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels']){
-                guildChannels[docSnapshot.id] = {channelId: docSnapshot.data()['channels']['riot']};
+            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels'] && 'riotNotifs' in docSnapshot.data()){
+                guildChannels[docSnapshot.id] = {
+                    channelId: docSnapshot.data()['channels']['riot'],
+                    members: docSnapshot.data()['riotNotifs']
+                };
             }
         })
         return guildChannels;
     })
 }
 
+/**
+ * Creates embed with the following style
+ * 
+ *   Teamfight Tactics
+ *   10/13/2023 5:22 PM
+ *
+ *   4th - Blazeris
+ *      Eliminated at 23:36 on round 4-3
+ *      Comp: Ionia Invoker    
+ *      Level: 6    Gold Left: 34   Damage dealt: 23  
+ *   
+ * @param {*} client 
+ * @param {*} tftMatch 
+ * @returns 
+ */
 function createTftEmbed(client, tftMatch){
+    logDebug(client, 'Creating embed for TFT match');
+    
     let members = tftMatch['members'];
     let matchData = tftMatch['matchData'];
+    let participants = [];
+    for(let i in matchData['info']['participants']){
+        let participant = matchData['info']['participants'][i];
+        if(members.includes(participant['puuid'])){
+            participants.push(participant);
+        } 
+    }
+    participants.sort((a, b) => {
+        return a.placement - b.placement;
+    });
+
+
+    let embed = new Discord.EmbedBuilder();
+
+    embed.setTitle('Teamfight Tactics');
+    for(let i in participants){
+        let participant = participants[i];
+        embed.addFields(
+            {name: `${participant['placement']} ~ username placeholder`, value: `Eliminated at ${participant['time_eliminated']} on round ${participant['last_round']}`},
+            {name: ' ', value: `Played trait place holder`},
+            {name: ' ', value: `Level: ${participant['level']} ~ Gold left: ${participant['gold_left']} ~ Damage dealt: ${participant['total_damage_to_players']}`},
+        )
+    }
+    embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
+
+    return embed;
 
 }
