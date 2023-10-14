@@ -12,6 +12,14 @@ exports.load = (client, apiKey) => {
 
 
 
+    /**
+     * get PUUIDs from Firestore
+     * get match history of every PUUID from Riot Web API
+     * get notification channels from Firestore
+     * for match data of every match from Riot Web API
+     * for every match, record all tracked players participating
+     * created embeds then send
+     */
     let checkRiotData = () => {
         let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 12;
         setTimeout(checkRiotData, interval);
@@ -19,6 +27,7 @@ exports.load = (client, apiKey) => {
 
         getPUUIDs(client).then(async puuids => {
             let matches = {league: {}, tft: {}};
+            let memberNames = {};
 
             // acquire list of matches from every player
             logDebug(client, 'Acquiring list of matches from every member');
@@ -41,7 +50,7 @@ exports.load = (client, apiKey) => {
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
                     });
-
+                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                     // map match history to player
                     let matchList = res.data;
                     for(i in matchList){
@@ -51,7 +60,6 @@ exports.load = (client, apiKey) => {
                         }
                         matches[gameType][match]['members'].push(riotId);
                     }
-                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                 }
             }
             
@@ -82,32 +90,50 @@ exports.load = (client, apiKey) => {
                         method: 'get',
                         url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
                     });
+                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                     matches[gameType][match]['matchData'] = matchData.data;
 
                     // check if a member of the match is in the channel
                     for(let guildId in guildChannels){
-                        let memberPresent = false;
-                        for(let matchMember in matches[gameType][match]['members']){
+                        let presentMembers = false;
+                        for(let i in matches[gameType][match]['members']){
+                            let matchMember = matches[gameType][match]['members'][i];
+                            console.log(matchMember);
+                            console.log(guildChannels[guildId]['members'])
                             if(matchMember in guildChannels[guildId]['members']){
-                                memberPresent = true;
+                                memberNames[matchMember] = null; // cache member data for embed
+                                presentMembers = true;
                             }
                         }
 
                         // send embed message based on gametype
-                        if(memberPresent){
+                        if(presentMembers){
+                            for(let memberId in memberNames){
+                                if(memberNames['memberId'] == null){
+                                    let summonerResponse = await axios({
+                                        method: 'get',
+                                        url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${memberId}?api_key=${apiKey}`
+                                    });
+                                    memberNames['memberId'] = summonerResponse.data.name;
+                                    await sleep(50);
+                                }
+                                
+                            }
+                            
+
                             let embed = 'This is supposed to be an embed message';
                             if(gameType == 'league'){
                                 
                             }
                             else if(gameType == 'tft'){
-                                embed = {embeds:[createTftEmbed(client, matches[gameType][match])]}
+                                embed = {embeds:[createTftEmbed(client, matches[gameType][match], memberNames)]}
                             }
 
                             guildChannels[guildId]['channel'].send(embed);
                         }
                     }
 
-                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
+                    
                 }
             }
             
@@ -188,9 +214,10 @@ function getGuildChannels(client){
  * @param {*} tftMatch 
  * @returns 
  */
-function createTftEmbed(client, tftMatch){
+function createTftEmbed(client, tftMatch, memberNames){
     logDebug(client, 'Creating embed for TFT match');
     
+    // create a list of all tracked players in match and sort by placement
     let members = tftMatch['members'];
     let matchData = tftMatch['matchData'];
     let participants = [];
@@ -204,7 +231,7 @@ function createTftEmbed(client, tftMatch){
         return a.placement - b.placement;
     });
 
-
+    // create embed
     let embed = new Discord.EmbedBuilder();
     embed.setTitle('Teamfight Tactics');
     embed.setDescription(timeToDate(matchData['info']['game_datetime']));
@@ -212,9 +239,11 @@ function createTftEmbed(client, tftMatch){
     for(let i in participants){
         let participant = participants[i];
         embed.addFields(
-            {name: `${position(participant['placement'])} ~ username placeholder`, value: `Eliminated at ${secondsToTime(participant['time_eliminated'])} on round ${roundToString(participant['last_round'])}`},
-            {name: ' ', value: `Played ${topTraits(participant['traits'])}`},
+            {name: ' ', value: '-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-'},
+            {name: `**${position(participant['placement'])}** ~ ${memberNames[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} --- Gold left: ${participant['gold_left']} --- Damage dealt: ${participant['total_damage_to_players']}`},
+
         )
     }
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
