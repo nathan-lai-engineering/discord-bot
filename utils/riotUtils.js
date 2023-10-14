@@ -2,6 +2,9 @@ module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position}
 
 /**
  * converts a number to stage string
+ * 6-3 = 35
+ * 6-1 = 33
+ * 5-1 = 26
  * 3-1 = 12
  * 2-1 = 5
  * 1-(1-3) = 2-4
@@ -18,7 +21,7 @@ function roundToString(roundNumber){
         subRound = roundNumber - 1;
     }
     else if (roundNumber >= 5){
-        round = Math.floor((roundNumber - 5) / 7) + 1;
+        round = Math.floor((roundNumber - 5) / 7) + 2;
         subRound = (roundNumber - 5) % 7 + 1;
     }
 
