@@ -2,7 +2,7 @@ const {log, logDebug} = require('./utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
-const {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes} = require('./utils/riotUtils.js');
+const {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes, leagueGametypes, leagueRoles} = require('./utils/riotUtils.js');
 
 exports.load = (client, apiKey) => {
     logDebug(client, 'Loading Riot Games module');
@@ -21,7 +21,7 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000);
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60*60*4;
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -62,16 +62,24 @@ exports.load = (client, apiKey) => {
                     }
                 }
             }
-            
+            console.log(matches)
             // get channel data for each notification channel
-            logDebug(client, 'Acquiring channel data');
-            let guildChannels = await getGuildChannels(client);
-            for(let guildId in guildChannels){
-                guildChannels[guildId]['channel'] = await client.channels.fetch(guildChannels[guildId]['channelId']);
-            }
+            let guildChannels = null;
+            if(Object.keys(matches['tft']).length + Object.keys(matches['league']).length > 0) {
+                logDebug(client, 'Acquiring channel data');
+                guildChannels = await getGuildChannels(client);
+                for(let guildId in guildChannels){
+                    guildChannels[guildId]['channel'] = await client.channels.fetch(guildChannels[guildId]['channelId']);
+                }
 
-            // acquire data for each match
-            logDebug(client, 'Acquiring match data from every match');
+
+
+                logDebug(client, 'Acquiring match data from every match');
+            }
+            else{
+                logDebug(client, 'No matches recently');
+            }
+            // acquire data for each match               
             for(let gameType in matches){
                 let apiStringPartial = null;
                 if(gameType == 'league'){
@@ -123,10 +131,10 @@ exports.load = (client, apiKey) => {
 
                             let embed = 'This is supposed to be an embed message';
                             if(gameType == 'league'){
-                                
+                                embed = {embeds:[createLeagueEmbed(client, matches[gameType][match])]};
                             }
                             else if(gameType == 'tft'){
-                                embed = {embeds:[createTftEmbed(client, matches[gameType][match], memberNames)]}
+                                embed = {embeds:[createTftEmbed(client, matches[gameType][match], memberNames)]};
                             }
 
                             guildChannels[guildId]['channel'].send(embed);
@@ -234,10 +242,10 @@ function createTftEmbed(client, tftMatch, memberNames){
     for(let i in participants){
         let participant = participants[i];
         embed.addFields(
-            {name: ' ', value: '-~-~-~-'},
-            {name: `**${position(participant['placement'])}** ~ ${memberNames[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: ' ', value: '⸻⸻'},
+            {name: `**${position(participant['placement'])}** • ${memberNames[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
-            {name: ' ', value: `Level: ${participant['level']} . Gold left: ${participant['gold_left']} . Damage dealt: ${participant['total_damage_to_players']}`},
+            {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
 
         )
     }
@@ -245,6 +253,80 @@ function createTftEmbed(client, tftMatch, memberNames){
 
     return embed;
 
+}
+
+/**
+ * Creates embed with the following style
+ * 
+ * League of Legends - Blind
+ * 10/13/2023 - 5:22 PM
+ * 
+ * Victory (Defeat, Surrender) in 23:23
+ * 15 - 34
+ * 
+ * Top Soraka ~ Galusha
+ * KDA: 15/20/53
+ * Gold: 2345345 - Vision: 45 - CS: 342
+ * Damage: 23423 - Heal: 2342 - Shield: 2342
+ * 
+ * @param {*} client 
+ * @param {*} leagueMatch 
+ * @param {*} memberNames 
+ */
+function createLeagueEmbed(client, leagueMatch){
+    logDebug(client, 'Creating embed for TFT match');
+    
+    // create a list of all tracked players in match and sort by placement
+    let members = leagueMatch['members'];
+    let matchData = leagueMatch['matchData'];
+    let participants = [];
+    for(let i in matchData['info']['participants']){
+        let participant = matchData['info']['participants'][i];
+        if(members.includes(participant['puuid'])){
+            participants.push(participant);
+        } 
+    }
+    participants.sort((a, b) => {
+        return a.placement - b.placement;
+    });
+    let result = 'Defeat';
+    if(participants[0]['gameEndedInEarlySurrender'] || participants[0]['gameEndedInSurrender']){
+        result = 'Surrender';
+    }
+    else if(participants[0]['win']){
+        result = 'Victory';
+    }
+    let teams = matchData['info']['teams'].sort((a,b) => {
+        if(a['win'] == participants[0]['win'])
+            return -1
+        return 1;
+    })
+
+    // create embed
+    let embed = new Discord.EmbedBuilder();
+    embed.setTitle(`League of Legends - ${leagueGametypes(matchData['info']['queueId'])}`);
+    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png');
+    embed.setDescription(timeToDate(matchData['info']['gameStartTimestamp']));
+
+    embed.addFields({
+        name: `${result} in ${secondsToTime(matchData['info']['gameDuration'])}`,
+        value: `${teams[0]['objectives']['champion']['kills']} - ${teams[1]['objectives']['champion']['kills']}`
+    });
+
+    for(let i in participants){
+        let participant = participants[i];
+        embed.addFields(
+            {name: ' ', value: '⸻⸻'}, //seperator 
+            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled']}`},
+            {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
+
+        )
+    }
+
+    embed.setFooter({text: `Match ID: ${matchData['metadata']['matchId']}`});
+
+    return embed;
 }
 
 

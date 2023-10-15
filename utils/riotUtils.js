@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes};
+module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes, leagueGametypes, leagueRoles};
 
 /**
  * converts a number to stage string
@@ -126,4 +126,72 @@ function tftGametypes(gametype){
     if(!(gametype in TFT_GAMETYPES))
         return gametype;
     return TFT_GAMETYPES[gametype];
+}
+
+/**
+ * Converts web api game type to proper name
+ * @param {*} gametype 
+ * @returns 
+ */
+function leagueGametypes(queueId){
+    switch(queueId){
+        case 0:
+            return 'Custom';
+        case 76:
+        case 83:
+        case 1900:
+            return 'URF';
+        case 78:
+        case 1020:
+            return 'One for All';
+        case 100:
+        case 450:
+            return 'ARAM';
+        case 325:
+            return 'All random';
+        case 400:
+            return 'Draft';
+        case 420:
+            return 'Ranked Solo/Duo';
+        case 430:
+            return 'Blind';
+        case 440:
+            return 'Ranked Flex';
+        case 700:
+            return 'Clash';
+        case 720:
+            return 'ARAM Clash'
+        case 820:
+        case 830:
+        case 840:
+        case 850:
+            return 'Co-op vs. AI';
+        case 900:
+            return 'ARURF';
+        case 1300:
+            return 'Nexus Blitz';
+        case 1400:
+            return 'Ultimate Spellbook';
+        default:
+            return 'Tutorial';
+    }
+}
+
+/**
+ * Returns proper role names
+ * @param {*} role 
+ * @returns 
+ */
+function leagueRoles(role){
+    const LEAGUE_ROLES = {
+        'BOTTOM': 'Bottom',
+        'TOP': 'Top',
+        'MIDDLE': 'Middle',
+        'SUPPORT': 'Support',
+        'JUNGLE': 'Jungle'
+    }
+    if(role in LEAGUE_ROLES){
+        return LEAGUE_ROLES[role];
+    }
+    return role;
 }
