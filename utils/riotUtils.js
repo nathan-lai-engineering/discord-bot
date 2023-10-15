@@ -91,7 +91,7 @@ function timeToDate(unixTime){
     let dateData = datatimeData[0].split('-');
     let dateString = `${dateData[1]}/${dateData[2]}/${dateData[0]}`
     let timeData = datatimeData[1].split('.')[0];
-    return `${timeData} . ${dateString}`;
+    return `${timeData} • ${dateString}`;
 }
 
 /**

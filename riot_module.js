@@ -21,7 +21,7 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60*60*4;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -62,7 +62,6 @@ exports.load = (client, apiKey) => {
                     }
                 }
             }
-            console.log(matches)
             // get channel data for each notification channel
             let guildChannels = null;
             if(Object.keys(matches['tft']).length + Object.keys(matches['league']).length > 0) {
@@ -274,7 +273,7 @@ function createTftEmbed(client, tftMatch, memberNames){
  * @param {*} memberNames 
  */
 function createLeagueEmbed(client, leagueMatch){
-    logDebug(client, 'Creating embed for TFT match');
+    logDebug(client, 'Creating embed for LoL match');
     
     // create a list of all tracked players in match and sort by placement
     let members = leagueMatch['members'];
@@ -318,7 +317,7 @@ function createLeagueEmbed(client, leagueMatch){
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
             {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
-            {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled']}`},
+            {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 
         )
