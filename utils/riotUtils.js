@@ -36,11 +36,11 @@ function roundToString(roundNumber){
  */
 function secondsToTime(seconds){
     let secondsInt = Math.floor(seconds);
-    let seconds = secondsInt % 60;
-    if (seconds < 10){
-        seconds = `0${seconds}`; // put a 0 in front of single digits
+    let second = secondsInt % 60;
+    if (second < 10){
+        second = `0${second}`; // put a 0 in front of single digits
     }
-    return `${Math.floor(secondsInt / 60)}:${secondsInt % 60}`;
+    return `${Math.floor(secondsInt / 60)}:${second}`;
 }
 
 /**
