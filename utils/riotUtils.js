@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes, leagueGametypes, leagueRoles};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles};
 
 /**
  * converts a number to stage string
@@ -80,22 +80,6 @@ function traitsName(trait){
         traitName = traitsDictionary[traitName];
     }
     return traitName;
-}
-
-/**
- * Takes unix time and converts it to human readable time
- * @param {*} unixTime 
- * @returns 
- */
-function timeToDate(unixTime){
-    let yourDate = new Date(unixTime);
-    const offset = yourDate.getTimezoneOffset(); 
-    yourDate = new Date(yourDate.getTime() + (offset*60*1000)); 
-    let datatimeData = yourDate.toISOString().split('T');
-    let dateData = datatimeData[0].split('-');
-    let dateString = `${dateData[1]}/${dateData[2]}/${dateData[0]}`
-    let timeData = datatimeData[1].split('.')[0];
-    return `${timeData} • ${dateString}`;
 }
 
 /**

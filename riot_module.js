@@ -2,7 +2,7 @@ const {log, logDebug} = require('./utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
-const {roundToString, secondsToTime, topTraits, timeToDate, position, tftGametypes, leagueGametypes, leagueRoles} = require('./utils/riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./utils/riotUtils.js');
 
 /**
  * Load the Riot Games match history tracker into the bot
@@ -24,7 +24,7 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000);
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60;
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -238,7 +238,7 @@ function createTftEmbed(client, tftMatch, memberNames){
     // create embed
     let embed = new Discord.EmbedBuilder();
     embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
-    embed.setDescription(timeToDate(matchData['info']['game_datetime']));
+    embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
     for(let i in participants){
         let participant = participants[i];
@@ -308,7 +308,8 @@ function createLeagueEmbed(client, leagueMatch){
     let embed = new Discord.EmbedBuilder();
     embed.setTitle(`League of Legends - ${leagueGametypes(matchData['info']['queueId'])}`);
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png');
-    embed.setDescription(timeToDate(matchData['info']['gameStartTimestamp']));
+
+    embed.setDescription(`<t:${Math.floor(matchData['info']['gameStartTimestamp']/1000)}>`);
 
     embed.addFields({
         name: `${result} in ${secondsToTime(matchData['info']['gameDuration'])}`,
