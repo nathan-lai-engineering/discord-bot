@@ -3,6 +3,7 @@ const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
 const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./riotUtils.js');
+const { api } = require('sodium');
 
 /**
  * Load the Riot Games match history tracker into the bot
@@ -24,6 +25,8 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
+        if(apiKey == null)
+            return;
         let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
@@ -52,10 +55,19 @@ exports.load = (client, apiKey) => {
                 // Make API call to acquire list of match ids
                 for(let discordId in puuids){
                     let riotId = puuids[discordId];
-                    let res = await axios({
-                        method: 'get',
-                        url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
-                    });
+                    let res = null;
+                    try{
+                        res = await axios({
+                            method: 'get',
+                            url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
+                        });
+                    }
+                    catch(error){
+                        logDebug(client, 'API call failed, disabling Riot module');
+                        apiKey = null;
+                        return;
+                    }
+
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
 
                     // record which tracked players are in each match
@@ -101,10 +113,18 @@ exports.load = (client, apiKey) => {
 
                 for(let match in matches[gameType]){
                     // get match data
-                    let matchData = await axios({
-                        method: 'get',
-                        url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
-                    });
+                    let matchData = null;
+                    try{
+                        matchData = await axios({
+                            method: 'get',
+                            url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
+                        });
+                    }
+                    catch(error){
+                        logDebug(client, 'API call failed, disabling Riot module');
+                        apiKey = null;
+                        return;
+                    }
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
                     matches[gameType][match]['matchData'] = matchData.data;
 
@@ -130,10 +150,18 @@ exports.load = (client, apiKey) => {
                                 // tft web api doesnt provide names of players so make additional api calls to acquire names per PUUID
                                 for(let memberId in memberNames){
                                     if(memberNames[memberId] == null){
-                                        let summonerResponse = await axios({
-                                            method: 'get',
-                                            url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${memberId}?api_key=${apiKey}`
-                                        });
+                                        let summonerResponse = null;
+                                        try{
+                                            summonerResponse = await axios({
+                                                method: 'get',
+                                                url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${memberId}?api_key=${apiKey}`
+                                            });
+                                        }
+                                        catch(error){
+                                            logDebug(client, 'API call failed, disabling Riot module');
+                                            apiKey = null;
+                                            return;
+                                        }
                                         memberNames[memberId] = summonerResponse.data.name;
                                         await sleep(50);
                                     }
