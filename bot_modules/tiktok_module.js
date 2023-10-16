@@ -1,4 +1,4 @@
-const {log, logDebug} = require('./utils/log.js');
+const {log, logDebug} = require('../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const https = require('https')

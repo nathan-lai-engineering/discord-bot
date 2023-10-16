@@ -77,15 +77,15 @@ client.db.collection('global').get().then((document) => {
     });
 
     // DISTUBE MODULE
-    const distubeModule = require("./distube_module.js");
+    const distubeModule = require("./bot_modules/distube_module.js");
     distubeModule.load(client, distubeConfig);
 
     // TikTok Embed MODULE
-    const tiktokModule = require("./tiktok_module.js");
+    const tiktokModule = require("./bot_modules/tiktok_module.js");
     tiktokModule.load(client);
 
     // RIOT tracker module
-    const riotModule = require("./riot_module.js");
+    const riotModule = require("./bot_modules/riot/riot_module.js");
     riotModule.load(client, docs[0].data()['riot']);
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());

@@ -1,8 +1,8 @@
-const {log, logDebug} = require('./utils/log.js');
+const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
-const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./utils/riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./riotUtils.js');
 
 /**
  * Load the Riot Games match history tracker into the bot
@@ -24,7 +24,7 @@ exports.load = (client, apiKey) => {
      * created embeds then send
      */
     let checkRiotData = () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 

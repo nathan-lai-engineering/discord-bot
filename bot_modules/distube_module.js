@@ -1,7 +1,7 @@
 const { DisTube } = require('distube');
 const Discord = require("discord.js");
-const {playOutro} = require('./commands/outro.js');
-const {logDebug} = require('./utils/log.js');
+const {playOutro} = require('../commands/outro.js');
+const {logDebug} = require('../utils/log.js');
 
 /**
  * Creates a debug logger for an event and sets up a queue for functions to trigger on event
