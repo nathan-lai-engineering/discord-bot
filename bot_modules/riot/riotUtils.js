@@ -175,7 +175,7 @@ function leagueRoles(role){
         'BOTTOM': 'Bottom',
         'TOP': 'Top',
         'MIDDLE': 'Middle',
-        'SUPPORT': 'Support',
+        'UTILITY': 'Support',
         'JUNGLE': 'Jungle'
     }
     if(role in LEAGUE_ROLES){
