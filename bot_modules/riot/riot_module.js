@@ -290,11 +290,11 @@ function createLeagueEmbed(client, leagueMatch){
 
     // organize data for teams
     let result = 'Defeat';
-    if(participants[0]['gameEndedInEarlySurrender'] || participants[0]['gameEndedInSurrender']){
-        result = 'Surrender';
-    }
-    else if(participants[0]['win']){
+    if(participants[0]['win']){
         result = 'Victory';
+    }
+    else if(participants[0]['gameEndedInEarlySurrender'] || participants[0]['gameEndedInSurrender']){
+        result = 'Surrender';
     }
 
     // sort teams, [0] is participant's team, [1] is enemy team
