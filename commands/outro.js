@@ -18,15 +18,19 @@ module.exports = {
                 .addStringOption(option =>
                     option
                         .setName('url')
-                        .setDescription('youtube url'))
+                        .setDescription('youtube url')
+                        .setRequired(true))
+
                 .addNumberOption(option => 
                     option
                         .setName('start')
-                        .setDescription('integer, the seconds when you want to start video from'))
+                        .setDescription('integer, the seconds when you want to start video from')
+                        .setRequired(true))
                 .addNumberOption(option => 
                     option
                         .setName('duration')
-                        .setDescription(`decimal, the seconds you want music to last, max of ${maxDuration}`)))
+                        .setDescription(`decimal, the seconds you want music to last, max of ${maxDuration}`)
+                        .setRequired(true)))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('toggle')
