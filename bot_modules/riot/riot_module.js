@@ -361,4 +361,96 @@ function createLeagueEmbed(client, leagueMatch){
     return embed;
 }
 
+/**
+ * Acquires cached rank and lp, compares that against current rank and lp, then returns the difference as a string
+ * @param {*} client 
+ * @param {*} discordId 
+ * @param {*} summonerId 
+ * @param {*} gametype 
+ * @param {*} apiKey 
+ * @returns 
+ */
+async function getSummonerLp(client, discordId, summonerId, gametype, apiKey){
+    logDebug(client, `Acquiring ${gametype} lp from Riot Web Api and comparing against database`);
+    let apiPath = '';
+    if(gametype == 'tft'){
+        apiPath = `/tft/league/v1/entries/by-summoner/`;
+    }
+    else if(gametype == 'league'){
+        apiPath = `/lol/league/v4/entries/by-summoner/`;
+    }
+    let apiString = `https://na1.api.riotgames.com${apiPath}${summonerId}?api_key=${apiKey}`
 
+    // acquire old rank and lp information from firestore
+    let userSnapshot = await client.db.collection('users').doc(discordId).get();
+    let userData = userSnapshot.data();
+    if(!('riot' in userData) || !('rank' in userData['riot']) || !(gametype in userData['riot']['rank'])){
+        userData = null;
+    }
+
+    // acquire data from Riot Web API and organize it
+    let riotRes = await axios({
+        method: 'get',
+        url: apiString
+    });
+    await sleep(50);
+    let riotData = riotRes.data;
+    let rank = null;
+    let tier = null;
+    let lp = null;
+    if(riotData.length > 0){
+        rank = riotData[0]['rank'];
+        tier = riotData[0]['tier'];
+        lp = riotData[0]['leaguePoints'];
+    }
+
+    // Write to database new rank and lp, while returning the change
+    if(rank != null && lp != null){
+        client.db.collection('users').doc(discordId).set({
+            'riot': {
+                [gametype]: {
+                    'rank': rank,
+                    'tier': tier,
+                    'lp': lp
+                }
+            }
+        }, {merge:true});
+
+        // data from database
+        let oldRank = userData['riot']['rank'][gametype]['rank'];
+        let oldTier = userData['riot']['rank'][gametype]['tier'];
+        let oldLp = userData['riot']['rank'][gametype]['lp'];
+        return calculateLpChange(client, oldRank, oldTier, oldLp, rank, tier, lp);
+
+    }
+    return null;
+}
+
+/**
+ * Calculates change in lp from ranks and returns either lp change or a change in rank status
+ * @param {*} client 
+ * @param {*} oldTier 
+ * @param {*} oldRank 
+ * @param {*} oldLp 
+ * @param {*} newTier 
+ * @param {*} newRank 
+ * @param {*} newLp 
+ * @returns 
+ */
+function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, newLp){
+    logDebug(client, 'Calculating LP change');
+    const TIERS = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
+    const RANKS = ['IV', 'III', 'II', 'I'];
+    if(oldTier == newTier){
+        if(oldRank == newRank){
+            return  `${newLp - oldLp} LP`
+        }
+    }
+
+    if(RANKS.indexOf(newRank) > RANKS.indexOf(oldRank) || TIERS.indexOf(newTier) > TIERS.indexOf(oldTier)){
+        return '**PROMOTED**'
+    }
+    else{
+        return '**DEMOTED**'
+    }
+}
