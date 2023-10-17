@@ -108,11 +108,13 @@ client.db.collection('global').get().then((document) => {
     // try executing command
     try {
       let commandString = interaction.commandName;
-      if(interaction.options.getSubcommand() != null)
+      if(interaction.options.getSubcommand(false) != null)
         commandString += " " + interaction.options.getSubcommand();
-      for(index in interaction.options.data[0].options){
-        let option = interaction.options.data[0].options[index];
-        commandString += ` ${option.name}:${option.value}`;
+      if(interaction.options.data.length){
+        for(index in interaction.options.data[0].options){
+          let option = interaction.options.data[0].options[index];
+          commandString += ` ${option.name}:${option.value}`;
+        }
       }
       logDebug(client, `EXECUTING COMMAND: ${interaction.user.username} => ${commandString}`);
       await command.execute(interaction);
