@@ -1,5 +1,6 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, getGuildChannels, getPUUIDs, sleep};
 
+const {logDebug} = require('../../utils/log.js') 
 /**
  * converts a number to stage string
  * 6-3 = 35
@@ -183,3 +184,90 @@ function leagueRoles(role){
     }
     return role;
 }
+
+/**
+ * Calculates change in lp from ranks and returns either lp change or a change in rank status
+ * @param {*} client 
+ * @param {*} oldTier 
+ * @param {*} oldRank 
+ * @param {*} oldLp 
+ * @param {*} newTier 
+ * @param {*} newRank 
+ * @param {*} newLp 
+ * @returns 
+ */
+function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, newLp){
+    logDebug(client, 'Calculating LP change');
+    const TIERS = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
+    const RANKS = ['IV', 'III', 'II', 'I'];
+    if(oldTier == newTier){
+        if(oldRank == newRank){
+            return  `${newLp - oldLp} LP`
+        }
+    }
+    if(RANKS.indexOf(newRank) > RANKS.indexOf(oldRank) || TIERS.indexOf(newTier) > TIERS.indexOf(oldTier)){
+        return '**PROMOTED**'
+    }
+    else{
+        return '**DEMOTED**'
+    }
+}
+
+/**
+ * Gets an object of guild ids and their riot notification channels
+ * @param {*} client 
+ * @returns 
+ * guildChannels = {
+ *      guildId: {
+ *          channelId: channelId,
+ *          members: [discordIds]
+ * }}
+ */
+function getGuildChannels(client){
+    logDebug(client, 'Getting guild Riot channels from Firestore');
+    return client.db.collection('guilds').get().then(snapshot => {
+        let guildChannels = {};
+        snapshot.forEach(docSnapshot => {
+            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels'] && 'riotNotifs' in docSnapshot.data()){
+                guildChannels[docSnapshot.id] = {
+                    channelId: docSnapshot.data()['channels']['riot'],
+                    members: docSnapshot.data()['riotNotifs']
+                };
+            }
+        })
+        return guildChannels;
+    })
+}
+
+/**
+ * Gets all the puuid data of all members
+ * @param {} client 
+ * @returns 
+ * {puuid: {
+ *      discordId: discordId
+ * }}
+ */
+function getPUUIDs(client){
+    logDebug(client, 'Getting Riot Id from Firestore');
+    
+    return client.db.collection('users').get().then(snapshot => {
+        let puuids = {};
+        snapshot.forEach(docSnapshot => {
+            if('puuid' in docSnapshot.data()){
+                puuids[docSnapshot.data().puuid] = {discordId: docSnapshot.id};
+            }
+        });
+        return puuids;
+    })
+}
+
+/**
+ * Utility function
+ * @param {*} ms 
+ * @returns 
+ */
+function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }

@@ -1,8 +1,7 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios')
-const firebase = require("firebase-admin");
-const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, getGuildChannels, getPUUIDs, sleep} = require('./riotUtils.js');
 
 /**
  * Load the Riot Games match history tracker into the bot
@@ -41,7 +40,7 @@ exports.load = (client) => {
     let checkRiotData = () => {
         if(apiKey == null)
             return;
-        let lastChecked = Math.floor((Date.now() - interval) / 1000);
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 6;
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -81,7 +80,6 @@ exports.load = (client) => {
                         apiKey = null;
                         return;
                     }
-
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
 
                     // record which tracked players are in each match
@@ -174,119 +172,6 @@ exports.load = (client) => {
 }
 
 /**
- * Utility function
- * @param {*} ms 
- * @returns 
- */
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-/**
- * Gets all the puuid data of all members
- * @param {} client 
- * @returns 
- * {puuid: {
- *      discordId: discordId
- * }}
- */
-function getPUUIDs(client){
-    logDebug(client, 'Getting Riot Id from Firestore');
-    
-    return client.db.collection('users').get().then(snapshot => {
-        let puuids = {};
-        snapshot.forEach(docSnapshot => {
-            if('puuid' in docSnapshot.data()){
-                //puuids[docSnapshot.id] = {puuid: };
-                puuids[docSnapshot.data().puuid] = {discordId: docSnapshot.id};
-            }
-        });
-        return puuids;
-    })
-}
-
-/**
- * Gets an object of guild ids and their riot notification channels
- * @param {*} client 
- * @returns 
- * guildChannels = {
- *      guildId: {
- *          channelId: channelId,
- *          members: [discordIds]
- * }}
- */
-function getGuildChannels(client){
-    logDebug(client, 'Getting guild Riot channels from Firestore');
-    return client.db.collection('guilds').get().then(snapshot => {
-        let guildChannels = {};
-        snapshot.forEach(docSnapshot => {
-            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels'] && 'riotNotifs' in docSnapshot.data()){
-                guildChannels[docSnapshot.id] = {
-                    channelId: docSnapshot.data()['channels']['riot'],
-                    members: docSnapshot.data()['riotNotifs']
-                };
-            }
-        })
-        return guildChannels;
-    })
-}
-
-/**
- * Creates embed with the following style
- * 
- *   Teamfight Tactics
- *   10/13/2023 5:22 PM
- *
- *   4th - Blazeris
- *      Eliminated at 23:36 on round 4-3
- *      Comp: Ionia Invoker    
- *      Level: 6    Gold Left: 34   Damage dealt: 23  
- *   
- * @param {*} client 
- * @param {*} tftMatch 
- * @returns 
- */
-function createTftEmbed(client, tftMatch, puuids){
-    logDebug(client, 'Creating embed for TFT match');
-    
-    // create a list of all tracked players in match and sort by placement
-    let members = tftMatch['members'];
-    let matchData = tftMatch['matchData'];
-    let participants = [];
-    for(let i in matchData['info']['participants']){
-        let participant = matchData['info']['participants'][i];
-        if(members.includes(participant['puuid'])){
-            participants.push(participant);
-        } 
-    }
-    participants.sort((a, b) => {
-        return a.placement - b.placement;
-    });
-
-    // create embed
-    let embed = new Discord.EmbedBuilder();
-    embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
-    embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
-    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
-    for(let i in participants){
-        let participant = participants[i];
-        embed.addFields(
-            {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${puuids[participant['puuid']]['summonerName']}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
-            {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
-            {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
-
-        )
-    }
-    embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
-
-    return embed;
-
-}
-
-/**
  * Creates embed with the following style
  * 
  * League of Legends - Blind
@@ -364,6 +249,61 @@ function createLeagueEmbed(client, leagueMatch){
 }
 
 /**
+ * Creates embed with the following style
+ * 
+ *   Teamfight Tactics
+ *   10/13/2023 5:22 PM
+ *
+ *   4th - Blazeris
+ *      Eliminated at 23:36 on round 4-3
+ *      Comp: Ionia Invoker    
+ *      Level: 6    Gold Left: 34   Damage dealt: 23  
+ *   
+ * @param {*} client 
+ * @param {*} tftMatch 
+ * @returns 
+ */
+function createTftEmbed(client, tftMatch, puuids){
+    logDebug(client, 'Creating embed for TFT match');
+    
+    // create a list of all tracked players in match and sort by placement
+    let members = tftMatch['members'];
+    let matchData = tftMatch['matchData'];
+    let participants = [];
+    for(let i in matchData['info']['participants']){
+        let participant = matchData['info']['participants'][i];
+        if(members.includes(participant['puuid'])){
+            participants.push(participant);
+        } 
+    }
+    participants.sort((a, b) => {
+        return a.placement - b.placement;
+    });
+
+    // create embed
+    let embed = new Discord.EmbedBuilder();
+    embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
+    embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
+    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
+    for(let i in participants){
+        let participant = participants[i];
+        embed.addFields(
+            {name: ' ', value: '⸻⸻'},
+            {name: `**${position(participant['placement'])}** • ${puuids[participant['puuid']]['summonerName']}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
+            {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
+
+        )
+    }
+    embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
+
+    return embed;
+
+}
+
+
+
+/**
  * Acquires cached rank and lp, compares that against current rank and lp, then returns the difference as a string
  * @param {*} client 
  * @param {*} discordId 
@@ -428,33 +368,4 @@ async function getSummonerLp(client, discordId, summonerId, gametype){
         }
     }
     return null;
-}
-
-/**
- * Calculates change in lp from ranks and returns either lp change or a change in rank status
- * @param {*} client 
- * @param {*} oldTier 
- * @param {*} oldRank 
- * @param {*} oldLp 
- * @param {*} newTier 
- * @param {*} newRank 
- * @param {*} newLp 
- * @returns 
- */
-function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, newLp){
-    logDebug(client, 'Calculating LP change');
-    const TIERS = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
-    const RANKS = ['IV', 'III', 'II', 'I'];
-    if(oldTier == newTier){
-        if(oldRank == newRank){
-            return  `${newLp - oldLp} LP`
-        }
-    }
-
-    if(RANKS.indexOf(newRank) > RANKS.indexOf(oldRank) || TIERS.indexOf(newTier) > TIERS.indexOf(oldTier)){
-        return '**PROMOTED**'
-    }
-    else{
-        return '**DEMOTED**'
-    }
 }
