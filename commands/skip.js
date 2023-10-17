@@ -8,7 +8,7 @@ module.exports = {
         let queue = interaction.client.distube.getQueue(interaction.guildId);
         if( !queue)
                 return;
-        if(queue.songs.length == 1 && !queue.autoplay && !queue.repeatMode){
+        if(queue.songs.length == 1 && !queue.autoplay){
             await interaction.client.distube.stop(interaction.guildId);
             if(interaction.client.debugMode)
                 console.log("Stopping music player.");
