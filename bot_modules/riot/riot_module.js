@@ -69,6 +69,7 @@ exports.load = (client) => {
                 // Make API call to acquire list of match ids
                 for(let puuid in puuids){
                     let res = null;
+
                     try{
                         res = await axios({
                             method: 'get',
@@ -84,8 +85,7 @@ exports.load = (client) => {
 
                     // record which tracked players are in each match
                     let matchList = res.data;
-                    for(i in matchList){
-                        let match = matchList[i];
+                    matchList.forEach(match => {
                         if(!(match in matches)){
                             matches[match] = {
                                 gametype: gametype,
@@ -93,7 +93,7 @@ exports.load = (client) => {
                             };
                         }
                         matches[match]['members'].push(puuid);
-                    }
+                    });
                 }
             }
             // use designated notification channels from Firestore and fetch Discord channels if there are matches
@@ -196,12 +196,11 @@ function createLeagueEmbed(client, leagueMatch){
     let members = leagueMatch['members'];
     let matchData = leagueMatch['matchData'];
     let participants = [];
-    for(let i in matchData['info']['participants']){
-        let participant = matchData['info']['participants'][i];
+    matchData['info']['participants'].forEach(participant => {
         if(members.includes(participant['puuid'])){
             participants.push(participant);
         } 
-    }
+    })
 
     // organize data for teams
     let result = 'Defeat';
@@ -232,17 +231,15 @@ function createLeagueEmbed(client, leagueMatch){
     });
 
     // create chunks for each player 
-    for(let i in participants){
-        let participant = participants[i];
+    participants.forEach(participant => {
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
             {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
             {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 
-        )
-    }
-
+        );
+    });
     embed.setFooter({text: `Match ID: ${matchData['metadata']['matchId']}`});
 
     return embed;
@@ -270,12 +267,12 @@ function createTftEmbed(client, tftMatch, puuids){
     let members = tftMatch['members'];
     let matchData = tftMatch['matchData'];
     let participants = [];
-    for(let i in matchData['info']['participants']){
-        let participant = matchData['info']['participants'][i];
+    matchData['info']['participants'].forEach(participant => {
         if(members.includes(participant['puuid'])){
             participants.push(participant);
         } 
-    }
+    });
+
     participants.sort((a, b) => {
         return a.placement - b.placement;
     });
@@ -285,8 +282,7 @@ function createTftEmbed(client, tftMatch, puuids){
     embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
     embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
-    for(let i in participants){
-        let participant = participants[i];
+    participants.forEach(participant => {
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
             {name: `**${position(participant['placement'])}** • ${puuids[participant['puuid']]['summonerName']}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
@@ -294,7 +290,7 @@ function createTftEmbed(client, tftMatch, puuids){
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
 
         )
-    }
+    });
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
 
     return embed;
