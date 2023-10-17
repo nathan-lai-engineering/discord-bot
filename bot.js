@@ -57,7 +57,8 @@ client.db = firebase.firestore();
 
 client.db.collection('global').get().then((document) => {
   const docs = document.docs;
-  let auth = docs[0].data()['discord']
+  client.externalApiKeys = docs[0].data()
+  let auth = client.externalApiKeys['discord']
   let debugMode = docs[1].data()['debugMode'];
   let distubeConfig = docs[2].data();
 
@@ -86,7 +87,7 @@ client.db.collection('global').get().then((document) => {
 
     // RIOT tracker module
     const riotModule = require("./bot_modules/riot/riot_module.js");
-    riotModule.load(client, docs[0].data()['riot']);
+    riotModule.load(client);
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });

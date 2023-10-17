@@ -3,16 +3,16 @@ const Discord = require("discord.js");
 const axios = require('axios')
 const firebase = require("firebase-admin");
 const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles} = require('./riotUtils.js');
-const { api } = require('sodium');
 
 /**
  * Load the Riot Games match history tracker into the bot
  * @param {*} client 
  * @param {*} apiKey 
  */
-exports.load = (client, apiKey) => {
+exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
     client.enabledModules.push("riot");
+    let apiKey = client.externalApiKeys['riot'];
 
     let interval = 10 * 60 * 1000; // interval to check match history in second
 
@@ -23,6 +23,20 @@ exports.load = (client, apiKey) => {
      * for match data of every match from Riot Web API
      * for every match, record all tracked players participating
      * created embeds then send
+     * uses two major data objects
+     * 
+     * puuids = {
+     *      puuid: {
+     *          discordId: discordId,
+     *          summonerName: summonerName (optional)
+     * }}
+     * 
+     * matches = {
+     *          matchId: {
+     *              gametype: gametype
+     *              members: [],
+     *              matchData: {matchDTO}
+     * }}}
      */
     let checkRiotData = () => {
         if(apiKey == null)
@@ -33,33 +47,33 @@ exports.load = (client, apiKey) => {
 
         // acquire PUUIDS mapped to discord ids
         getPUUIDs(client).then(async puuids => {
-            let matches = {league: {}, tft: {}};
-            let memberNames = {};
+            const API_PATHS = {
+                'league': {
+                    matchHistory: '/lol/match/v5/matches/by-puuid/',
+                    matchInfo: '/lol/match/v5/matches/'
+            }, 
+                'tft':{
+                    matchHistory: '/tft/match/v1/matches/by-puuid/',
+                    matchInfo: '/tft/match/v1/matches/'
+
+            }}
+            let matches = {};
+            //let memberNames = {};
 
             // get match history of each tracked player
             logDebug(client, 'Acquiring list of matches from every member');
-            for(let gameType in matches){
+            for(let gametype in API_PATHS){
 
                 // construct Riot Web API path based on gametype
-                let apiStringPartial = null;
-                if(gameType == 'league'){
-                    apiStringPartial = '/lol/match/v5/matches/by-puuid/'
-                }
-                else if(gameType == 'tft'){
-                    apiStringPartial = '/tft/match/v1/matches/by-puuid/'
-                }
-                else{
-                    continue;
-                }
+                let apiPath = API_PATHS[gametype]['matchHistory'];
 
                 // Make API call to acquire list of match ids
-                for(let discordId in puuids){
-                    let riotId = puuids[discordId];
+                for(let puuid in puuids){
                     let res = null;
                     try{
                         res = await axios({
                             method: 'get',
-                            url: `https://americas.api.riotgames.com${apiStringPartial}${riotId}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
+                            url: `https://americas.api.riotgames.com${apiPath}${puuid}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`
                         });
                     }
                     catch(error){
@@ -74,16 +88,19 @@ exports.load = (client, apiKey) => {
                     let matchList = res.data;
                     for(i in matchList){
                         let match = matchList[i];
-                        if(!(match in matches[gameType])){
-                            matches[gameType][match] = {members:[]};
+                        if(!(match in matches)){
+                            matches[match] = {
+                                gametype: gametype,
+                                members: []
+                            };
                         }
-                        matches[gameType][match]['members'].push(riotId);
+                        matches[match]['members'].push(puuid);
                     }
                 }
             }
             // use designated notification channels from Firestore and fetch Discord channels if there are matches
             let guildChannels = null;
-            if(Object.keys(matches['tft']).length + Object.keys(matches['league']).length > 0) {
+            if(Object.keys(matches).length > 0) {
                 logDebug(client, 'Acquiring channel data');
                 guildChannels = await getGuildChannels(client); // api call
                 for(let guildId in guildChannels){
@@ -95,84 +112,60 @@ exports.load = (client, apiKey) => {
                 logDebug(client, 'No matches recently');
             }
 
-            // acquire data for each match               
-            for(let gameType in matches){
+            // construct Riot Web API path based on gametype
+            for(let matchId in matches){
+                // get match data
+                let matchData = null;
+                let gametype = matches[matchId]['gametype'];
+                let apiPath = API_PATHS[gametype]['matchInfo'];
 
-                // construct Riot Web API path based on gametype
-                let apiStringPartial = null;
-                if(gameType == 'league'){
-                    apiStringPartial = '/lol/match/v5/matches/'
+                try{
+                    matchData = await axios({
+                        method: 'get',
+                        url: `https://americas.api.riotgames.com${apiPath}${matchId}?api_key=${apiKey}`
+                    });
                 }
-                else if(gameType == 'tft'){
-                    apiStringPartial = '/tft/match/v1/matches/'
+                catch(error){
+                    logDebug(client, 'API call failed, disabling Riot module');
+                    apiKey = null;
+                    return;
                 }
-                else{
-                    continue;
-                }
+                await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
+                matches[matchId]['matchData'] = matchData.data;
 
+                // check if a member of the match is in the channel
+                for(let guildId in guildChannels){
+                    // send embed message based on gametype 
+                    let embed = 'This is supposed to be an embed message';
 
-                for(let match in matches[gameType]){
-                    // get match data
-                    let matchData = null;
-                    try{
-                        matchData = await axios({
-                            method: 'get',
-                            url: `https://americas.api.riotgames.com${apiStringPartial}${match}?api_key=${apiKey}`
-                        });
+                    if(gametype == 'league'){
+                        embed = {embeds:[createLeagueEmbed(client, matches[matchId])]};
                     }
-                    catch(error){
-                        logDebug(client, 'API call failed, disabling Riot module');
-                        apiKey = null;
-                        return;
-                    }
-                    await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
-                    matches[gameType][match]['matchData'] = matchData.data;
-
-                    // check if a member of the match is in the channel
-                    for(let guildId in guildChannels){
-                        let presentMembers = false;
-                        for(let i in matches[gameType][match]['members']){
-                            let matchMember = matches[gameType][match]['members'][i];
-                            let matchMemberDiscord = Object.keys(puuids).find(key => puuids[key] === matchMember);
-                            if(guildChannels[guildId]['members'].includes(matchMemberDiscord)){
-                                memberNames[matchMember] = null; // cache member data for embed
-                                presentMembers = true;
-                            }
-                        }
-
-                        // send embed message based on gametype 
-                        if(presentMembers){
-                            let embed = 'This is supposed to be an embed message';
-                            if(gameType == 'league'){
-                                embed = {embeds:[createLeagueEmbed(client, matches[gameType][match])]};
-                            }
-                            else if(gameType == 'tft'){
-                                // tft web api doesnt provide names of players so make additional api calls to acquire names per PUUID
-                                for(let memberId in memberNames){
-                                    if(memberNames[memberId] == null){
-                                        let summonerResponse = null;
-                                        try{
-                                            summonerResponse = await axios({
-                                                method: 'get',
-                                                url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${memberId}?api_key=${apiKey}`
-                                            });
-                                        }
-                                        catch(error){
-                                            logDebug(client, 'API call failed, disabling Riot module');
-                                            apiKey = null;
-                                            return;
-                                        }
-                                        memberNames[memberId] = summonerResponse.data.name;
-                                        await sleep(50);
-                                    }
+                    else if(gametype == 'tft'){
+                        // tft web api doesnt provide names of players so make additional api calls to acquire names per PUUID
+                        for(let i in matches[matchId]['members']){
+                            let puuid = matches[matchId]['members'][i];
+                            if(!('summonerName' in puuids[puuid])){
+                                let summonerResponse = null;
+                                try{
+                                    summonerResponse = await axios({
+                                        method: 'get',
+                                        url: `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}?api_key=${apiKey}`
+                                    });
                                 }
-                                embed = {embeds:[createTftEmbed(client, matches[gameType][match], memberNames)]};
+                                catch(error){
+                                    logDebug(client, 'API call failed, disabling Riot module');
+                                    apiKey = null;
+                                    return;
+                                }
+                                puuids[puuid]['summonerName'] = summonerResponse.data.name;
+                                await sleep(50);
                             }
-
-                            // send the bad boy
-                            guildChannels[guildId]['channel'].send(embed);
                         }
+                        embed = {embeds:[createTftEmbed(client, matches[matchId], puuids)]};
                     }
+                    // send the bad boy
+                    guildChannels[guildId]['channel'].send(embed);
                 }
             }
         });
@@ -195,6 +188,9 @@ function sleep(ms) {
  * Gets all the puuid data of all members
  * @param {} client 
  * @returns 
+ * {puuid: {
+ *      discordId: discordId
+ * }}
  */
 function getPUUIDs(client){
     logDebug(client, 'Getting Riot Id from Firestore');
@@ -203,7 +199,8 @@ function getPUUIDs(client){
         let puuids = {};
         snapshot.forEach(docSnapshot => {
             if('puuid' in docSnapshot.data()){
-                puuids[docSnapshot.id] = docSnapshot.data().puuid;
+                //puuids[docSnapshot.id] = {puuid: };
+                puuids[docSnapshot.data().puuid] = {discordId: docSnapshot.id};
             }
         });
         return puuids;
@@ -214,6 +211,11 @@ function getPUUIDs(client){
  * Gets an object of guild ids and their riot notification channels
  * @param {*} client 
  * @returns 
+ * guildChannels = {
+ *      guildId: {
+ *          channelId: channelId,
+ *          members: [discordIds]
+ * }}
  */
 function getGuildChannels(client){
     logDebug(client, 'Getting guild Riot channels from Firestore');
@@ -246,7 +248,7 @@ function getGuildChannels(client){
  * @param {*} tftMatch 
  * @returns 
  */
-function createTftEmbed(client, tftMatch, memberNames){
+function createTftEmbed(client, tftMatch, puuids){
     logDebug(client, 'Creating embed for TFT match');
     
     // create a list of all tracked players in match and sort by placement
@@ -272,7 +274,7 @@ function createTftEmbed(client, tftMatch, memberNames){
         let participant = participants[i];
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${memberNames[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(participant['placement'])}** • ${puuids[participant['puuid']]['summonerName']}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
 
@@ -370,7 +372,8 @@ function createLeagueEmbed(client, leagueMatch){
  * @param {*} apiKey 
  * @returns 
  */
-async function getSummonerLp(client, discordId, summonerId, gametype, apiKey){
+async function getSummonerLp(client, discordId, summonerId, gametype){
+    let apiKey = client.externalApiKeys['riot'];
     logDebug(client, `Acquiring ${gametype} lp from Riot Web Api and comparing against database`);
     let apiPath = '';
     if(gametype == 'tft'){
@@ -416,12 +419,13 @@ async function getSummonerLp(client, discordId, summonerId, gametype, apiKey){
             }
         }, {merge:true});
 
-        // data from database
-        let oldRank = userData['riot']['rank'][gametype]['rank'];
-        let oldTier = userData['riot']['rank'][gametype]['tier'];
-        let oldLp = userData['riot']['rank'][gametype]['lp'];
-        return calculateLpChange(client, oldRank, oldTier, oldLp, rank, tier, lp);
-
+        if(userData != null) {
+            // data from database
+            let oldRank = userData['riot']['rank'][gametype]['rank'];
+            let oldTier = userData['riot']['rank'][gametype]['tier'];
+            let oldLp = userData['riot']['rank'][gametype]['lp'];
+            return `${calculateLpChange(client, oldRank, oldTier, oldLp, rank, tier, lp)} ${tier} ${rank}`;
+        }
     }
     return null;
 }
