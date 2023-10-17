@@ -137,7 +137,7 @@ exports.load = (client) => {
                     let embed = 'This is supposed to be an embed message';
 
                     if(gametype == 'league'){
-                        embed = {embeds:[createLeagueEmbed(client, matches[matchId])]};
+                        embed = {embeds:[createLeagueEmbed(client, matches[matchId], puuids)]};
                     }
                     else if(gametype == 'tft'){
                         // tft web api doesnt provide names of players so make additional api calls to acquire names per PUUID
@@ -157,10 +157,11 @@ exports.load = (client) => {
                                     return;
                                 }
                                 puuids[puuid]['summonerName'] = summonerResponse.data.name;
+                                puuids[puuid]['summonerId'] = summonerResponse.data.id;
                                 await sleep(50);
                             }
                         }
-                        embed = {embeds:[createTftEmbed(client, matches[matchId], puuids)]};
+                        embed = {embeds:[await createTftEmbed(client, matches[matchId], puuids)]};
                     }
                     // send the bad boy
                     guildChannels[guildId]['channel'].send(embed);
@@ -189,7 +190,7 @@ exports.load = (client) => {
  * @param {*} leagueMatch 
  * @param {*} memberNames 
  */
-function createLeagueEmbed(client, leagueMatch){
+function createLeagueEmbed(client, leagueMatch, puuids){
     logDebug(client, 'Creating embed for LoL match');
     
     // create a list of all tracked players in match
@@ -197,8 +198,11 @@ function createLeagueEmbed(client, leagueMatch){
     let matchData = leagueMatch['matchData'];
     let participants = [];
     matchData['info']['participants'].forEach(participant => {
-        if(members.includes(participant['puuid'])){
+        let puuid = participant['puuid'];
+        if(members.includes(puuid)){
             participants.push(participant);
+            puuids[puuid]['summonerName'] = participant['summonerName'];
+            puuids[puuid]['summonerId'] = participant['summonerId'];
         } 
     })
 
@@ -260,7 +264,7 @@ function createLeagueEmbed(client, leagueMatch){
  * @param {*} tftMatch 
  * @returns 
  */
-function createTftEmbed(client, tftMatch, puuids){
+async function createTftEmbed(client, tftMatch, puuids){
     logDebug(client, 'Creating embed for TFT match');
     
     // create a list of all tracked players in match and sort by placement
@@ -282,15 +286,18 @@ function createTftEmbed(client, tftMatch, puuids){
     embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
     embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
-    participants.forEach(participant => {
+    for(let i in participants){
+        let participant = participants[i];
+        let puuidData = puuids[participant['puuid']];
+        let lpString = await getSummonerLp(client, puuidData, 'tft');
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${puuids[participant['puuid']]['summonerName']}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(participant['placement'])}** • ${puuidData['summonerName']} • ${lpString}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
 
         )
-    });
+    }
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
 
     return embed;
@@ -308,8 +315,11 @@ function createTftEmbed(client, tftMatch, puuids){
  * @param {*} apiKey 
  * @returns 
  */
-async function getSummonerLp(client, discordId, summonerId, gametype){
+async function getSummonerLp(client, puuidData, gametype){
+    let discordId = puuidData['discordId'];
+    let summonerId = puuidData['summonerId'];
     let apiKey = client.externalApiKeys['riot'];
+
     logDebug(client, `Acquiring ${gametype} lp from Riot Web Api and comparing against database`);
     let apiPath = '';
     if(gametype == 'tft'){
@@ -362,6 +372,7 @@ async function getSummonerLp(client, discordId, summonerId, gametype){
             let oldLp = userData['riot']['rank'][gametype]['lp'];
             return `${calculateLpChange(client, oldRank, oldTier, oldLp, rank, tier, lp)} ${tier} ${rank}`;
         }
+        return `${tier} ${rank}`;
     }
     return null;
 }
