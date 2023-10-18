@@ -13,6 +13,8 @@ const firebase = require("firebase-admin");
 
 const FIREBASE_AUTH = require("./firebase.json");
 const {log, logDebug} = require('./utils/log');
+const oracledb = require('oracledb');
+const {oracleQuery} = require('./utils/oracle');
 
 // =============================================================
 // CLIENT INITIALIZATION
@@ -46,6 +48,8 @@ for (const file of commandFiles) {
 // =============================================================
 
 // INITIALIZE DATABASE
+
+initalize()
 
 firebase.initializeApp({
   credential: firebase.credential.cert(FIREBASE_AUTH.credential),
@@ -86,8 +90,8 @@ client.db.collection('global').get().then((document) => {
     tiktokModule.load(client);
 
     // RIOT tracker module
-    const riotModule = require("./bot_modules/riot/riot_module.js");
-    riotModule.load(client);
+    //const riotModule = require("./bot_modules/riot/riot_module.js");
+    //riotModule.load(client);
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
@@ -138,3 +142,15 @@ client.db.collection('global').get().then((document) => {
     console.log(error);
   }
 });
+
+async function initalize(){
+  console.log('initalizing')
+
+  let result = await oracleQuery(`SELECT json_document
+  FROM global
+  FETCH FIRST 1 ROWS ONLY`);
+
+  console.log(result.rows[0][0].toString())
+  result = JSON.parse(result.rows[0][0].toString());
+  console.log(result)
+}

@@ -17,6 +17,9 @@ temp
 
 firebase.json
 discordconfig.json
+oracledb.json
+oraclepasswords.txt
+oracle_wallet
 
 # macOS
 .DS_Store
