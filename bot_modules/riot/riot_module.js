@@ -27,7 +27,8 @@ exports.load = (client) => {
      * puuids = {
      *      puuid: {
      *          discordId: discordId,
-     *          summonerName: summonerName (optional)
+     *          summonerName: summonerName (needed for tft),
+     *          summonerId: summonerId (needed for lp calculation)
      * }}
      * 
      * matches = {
@@ -40,7 +41,7 @@ exports.load = (client) => {
     let checkRiotData = () => {
         if(apiKey == null)
             return;
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 6;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, 'Performing check on Riot Web API');
 
@@ -255,7 +256,7 @@ function createLeagueEmbed(client, leagueMatch, puuids){
  *   Teamfight Tactics
  *   10/13/2023 5:22 PM
  *
- *   4th - Blazeris
+ *   4th • Blazeris • +43 LP PLATINUM IV
  *      Eliminated at 23:36 on round 4-3
  *      Comp: Ionia Invoker    
  *      Level: 6    Gold Left: 34   Damage dealt: 23  

@@ -202,7 +202,7 @@ function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, ne
     const RANKS = ['IV', 'III', 'II', 'I'];
     if(oldTier == newTier){
         if(oldRank == newRank){
-            return  `${newLp - oldLp} LP`
+            return  `${oldLp <= newLp ? '+' : ''}${newLp - oldLp} LP`
         }
     }
     if(RANKS.indexOf(newRank) > RANKS.indexOf(oldRank) || TIERS.indexOf(newTier) > TIERS.indexOf(oldTier)){
