@@ -16,10 +16,10 @@ module.exports = {
                 .setDescription('registers your Riot username to your discord'))
                 .addStringOption(option =>
                     option
-                        .setName('summoner name')
+                        .setName('summoner_name')
                         .setDescription('caps sensitive summoner name')
                         .setRequired(true)),
 	async execute(interaction) {
-        
+
 	},
 };
