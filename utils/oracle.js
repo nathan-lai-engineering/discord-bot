@@ -24,7 +24,6 @@ async function oracleQuery(sqlString, binds, config){
     try{
         oracledb.fetchAsBuffer = [oracledb.BLOB];
         result = await connection.execute(sqlString, binds, config);
-        console.log(result)
     }
     catch(error){
         console.error(error);

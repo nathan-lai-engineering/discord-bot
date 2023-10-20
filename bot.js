@@ -49,8 +49,6 @@ for (const file of commandFiles) {
 
 // INITIALIZE DATABASE
 
-initalize()
-
 firebase.initializeApp({
   credential: firebase.credential.cert(FIREBASE_AUTH.credential),
   databaseURL: FIREBASE_AUTH.databaseURL
@@ -59,19 +57,18 @@ firebase.initializeApp({
 console.log("Database intialized.");
 client.db = firebase.firestore();
 
-client.db.collection('global').get().then((document) => {
-  const docs = document.docs;
-  client.externalApiKeys = docs[0].data()
-  let auth = client.externalApiKeys['discord']
-  let debugMode = docs[1].data()['debugMode'];
-  let distubeConfig = docs[2].data();
-
-  client.debugMode = debugMode;
+oracleQuery(`SELECT * FROM api_keys`).then(res => {
+  client.apiKeys = {};
+  for(let i in res.rows){
+    client.apiKeys[res.rows[i][0]] = res.rows[i][1];
+  }
+  
+  client.debugMode = true;
   client.enabledModules = [];
   client.messageListeners = [];
 
   console.log("Global config loaded.");
-  logDebug(client, 'Auth: ' + auth);
+  logDebug(client, 'Auth: ' + client.apiKeys['discord']);
 
   // READY
   client.on("ready", () => {
@@ -82,8 +79,8 @@ client.db.collection('global').get().then((document) => {
     });
 
     // DISTUBE MODULE
-    const distubeModule = require("./bot_modules/distube_module.js");
-    distubeModule.load(client, distubeConfig);
+    //const distubeModule = require("./bot_modules/distube_module.js");
+    //distubeModule.load(client, distubeConfig);
 
     // TikTok Embed MODULE
     const tiktokModule = require("./bot_modules/tiktok_module.js");
@@ -95,6 +92,7 @@ client.db.collection('global').get().then((document) => {
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
+
 
   // COMMAND HANDLER
   client.on(Discord.Events.InteractionCreate, async interaction => {
@@ -137,20 +135,8 @@ client.db.collection('global').get().then((document) => {
 
   // BOT LOGIN
   try {
-    client.login(auth);
+    client.login(client.apiKeys['discord']);
   } catch (error) {
     console.log(error);
   }
 });
-
-async function initalize(){
-  console.log('initalizing')
-
-  let result = await oracleQuery(`SELECT json_document
-  FROM global
-  FETCH FIRST 1 ROWS ONLY`);
-
-  console.log(result.rows[0][0].toString())
-  result = JSON.parse(result.rows[0][0].toString());
-  console.log(result)
-}
