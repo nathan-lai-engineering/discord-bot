@@ -9,11 +9,7 @@ https://discord.com/oauth2/authorize?client_id=617027534042693664&scope=bot
 const fs = require("fs");
 const path = require("path");
 const Discord = require("discord.js");
-const firebase = require("firebase-admin");
-
-const FIREBASE_AUTH = require("./firebase.json");
 const {log, logDebug} = require('./utils/log');
-const oracledb = require('oracledb');
 const {oracleQuery} = require('./utils/oracle');
 
 // =============================================================
@@ -48,19 +44,13 @@ for (const file of commandFiles) {
 // =============================================================
 
 // INITIALIZE DATABASE
-
-firebase.initializeApp({
-  credential: firebase.credential.cert(FIREBASE_AUTH.credential),
-  databaseURL: FIREBASE_AUTH.databaseURL
-});
-
 console.log("Database intialized.");
-client.db = firebase.firestore();
 
 oracleQuery(`SELECT * FROM api_keys`).then(res => {
+  // load api keys from database
   client.apiKeys = {};
-  for(let i in res.rows){
-    client.apiKeys[res.rows[i][0]] = res.rows[i][1];
+  for(let apiKey of res.rows){
+    client.apiKeys[apiKey[0]] = apiKey[1];
   }
   
   client.debugMode = true;
