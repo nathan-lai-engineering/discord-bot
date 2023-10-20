@@ -66,11 +66,16 @@ exports.load = (client, disConfig) => {
 
 function leaveOnEmpty(oldState){
     let client = oldState.client;
-    if(oldState.channel != null && channelEmpty(oldState.channel)){
-        logDebug(client, "Left on empty " + oldState.channel.id);
-        let voice = client.distube.voices.get(oldState.guild.id)
-        if(voice != undefined)
-            voice.leave();
+
+    if(oldState.channel != null) {
+        oldState.channel.fetch().then(channel => {
+            if(channel != null && channelEmpty(channel)){
+                logDebug(client, "Left on empty " + channel.id);
+                let voice = client.distube.voices.get(oldState.guild.id)
+                if(voice != undefined)
+                    voice.leave();
+            }
+        });
     }
 }
 
