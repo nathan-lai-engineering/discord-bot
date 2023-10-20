@@ -114,9 +114,6 @@ module.exports = {
                     connection.close();
                 }
 
-
-
-
                 interaction.reply({content:'Successfully saved.', ephemeral: true});
                 break;
 
@@ -155,36 +152,32 @@ module.exports = {
      */
     async playOutro(client, member, guild, channel){
         const distube = client.distube;
-        client.db.collection('users').doc(member.id).get().then(snapshot => {
+        oracleQuery(
+            `SELECT * 
+            FROM outros
+            WHERE discord_id=:0`,
+            [member.id],
+            {}
+        ).then(res => {
+            console.log(res.rows)
+            if(res.rows.length > 0){
+                let url, start, duration, toggle;
+                [_, url, start, duration, toggle] = res.rows[0];
+                
+
+                
+                let currentQueue = distube.queues.get(guild);
+
+                if(currentQueue != null && currentQueue.playing){
             
-            logDebug(client, 'Outro data acquired from Firestore');
-            if(!snapshot || !snapshot.data() || !(snapshot.data().hasOwnProperty('outro'))){
-                return false;
+                }
+                else {
+                    playSongPriority(url, channel, client, start);
+                    delayedSkipGradual(duration, client, guild);
+                }
+
+                return true;
             }
-
-            let outroData = snapshot.data().outro;
-
-            if( outroData == null ||  
-                outroData.url == null ||  
-                outroData.start == null ||  
-                outroData.duration == null || ! 
-                outroData.toggle){
-                logDebug(client, 'Outro play denied');
-                return false;
-            }
-            
-
-            let currentQueue = distube.queues.get(guild);
-
-            if(currentQueue != null && currentQueue.playing){
-         
-            }
-            else {
-                playSongPriority(outroData.url, channel, client, outroData);
-                delayedSkipGradual(outroData, client, guild);
-            }
-
-            return true;
         });
     }
 };
@@ -194,13 +187,13 @@ module.exports = {
  * @param {*} url 
  * @param {*} channel 
  * @param {*} client 
- * @param {*} outroData 
+ * @param {*} start
  */
-function playSongPriority(url, channel, client, outroData){
+function playSongPriority(url, channel, client, start){
     client.distube.eventFunctionsQueue['playSong'].push(
         function(){
-            logDebug(client, 'Seeking to ' + outroData.start + 's');
-            client.distube.seek(channel.guild, outroData.start);
+            logDebug(client, 'Seeking to ' + start + 's');
+            client.distube.seek(channel.guild, start);
             return true; //continue to next in queue
         }
     );
@@ -211,11 +204,11 @@ function playSongPriority(url, channel, client, outroData){
 
 /**
  * After a duration, lowers the volume gradually until silence
- * @param {*} outroData 
+ * @param {*} duration
  * @param {*} client 
  * @param {*} guild 
  */
-function delayedSkipGradual(outroData, client, guild){
+function delayedSkipGradual(duration, client, guild){
     logDebug(client, 'Queueing delayed skip');
     client.distube.eventFunctionsQueue['playSong'].push(
         function(){
@@ -223,10 +216,10 @@ function delayedSkipGradual(outroData, client, guild){
                 logDebug(client, 'Executing delayedSkipGradual');
 
                 let volume = 50;
-                let interval = (outroData.duration + 4) / 200; // the gradual lower volume will be little more than 1/4 of total duration
+                let interval = (duration + 4) / 200; // the gradual lower volume will be little more than 1/4 of total duration
                 delayedSkipGradualHelper(client, guild, interval, volume);
             }, 
-                outroData.duration * 1000);
+                duration * 1000);
             return false; // end of list of actions
         }
     );
