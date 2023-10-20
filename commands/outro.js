@@ -1,5 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const {logDebug} = require('../utils/log');
+const {oracleQuery} = require('../utils/oracle');
+const oracledb = require('oracledb');
+
+
 
 let maxDuration = 10;
 
@@ -75,15 +79,45 @@ module.exports = {
                     return;
                 }
 
-                let toggle = true;
-                let outroData = {
-                    url: url,
-                    start: start,
-                    duration: duration,
-                    toggle: toggle};
+                const oracleLogin = require('../oracledb.json');
+                const connection = await oracledb.getConnection(oracleLogin);
+            
+                var result = null
+                try{
+                    await connection.execute(
+                        `INSERT INTO discord_accounts (discord_id, admin)
+                        SELECT :0, 0
+                        FROM dual
+                        WHERE NOT EXISTS(
+                            SELECT * FROM discord_accounts
+                            WHERE (discord_id = :1)
+                        )`,
+                        [interaction.member.id, interaction.member.id],
+                        {}
+                    );
+                    connection.execute(
+                        `MERGE INTO outros USING dual ON (discord_id = :discord_id)
+                        WHEN MATCHED THEN UPDATE SET url=:url,start_second=:start_second, duration_second=:duration_second, toggle=1
+                        WHEN NOT MATCHED THEN INSERT
+                            VALUES(:discord_id, :url, :start_second, :duration_second, 1)`,
+                        {discord_id: interaction.member.id,
+                        url: url,
+                        start_second: start,
+                        duration_second: duration},
+                        {autoCommit:true}
+                    );
+                }
+                catch(error){
+                    console.error(error);
+                }
+                finally{
+                    connection.close();
+                }
 
-                interaction.client.db.collection('users').doc(interaction.user.id).set({'outro': outroData}, {merge: true})
-                    .then(interaction.reply({content:'Successfully saved.', ephemeral: true}));
+
+
+
+                interaction.reply({content:'Successfully saved.', ephemeral: true});
                 break;
 
             /**

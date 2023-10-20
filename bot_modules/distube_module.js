@@ -33,7 +33,12 @@ function createEvent(client, event, eventText){
 
 exports.load = (client, disConfig) => {
     logDebug(client, 'Loading Distube module');
-    client.distube = new DisTube(client, disConfig);
+    client.distube = new DisTube(client, {
+        "emitAddSongWhenCreatingQueue": false,
+        "emitNewSongOnly": true,
+        "leaveOnStop": false,
+        "nsfw": true
+        });
     client.enabledModules.push("distube");
     client.distube.eventFunctionsQueue = {};
     client.distube.lastJoined = Date.now();

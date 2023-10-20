@@ -3,24 +3,17 @@ const oracledb = require('oracledb');
 module.exports = {oracleQuery}
 
 /**
- * Helper method for wrapping oracle connection and query
+ * Method for basic wrapping oracle connection and query
  * @param {*} sqlString 
  * @param {*} binds 
  * @param {*} config 
  * @returns 
  */
-async function oracleQuery(sqlString, binds, config){
-    if(binds == undefined){
-        binds = [];
-    }
-    if(config == undefined){
-        config = {};
-    }
+async function oracleQuery(sqlString, binds=[], config={}){
     const oracleLogin = require('../oracledb.json');
+    const connection = await oracledb.getConnection(oracleLogin);
 
-    var connection;
-    var result = null;
-    connection = await oracledb.getConnection(oracleLogin);
+    var result = null
     try{
         oracledb.fetchAsBuffer = [oracledb.BLOB];
         result = await connection.execute(sqlString, binds, config);

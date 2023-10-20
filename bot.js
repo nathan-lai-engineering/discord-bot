@@ -69,8 +69,8 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     });
 
     // DISTUBE MODULE
-    //const distubeModule = require("./bot_modules/distube_module.js");
-    //distubeModule.load(client, distubeConfig);
+    const distubeModule = require("./bot_modules/distube_module.js");
+    distubeModule.load(client);
 
     // TikTok Embed MODULE
     const tiktokModule = require("./bot_modules/tiktok_module.js");
