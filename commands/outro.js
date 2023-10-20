@@ -52,8 +52,8 @@ module.exports = {
                     return;
                 }
 
-                this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel) ? 
-                    interaction.reply({content:'Your outro is playing, gg gn', ephemeral: true}) : interaction.reply({content:'Your outro is off or you do not have one set up', ephemeral: true});
+                let outroPlayed = await this.playOutro(interaction.client, interaction.member, interaction.guild, interaction.member.voice.channel);
+                outroPlayed ? interaction.reply({content:'Your outro is playing, gg gn', ephemeral: true}) : interaction.reply({content:'Your outro is off or you do not have one set up', ephemeral: true});
                 break;
 
             /**
@@ -80,9 +80,8 @@ module.exports = {
                 }
 
                 const oracleLogin = require('../oracledb.json');
-                const connection = await oracledb.getConnection(oracleLogin);
+                let connection = await oracledb.getConnection(oracleLogin);
             
-                var result = null
                 try{
                     await connection.execute(
                         `INSERT INTO discord_accounts (discord_id, admin)
@@ -117,24 +116,8 @@ module.exports = {
                 interaction.reply({content:'Successfully saved.', ephemeral: true});
                 break;
 
-            /**
-             * Toggles whether the outro is played or not
-             */
             case 'toggle':
-                let docRef = interaction.client.db.collection('users').doc(interaction.user.id);
-                docRef.get().then(snapshot => {
-                    let toggle = snapshot.data().outro.toggle;
-                    if(toggle != null && toggle != undefined){
-                        toggle = !toggle;
-                        docRef.update({'outro.toggle': toggle}).then(result => {
-                            let message = 'Outro ';
-                            message += toggle ? 'enabled.' : 'disabled.';
-                            interaction.reply({content: message, ephemeral: true})
-                        });
-                    }
-                    else
-                        interaction.reply({content: 'No outro to toggle', ephemeral: true});
-                })
+                await outroToggle(interaction.client, interaction);
                 break;
 
 
@@ -152,32 +135,31 @@ module.exports = {
      */
     async playOutro(client, member, guild, channel){
         const distube = client.distube;
-        oracleQuery(
+        return oracleQuery(
             `SELECT * 
             FROM outros
             WHERE discord_id=:0`,
             [member.id],
             {}
         ).then(res => {
-            console.log(res.rows)
             if(res.rows.length > 0){
                 let url, start, duration, toggle;
                 [_, url, start, duration, toggle] = res.rows[0];
                 
+                if(toggle != 0){
+                    let currentQueue = distube.queues.get(guild);
 
-                
-                let currentQueue = distube.queues.get(guild);
-
-                if(currentQueue != null && currentQueue.playing){
-            
-                }
-                else {
-                    playSongPriority(url, channel, client, start);
-                    delayedSkipGradual(duration, client, guild);
-                }
-
-                return true;
+                    if(currentQueue != null && currentQueue.playing){
+                        return false;
+                    }
+                    else {
+                        playSongPriority(url, channel, client, start);
+                        delayedSkipGradual(duration, client, guild);
+                    }
+                    return true;
+                }  
             }
+            return false;
         });
     }
 };
@@ -250,5 +232,48 @@ function delayedSkipGradualHelper(client, guild, interval, volume){
         else{
             logDebug(client, 'Error on delayedSkipGradual, no queue');
         }
+    }
+}
+
+/**
+ * Toggles on and off the outro function through the database
+ * @param {*} client 
+ * @param {*} interaction 
+ */
+async function outroToggle(client, interaction){
+    const oracleLogin = require('../oracledb.json');
+    const connection = await oracledb.getConnection(oracleLogin);
+
+    try{
+        let res = await connection.execute(
+            `SELECT toggle
+            FROM outros
+            WHERE discord_id = :0`,
+            [interaction.member.id],
+            {}
+        );
+        let toggle = res.rows[0][0];
+        if(toggle == 0){
+            toggle = 1;
+        }
+        else {
+            toggle = 0;
+        }
+        await connection.execute(
+            `UPDATE outros
+            SET toggle = :0
+            WHERE discord_id = :1`, 
+            [toggle, interaction.member.id], 
+            {autoCommit: true}
+        );
+        interaction.reply({content:`Outro toggled ${toggle == 0 ? 'off': 'on'}`, ephemeral: true});
+    }
+    catch(error){
+        interaction.reply({content: 'Toggle failed', ephemeral: true});
+        logDebug(client, error);
+    }
+    finally{
+        if(connection)
+            connection.close();
     }
 }
