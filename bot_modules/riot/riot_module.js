@@ -1,6 +1,6 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
-const axios = require('axios')
+const axios = require('axios');
 const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, getGuildChannels, getPUUIDs, sleep} = require('./riotUtils.js');
 
 /**
