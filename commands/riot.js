@@ -14,19 +14,26 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('register')
-                .setDescription('registers your Riot username to your discord'))
+                .setDescription('registers your Riot username to your discord')
                 .addStringOption(option =>
                     option
                         .setName('summoner_name')
-                        .setDescription('caps sensitive summoner name')
-                        .setRequired(true)),
+                        .setDescription('summoner name')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('toggle')
+                .setDescription('toggles whether or not to track your match history')),
 	async execute(interaction) {
             switch(interaction.options.getSubcommand()){
                 case 'set':
-                    await riotSet(interaction.client, interaction);
+                    await riotSet(interaction);
                     break;
                 case 'register':
-                    await riotRegister(interaction.client, interaction);
+                    await riotRegister(interaction);
+                    break;
+                case 'toggle':
+                    await riotToggle(interaction);
                     break;
                 default:
                     interaction.reply({content:'What subcommand did you even try?', ephemeral: true});
@@ -41,8 +48,9 @@ module.exports = {
  * @param {*} client 
  * @param {*} interaction 
  */
-async function riotSet(client, interaction){
-    logDebug(client, 'Updating Riot notification channel on database');
+async function riotSet(interaction){
+
+    logDebug(interaction.client, 'Updating Riot notification channel on database');
     const oracleLogin = require('../oracledb.json');
     let connection = await oracledb.getConnection(oracleLogin);
     try{
@@ -82,7 +90,7 @@ async function riotSet(client, interaction){
         interaction.reply({content: 'You are no admin!', ephemeral: true});
     }
     catch(error){
-        logDebug(client, error);
+        logDebug(interaction.client, error);
     }
     finally{
         if(connection)
@@ -91,41 +99,80 @@ async function riotSet(client, interaction){
     
 }
 
+async function riotRegister(interaction){
+    logDebug(interaction.client, 'Looking up riot account of user');
+    let apiKey = interaction.client.apiKeys['league'];
+    let summonerName = interaction.options.getSubcommand();
+    try{
+        let res = await axios({
+            method: 'get',
+            url: `https://na1.api.riotgames.com/tft/summoner/v1/summoners/by-name/${summonerName}?api_key=${apiKey}`
+        });
+        console.log(res);
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
+
+    console.log(interaction.client.apiKeys)
+}
+
 /**
  * Registers the user's input username as their riot account
  * @param {*} client 
  * @param {*} interaction 
  */
-async function riotRegister(client, interaction){
-    logDebug(client, 'Looking up riot account of user');
-
+async function riotToggle(interaction){
+    logDebug(interaction.client, 'Toggling Riot match history tracker');
 
     const oracleLogin = require('../oracledb.json');
     let connection = await oracledb.getConnection(oracleLogin);
     try{
         await connection.execute(
             `INSERT INTO discord_accounts (discord_id, admin)
-            SELECT :guild_id, false
+            SELECT :discord_id, 0
             FROM dual
             WHERE NOT EXISTS(
-                SELECT * FROM guilds
+                SELECT * FROM discord_accounts
                 WHERE (discord_id = :discord_id)
             )`,
             {discord_id: interaction.member.id},
             {}
         );
-    
+        let result = await connection.execute(
+            `SELECT toggle
+            FROM notification_members
+            WHERE guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id`,
+            {guild_id: interaction.guild.id,
+            discord_id: interaction.member.id},
+            {}
+        );
+
+        let toggle = 0;
+        if(result != null && result.rows.length > 0){
+            if(result.rows[0][0] == 0)
+                toggle = 1;
+            else
+                toggle = 0;
+        }
+
         await connection.execute(
-            `MERGE INTO notification_channels USING dual ON (guild_id=:guild_id AND notification_type='riot')
-            WHEN MATCHED THEN UPDATE SET channel_id=:channel_id
+            `MERGE INTO notification_members USING dual ON (guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id)
+            WHEN MATCHED THEN UPDATE SET toggle=:toggle
             WHEN NOT MATCHED THEN INSERT
-            VALUES(:guild_id, 'riot', :channel_id)`,
+            VALUES(:guild_id, 'riot', :discord_id, :toggle)`,
         {guild_id: interaction.guild.id,
-        channel_id: interaction.channel.id},
+        discord_id: interaction.member.id,
+        toggle: toggle},
         {autoCommit:true});
+
+        if(toggle == 1)
+            interaction.reply({content: 'You are now subscribed to the Riot match history tracker', ephemeral: true});
+        else
+            interaction.reply({content: 'You are now unsubscribed to the Riot match history tracker', ephemeral: true});
     }
     catch(error){
-        logDebug(client, error);
+        logDebug(interaction.client, error);
     }
     finally{
         if(connection)
