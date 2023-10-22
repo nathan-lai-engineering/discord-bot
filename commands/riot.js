@@ -99,26 +99,79 @@ async function riotSet(interaction){
     
 }
 
+/**
+ * 
+ * @param {*} interaction 
+ */
 async function riotRegister(interaction){
     logDebug(interaction.client, 'Looking up riot account of user');
     let apiKey = interaction.client.apiKeys['league'];
-    let summonerName = interaction.options.getSubcommand();
+    let summonerName = interaction.options.getString('summoner_name');
+    let apiString = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${apiKey}`;
+    let resData = null;
     try{
         let res = await axios({
             method: 'get',
-            url: `https://na1.api.riotgames.com/tft/summoner/v1/summoners/by-name/${summonerName}?api_key=${apiKey}`
+            url: apiString
         });
-        console.log(res);
+        resData = res.data;
     }
     catch(error){
         logDebug(interaction.client, error);
+        interaction.reply({content: `That account could not be found`, ephemeral:true});
     }
 
-    console.log(interaction.client.apiKeys)
+    if(resData != null){
+        const oracleLogin = require('../oracledb.json');
+        let connection = await oracledb.getConnection(oracleLogin);
+        try{
+            await connection.execute(
+                `INSERT INTO discord_accounts (discord_id, admin)
+                SELECT :discord_id, 0
+                FROM dual
+                WHERE NOT EXISTS(
+                    SELECT * FROM discord_accounts
+                    WHERE (discord_id = :discord_id)
+                )`,
+                {discord_id: interaction.member.id},
+                {}
+            );
+    
+            await connection.execute(
+                `MERGE INTO riot_accounts USING dual ON (puuid=:puuid)
+                WHEN MATCHED THEN UPDATE SET discord_id=:discord_id, summoner_name=:summoner_name
+                WHEN NOT MATCHED THEN INSERT
+                VALUES(:puuid, :discord_id, :summoner_name, :summoner_id)`,
+            {puuid: resData.puuid,
+            discord_id: interaction.member.id,
+            summoner_name: resData.name,
+            summoner_id: resData.id},
+            {});
+    
+            await connection.execute(
+                `MERGE INTO notification_members USING dual ON (guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id)
+                WHEN MATCHED THEN UPDATE SET toggle=:toggle
+                WHEN NOT MATCHED THEN INSERT
+                VALUES(:guild_id, 'riot', :discord_id, :toggle)`,
+            {guild_id: interaction.guild.id,
+            discord_id: interaction.member.id,
+            toggle: 1},
+            {autoCommit:true});
+            interaction.reply({content: `You have registered to the Riot account of: ${resData.name}`, ephemeral:false});
+        }
+        catch(error){
+            logDebug(interaction.client, error);
+            interaction.reply({content:'Database error.', ephemeral:true});
+        }
+        finally{
+            if(connection)
+                connection.close();
+        }
+    }
 }
 
 /**
- * Registers the user's input username as their riot account
+ * Toggles the Riot match tracking
  * @param {*} client 
  * @param {*} interaction 
  */
