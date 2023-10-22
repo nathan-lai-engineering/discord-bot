@@ -100,7 +100,7 @@ function createTikTokEmbed(message, videoData){
         embed.setAuthor({
             name: posterName,
             iconURL: avatar,
-            url:'https://www.tiktok.com/@' + posterName
+            url:'https://www.tiktok.com/@' + videoData.id
         });
     }
     catch(error){
@@ -172,6 +172,7 @@ function tikVM(client, tiktokUrl){
             if(videoData.videoUrl == undefined || videoData.videoUrl == null){
                 return null;
             }
+            videoData.id = data.author.id;
             videoData.caption = data.title;
             videoData.size = data.size;
             videoData.viewCount = data.play_count;
