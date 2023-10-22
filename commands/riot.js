@@ -100,7 +100,7 @@ async function riotSet(interaction){
 }
 
 /**
- * 
+ * Registers a discord user to a riot account. Repeated usage only updates summoner name.
  * @param {*} interaction 
  */
 async function riotRegister(interaction){
@@ -139,7 +139,7 @@ async function riotRegister(interaction){
     
             await connection.execute(
                 `MERGE INTO riot_accounts USING dual ON (puuid=:puuid)
-                WHEN MATCHED THEN UPDATE SET discord_id=:discord_id, summoner_name=:summoner_name
+                WHEN MATCHED THEN UPDATE SET summoner_name=:summoner_name
                 WHEN NOT MATCHED THEN INSERT
                 VALUES(:puuid, :discord_id, :summoner_name, :summoner_id)`,
             {puuid: resData.puuid,
