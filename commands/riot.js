@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const {log, logDebug} = require('../utils/log.js');
 const oracledb = require('oracledb');
 const axios = require('axios');
+const apiPaths = require('../bot_modules/riot/riotApiPaths.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -105,25 +106,38 @@ async function riotSet(interaction){
  */
 async function riotRegister(interaction){
     logDebug(interaction.client, 'Looking up riot account of user');
-    let apiKey = interaction.client.apiKeys['league'];
-    let summonerName = interaction.options.getString('summoner_name');
-    let apiString = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${apiKey}`;
-    let resData = null;
-    try{
-        let res = await axios({
-            method: 'get',
-            url: apiString
-        });
-        resData = res.data;
-    }
-    catch(error){
-        logDebug(interaction.client, error);
-        interaction.reply({content: `That account could not be found`, ephemeral:true});
+    let summonerNameInput = interaction.options.getString('summoner_name');
+
+    // acquire summoner data from both league and tft
+    var summonerData = {};
+    
+
+    for(let gametype in apiPaths){
+        let apiKey = interaction.client.apiKeys[gametype];
+        let apiPath = apiPaths[gametype]['summoner'];
+        let apiString = `${apiPath}${summonerNameInput}?api_key=${apiKey}`
+        console.log(apiString)
+        try{
+            let res = await axios({
+                method: 'get',
+                url: apiString
+            });
+            summonerData[gametype] = res.data;
+
+        }
+        catch(error){
+            logDebug(interaction.client, error);
+        }
     }
 
-    if(resData != null){
+    if(Object.keys(summonerData).length > 0){
         const oracleLogin = require('../oracledb.json');
         let connection = await oracledb.getConnection(oracleLogin);
+
+        let summonerName, summonerId;
+        summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
+        summonerId = summonerData[Object.keys(summonerData)[0]]['id'];
+
         try{
             await connection.execute(
                 `INSERT INTO discord_accounts (discord_id, admin)
@@ -138,16 +152,32 @@ async function riotRegister(interaction){
             );
     
             await connection.execute(
-                `MERGE INTO riot_accounts USING dual ON (puuid=:puuid)
+                `MERGE INTO riot_accounts USING dual ON (summoner_id=:summoner_id)
                 WHEN MATCHED THEN UPDATE SET summoner_name=:summoner_name
                 WHEN NOT MATCHED THEN INSERT
-                VALUES(:puuid, :discord_id, :summoner_name, :summoner_id)`,
-            {puuid: resData.puuid,
+                VALUES(:summoner_id, :discord_id, :summoner_name)`,
+            {summoner_id: summonerId,
             discord_id: interaction.member.id,
-            summoner_name: resData.name,
-            summoner_id: resData.id},
+            summoner_name: summonerName
+            },
             {});
     
+            for(let gametype in summonerData){
+                await connection.execute(
+                    `INSERT INTO puuids (puuid, summoner_id, gametype)
+                    SELECT :puuid, :summoner_id, :gametype
+                    FROM dual
+                    WHERE NOT EXISTS(
+                        SELECT * FROM puuids
+                        WHERE (puuid=:puuid)
+                    )`,
+                    {puuid: summonerData[gametype]['puuid'],
+                    summoner_id: summonerId,
+                    gametype: gametype},
+                    {}
+                );
+            }
+
             await connection.execute(
                 `MERGE INTO notification_members USING dual ON (guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id)
                 WHEN MATCHED THEN UPDATE SET toggle=:toggle
@@ -157,7 +187,7 @@ async function riotRegister(interaction){
             discord_id: interaction.member.id,
             toggle: 1},
             {autoCommit:true});
-            interaction.reply({content: `You have registered to the Riot account of: ${resData.name}`, ephemeral:false});
+            interaction.reply({content: `You have registered to the Riot account of: ${summonerName}`, ephemeral:false});
         }
         catch(error){
             logDebug(interaction.client, error);
@@ -168,6 +198,8 @@ async function riotRegister(interaction){
                 connection.close();
         }
     }
+    else
+        interaction.reply({content: `That account could not be found.`, ephemeral:true});
 }
 
 /**

@@ -24,6 +24,8 @@ const client = new Discord.Client({
 ]
 });
 
+
+// Setting up commands
 client.commands = new Discord.Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -43,8 +45,7 @@ for (const file of commandFiles) {
 // BOT OPERATION
 // =============================================================
 
-// INITIALIZE DATABASE
-console.log("Database intialized.");
+client.dbLogin = require('./oracledb.json');
 
 oracleQuery(`SELECT * FROM api_keys`).then(res => {
   // load api keys from database
