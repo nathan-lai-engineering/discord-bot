@@ -107,6 +107,13 @@ async function riotSet(interaction){
 async function riotRegister(interaction){
     logDebug(interaction.client, 'Looking up riot account of user');
     let summonerNameInput = interaction.options.getString('summoner_name');
+    let discordId = interaction.member.id;
+
+    // secret method for registering someone else
+    if(summonerNameInput.includes(":")){
+        discordId = summonerNameInput.split(":")[0];
+        summonerNameInput = summonerNameInput.split(":")[1];
+    }
 
     // acquire summoner data from both league and tft
     var summonerData = {};
@@ -147,7 +154,7 @@ async function riotRegister(interaction){
                     SELECT * FROM discord_accounts
                     WHERE (discord_id = :discord_id)
                 )`,
-                {discord_id: interaction.member.id},
+                {discord_id: discordId},
                 {}
             );
     
@@ -157,7 +164,7 @@ async function riotRegister(interaction){
                 WHEN NOT MATCHED THEN INSERT
                 VALUES(:summoner_id, :discord_id, :summoner_name)`,
             {summoner_id: summonerId,
-            discord_id: interaction.member.id,
+            discord_id: discordId,
             summoner_name: summonerName
             },
             {});
@@ -184,7 +191,7 @@ async function riotRegister(interaction){
                 WHEN NOT MATCHED THEN INSERT
                 VALUES(:guild_id, 'riot', :discord_id, :toggle)`,
             {guild_id: interaction.guild.id,
-            discord_id: interaction.member.id,
+            discord_id: discordId,
             toggle: 1},
             {autoCommit:true});
             interaction.reply({content: `You have registered to the Riot account of: ${summonerName}`, ephemeral:false});
