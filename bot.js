@@ -78,8 +78,8 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     tiktokModule.load(client);
 
     // RIOT tracker module
-    //const riotModule = require("./bot_modules/riot/riot_module.js");
-    //riotModule.load(client);
+    const riotModule = require("./bot_modules/riot/riot_module.js");
+    riotModule.load(client);
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
