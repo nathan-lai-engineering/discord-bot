@@ -123,7 +123,6 @@ async function riotRegister(interaction){
         let apiKey = interaction.client.apiKeys[gametype];
         let apiPath = apiPaths[gametype]['summoner'];
         let apiString = `${apiPath}${summonerNameInput}?api_key=${apiKey}`
-        console.log(apiString)
         try{
             let res = await axios({
                 method: 'get',
