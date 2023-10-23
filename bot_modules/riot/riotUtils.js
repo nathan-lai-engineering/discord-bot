@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, getGuildChannels, getPUUIDs, sleep};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep};
 
 const {logDebug} = require('../../utils/log.js') 
 /**
@@ -211,54 +211,6 @@ function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, ne
     else{
         return '**DEMOTED**'
     }
-}
-
-/**
- * Gets an object of guild ids and their riot notification channels
- * @param {*} client 
- * @returns 
- * guildChannels = {
- *      guildId: {
- *          channelId: channelId,
- *          members: [discordIds]
- * }}
- */
-function getGuildChannels(client){
-    logDebug(client, 'Getting guild Riot channels from Firestore');
-    return client.db.collection('guilds').get().then(snapshot => {
-        let guildChannels = {};
-        snapshot.forEach(docSnapshot => {
-            if('channels' in docSnapshot.data() && 'riot' in docSnapshot.data()['channels'] && 'riotNotifs' in docSnapshot.data()){
-                guildChannels[docSnapshot.id] = {
-                    channelId: docSnapshot.data()['channels']['riot'],
-                    members: docSnapshot.data()['riotNotifs']
-                };
-            }
-        })
-        return guildChannels;
-    })
-}
-
-/**
- * Gets all the puuid data of all members
- * @param {} client 
- * @returns 
- * {puuid: {
- *      discordId: discordId
- * }}
- */
-function getPUUIDs(client){
-    logDebug(client, 'Getting Riot Id from Firestore');
-    
-    return client.db.collection('users').get().then(snapshot => {
-        let puuids = {};
-        snapshot.forEach(docSnapshot => {
-            if('puuid' in docSnapshot.data()){
-                puuids[docSnapshot.data().puuid] = {discordId: docSnapshot.id};
-            }
-        });
-        return puuids;
-    })
 }
 
 /**
