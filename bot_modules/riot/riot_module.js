@@ -64,7 +64,7 @@ exports.load = (client) => {
         var subscribedMembers;
         if(Object.keys(matches).length > 0) {
             // get channel objects
-            guildChannels = await getGuildChannels(client); 
+            guildChannels = await getGuildChannels(client);
 
             // gets all members who want to be tracked
             subscribedMembers = await getSubscribedMembers(client);
@@ -336,4 +336,38 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts){
     }
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
     return embed;
+}
+
+/**
+ * Updates the rank info in the database
+ * @param {} client 
+ * @param {*} puuid 
+ * @param {*} queue 
+ * @param {*} tier 
+ * @param {*} rank 
+ * @param {*} leaguePoints 
+ */
+async function updateRank(client, puuid, queue, tier, rank, leaguePoints){
+    let connection = await oracledb.getConnection(client.oracleLogin);
+
+    try{
+        await connection.execute(
+            `MERGE INTO ranks USING dual ON (puuid=:puuid, queue=:queue)
+            WHEN MATCHED THEN UPDATE SET tier=:tier, tier_rank=:tier_rank, league_points=:league_points
+            WHEN NOT MATCHED THEN INSERT
+            VALUES(puuid=:puuid, queue=:queue, tier=:tier, tier_rank=:tier_rank, league_points=:league_points)`,
+            {puuid: puuid,
+            queue: queue,
+            tier: tier,
+            tier_rank: rank,
+            league_points:leaguePoints},
+            {autoCommit:true});
+    }
+    catch(error){
+        logDebug(client, error);
+    }
+    finally {
+        if(connection)
+            connection.close();
+    }
 }
