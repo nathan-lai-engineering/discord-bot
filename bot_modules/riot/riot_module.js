@@ -61,18 +61,17 @@ exports.load = (client) => {
         }
 
         let guildChannels;
+        var subscribedMembers;
         if(Object.keys(matches).length > 0) {
-            guildChannels = await getGuildChannels(client); // api call
-            for(let guildId in guildChannels){
-                guildChannels[guildId] = await client.channels.fetch(guildChannels[guildId]); // fetch from Discord
-            }
+            // get channel objects
+            guildChannels = await getGuildChannels(client); 
+
+            // gets all members who want to be tracked
+            subscribedMembers = await getSubscribedMembers(client);
         }
         else{
             logDebug(client, '[RIOT] No matches recently');
         }
-
-        // gets all members who want to be tracked
-        var subscribedMembers = await getSubscribedMembers(client);
 
         let sortedMatchIds = Object.keys(matches);
         sortedMatchIds.sort();
@@ -103,16 +102,17 @@ exports.load = (client) => {
                 let embed = 'This is supposed to be an embed message';
 
                 if(gametype == 'league'){
-
+                    embed = {embeds:[createLeagueEmbed(client, matches[matchId], matchRiotAccounts)]};
                 }
                 else if(gametype == 'tft'){
-                    embed = {embeds:[await createTftEmbed(client, matches[matchId], matchRiotAccounts)]};
+                    embed = {embeds:[createTftEmbed(client, matches[matchId], matchRiotAccounts)]};
                 }
                 // send the bad boy
                 guildChannels[guildId].send(embed);
             }
 
         }
+        logDebug(client, "[RIOT] All matches historied");
     };
 
     setTimeout(checkRiotData, 10000);
@@ -162,7 +162,8 @@ async function getGuildChannels(client){
         `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {});
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
-            guildChannels[resGuildChannel[0]] = resGuildChannel[1];
+            guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
+            
         }
     }
     logDebug(client, '[RIOT] Notification channel IDs acquired');
@@ -219,6 +220,79 @@ function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMember
 /**
  * Creates embed with the following style
  * 
+ * League of Legends - Blind
+ * 10/13/2023 - 5:22 PM
+ * 
+ * Victory (Defeat, Surrender) in 23:23
+ * 15 - 34
+ * 
+ * Top Soraka ~ Galusha
+ * KDA: 15/20/53
+ * Gold: 2345345 - Vision: 45 - CS: 342
+ * Damage: 23423 - Heal: 2342 - Shield: 2342
+ * 
+ * @param {*} client 
+ * @param {*} leagueMatch 
+ * @param {*} memberNames 
+ */
+function createLeagueEmbed(client, leagueMatch, matchRiotAccounts){
+    logDebug(client, '[RIOT] Creating embed for LoL match');
+    
+    // create a list of all tracked players in match
+    let matchData = leagueMatch['matchData'];
+    let participants = [];
+    matchData['info']['participants'].forEach(participant => {
+        if(participant['puuid'] in matchRiotAccounts){
+            participants.push(participant);
+        } 
+    })
+
+    // organize data for teams
+    let result = 'Defeat';
+    if(participants[0]['win']){
+        result = 'Victory';
+    }
+    else if(participants[0]['gameEndedInEarlySurrender'] || participants[0]['gameEndedInSurrender']){
+        result = 'Surrender';
+    }
+
+    // sort teams, [0] is participant's team, [1] is enemy team
+    let teams = matchData['info']['teams'].sort((a,b) => {
+        if(a['win'] == participants[0]['win'])
+            return -1
+        return 1;
+    })
+
+    // create embed
+    let embed = new Discord.EmbedBuilder();
+    embed.setTitle(`League of Legends - ${leagueGametypes(matchData['info']['queueId'])}`);
+    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png');
+
+    embed.setDescription(`<t:${Math.floor(matchData['info']['gameStartTimestamp']/1000)}>`);
+
+    embed.addFields({
+        name: `${result} in ${secondsToTime(matchData['info']['gameDuration'])}`,
+        value: `${teams[0]['objectives']['champion']['kills']} - ${teams[1]['objectives']['champion']['kills']}`
+    });
+
+    // create chunks for each player 
+    participants.forEach(participant => {
+        embed.addFields(
+            {name: ' ', value: '⸻⸻'}, //seperator 
+            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
+            {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
+
+        );
+    });
+    embed.setFooter({text: `Match ID: ${matchData['metadata']['matchId']}`});
+
+    return embed;
+}
+
+/**
+ * Creates embed with the following style
+ * 
  *   Teamfight Tactics
  *   10/13/2023 5:22 PM
  *
@@ -231,22 +305,18 @@ function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMember
  * @param {*} tftMatch 
  * @returns 
  */
-async function createTftEmbed(client, tftMatch, matchRiotAccounts){
+function createTftEmbed(client, tftMatch, matchRiotAccounts){
     logDebug(client, '[RIOT] Creating embed for TFT match');
     
     // create a list of all tracked players in match and sort by placement
-    let memberPuuids = Object.keys(matchRiotAccounts);
     let matchData = tftMatch['matchData'];
     let participants = [];
     matchData['info']['participants'].forEach(participant => {
-        if(memberPuuids.includes(participant['puuid'])){
+        if(participant['puuid'] in matchRiotAccounts){
             participants.push(participant);
         } 
     });
-
-    participants.sort((a, b) => {
-        return a.placement - b.placement;
-    });
+    participants.sort((a, b) => a.placement - b.placement);
 
     // create embed
     let embed = new Discord.EmbedBuilder();
@@ -259,14 +329,11 @@ async function createTftEmbed(client, tftMatch, matchRiotAccounts){
         let lpString = "LP HERE";
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${summonerName} • ${lpString}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(participant['placement'])}** • ${summonerName}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
-
-        )
+        );
     }
     embed.setFooter({text: `Match ID: ${matchData['metadata']['match_id']}`});
-
     return embed;
-
 }
