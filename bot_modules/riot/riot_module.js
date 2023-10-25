@@ -1,11 +1,10 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios');
-const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep} = require('./riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType} = require('./riotUtils.js');
 const oracledb = require('oracledb');
 const {oracleQuery} = require('../../utils/oracle');
 const API_PATHS = require('./riotApiPaths.json');
-const riot = require('../../commands/riot.js');
 
 
 /**
@@ -84,7 +83,7 @@ exports.load = (client) => {
 
             try{
                 let matchData = await axios({method: 'get', url: apiString});
-                matches[matchId]['matchData'] = matchData.data;
+                match['matchData'] = matchData.data;
             }
             catch(error){
                 logDebug(client, error);
@@ -93,10 +92,13 @@ exports.load = (client) => {
             
             for(let guildId in guildChannels){
                 // get an object of all registered riot accounts in the match AND have tracking on for this guild mapped by PUUID
-                let matchRiotAccounts = formatMatchMembers(client, riotAccounts, members, subscribedMembers[guildId], gametype);
-                let lpString = " ";
+                let matchRiotAccounts = formatMatchMembers(riotAccounts, members, subscribedMembers[guildId], gametype);
+
+                // builds lp string and manages all ranked info
+                let lpStrings = await manageLpStrings(client, match, matchRiotAccounts);
+
                 // send embed message based on gametype 
-                let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpString);
+                let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpStrings);
                 // send the bad boy
                 guildChannels[guildId].send(embed);
             }
@@ -110,9 +112,8 @@ exports.load = (client) => {
  * Acquires Riot accounts from database and formats into object
  * {
  * discordId: {
- *      summonerId, 
  *      summonerName, 
- *      puuids: { gametype: puuid}
+ *      [gametype]: {puuid, summonerId}
  * }}
  * @param {*} client 
  */
@@ -183,14 +184,15 @@ async function getSubscribedMembers(client){
 }
 
 /**
- * 
+ * Gets the subscribed riot accounts in a match in the following format
+ * {puuid: {summonerName, summonerId}}
  * @param {*} client 
  * @param {*} riotAccounts 
  * @param {*} matchMembers 
  * @param {*} subscribedMembers 
  * @param {*} gametype 
  */
-function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMembers, gametype){
+function formatMatchMembers(riotAccounts, matchMembers, subscribedMembers, gametype){
     let matchRiotAccounts = {};
     for(let discordId in riotAccounts){
         if(matchMembers.includes(discordId) && subscribedMembers.includes(discordId)){
@@ -201,7 +203,6 @@ function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMember
             }
         }
     }
-    logDebug(client, '[RIOT] Reformatted match riot accounts');
     return matchRiotAccounts;
 }
 
@@ -243,7 +244,7 @@ function createEmbed(client, match, matchRiotAccounts, gametype, lpString){
  * @param {*} leagueMatch 
  * @param {*} memberNames 
  */
-function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpString){
+function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
     logDebug(client, '[RIOT] Creating embed for LoL match');
     
     // create a list of all tracked players in match
@@ -287,7 +288,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpString){
     participants.forEach(participant => {
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
-            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']} • ${lpString}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}${lpStrings[participant['puuid']]}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
             {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 
@@ -313,7 +314,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpString){
  * @param {*} tftMatch 
  * @returns 
  */
-function createTftEmbed(client, tftMatch, matchRiotAccounts, lpString){
+function createTftEmbed(client, tftMatch, matchRiotAccounts, lpStrings){
     logDebug(client, '[RIOT] Creating embed for TFT match');
     
     // create a list of all tracked players in match and sort by placement
@@ -333,11 +334,9 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts, lpString){
     embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
     for(let participant of participants){
         let summonerName = matchRiotAccounts[participant['puuid']]['summonerName'];
-        let summonerId = matchRiotAccounts[participant['puuid']]['summonerId'];
-        let lpString = "LP HERE";
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${summonerName} • ${lpString}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(participant['placement'])}** • ${summonerName}${lpStrings[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
         );
@@ -348,24 +347,25 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts, lpString){
 
 /**
  * Updates the rank info in the database
- * @param {} client 
- * @param {*} puuid 
+ * @param {*} client 
  * @param {*} queue 
+ * @param {*} puuid 
+ * @param {*} gametype 
  * @param {*} tier 
  * @param {*} rank 
  * @param {*} leaguePoints 
  */
-async function updateRank(client, puuid, queue, tier, rank, leaguePoints){
-    let connection = await oracledb.getConnection(client.oracleLogin);
-
+async function updateRank(client, queue, puuid, gametype, tier, rank, leaguePoints){
+    let connection = await oracledb.getConnection(client.dbLogin);
     try{
         await connection.execute(
             `MERGE INTO ranks USING dual ON (puuid=:puuid, queue=:queue)
             WHEN MATCHED THEN UPDATE SET tier=:tier, tier_rank=:tier_rank, league_points=:league_points
             WHEN NOT MATCHED THEN INSERT
-            VALUES(puuid=:puuid, queue=:queue, tier=:tier, tier_rank=:tier_rank, league_points=:league_points)`,
-            {puuid: puuid,
-            queue: queue,
+            VALUES(queue=:queue, puuid=:puuid, gametype=:gametype, tier=:tier, tier_rank=:tier_rank, league_points=:league_points)`,
+            {queue: queue,
+            puuid: puuid,
+            gametype: gametype,
             tier: tier,
             tier_rank: rank,
             league_points:leaguePoints},
@@ -380,3 +380,94 @@ async function updateRank(client, puuid, queue, tier, rank, leaguePoints){
     }
 }
 
+/**
+ * Returns the LeagueEntryDTO from Riot Web API
+ * @param {*} client 
+ * @param {*} summonerId 
+ * @param {*} gametype 
+ * @param {*} queueId 
+ * @returns 
+ */
+async function getCurrentRank(client, summonerId, gametype, queueId){
+    logDebug(client, '[RIOT] Acquiring current rank from Riot WEB API');
+    try{
+        let apiString = `${API_PATHS[gametype]['rank']}${summonerId}?api_key=${client.apiKeys[gametype]}`
+        let res = await axios({method:'get', url: apiString});
+        sleep(50);
+        let rankQueue = res.data.find((queue) => getRankedType(queue['queueType']) == queueId);
+        if(rankQueue != undefined){
+            return rankQueue;
+        }
+    }
+    catch(error){
+        logDebug(client, error);
+    }
+    return null;
+}
+
+/**
+ * Returns the ranked row from database
+ * @param {*} client 
+ * @param {*} puuid 
+ * @param {*} gametype 
+ * @param {*} queue 
+ */
+async function getLastRank(client, puuid, queue){
+    logDebug(client, '[RIOT] Acquiring last rank from database');
+    let res = await oracleQuery(
+        `SELECT * 
+        FROM ranks 
+        WHERE queue=:queue AND puuid=:puuid`, 
+        {queue: queue,
+        puuid: puuid}, 
+        {}
+    );
+    if(res.rows.length > 0){
+        return res.rows[0];
+    }
+    return null;
+}
+
+/**
+ * Acquires all ranked info, updates ranked info to database then returns an lp string for the embed
+ * @param {*} client 
+ * @param {*} match 
+ * @param {*} gametype 
+ * @param {*} riotAccount 
+ * @returns 
+ */
+async function manageLpStrings(client, match, matchRiotAccounts){
+    logDebug(client, '[RIOT] Managing Ranked information');
+    let lpStrings = {};
+    let matchData = match['matchData'];
+    let gametype = match['gametype']
+    let queueId = 0;
+    if(gametype == 'league'){
+        queueId = matchData['info']['queueId'];
+    }
+    else if(gametype == 'tft'){
+        queueId = matchData['info']['queue_id'];
+    }
+    for(let puuid in matchRiotAccounts){
+        lpStrings[puuid] = "";
+        if([420, 440, 1100].includes(queueId)){
+            let summonerId = matchRiotAccounts[puuid]['summonerId'];
+            // gets LeagueEntryDTO
+            let currentRank = await getCurrentRank(client, summonerId, gametype, queueId);
+            if(currentRank != null){
+                let lastRank = await getLastRank(client, puuid, queueId);
+                await updateRank(client, queueId, puuid, gametype, currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
+                let rankString = `${currentRank['tier'].slice(0,1).toUpperCase() + currentRank['tier'].slice(1).toLowerCase()} ${currentRank['rank']} ${currentRank['leaguePoints']} LP`
+                if(lastRank != null){
+                    let lpChange = calculateLpChange(lastRank['tier'], lastRank['tier_rank'], lastRank['league_points'], currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
+                    
+                    lpStrings[puuid] = ` • ${lpChange} 🡆 ${rankString}`;
+                }
+                else {
+                    lpStrings[puuid] = ` • ${rankString}`;
+                }
+            }
+        }
+    }
+    return lpStrings;
+}

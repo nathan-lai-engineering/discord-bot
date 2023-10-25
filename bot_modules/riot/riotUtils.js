@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType};
 
 const {logDebug} = require('../../utils/log.js') 
 /**
@@ -167,6 +167,26 @@ function leagueGametypes(queueId){
 }
 
 /**
+ * Given a text queue, return a queueid if it is a ranked game
+ * @param {*} queueType 
+ * @returns 
+ */
+function getRankedType(queuetype){
+    if(queuetype.includes('RANKED')){
+        if(queuetype.includes('SOLO')){
+            return 420;
+        }
+        if(queuetype.includes('FLEX')){
+            return 440;
+        }
+        if(queuetype.includes('TFT')){
+            return 1100;
+        }
+    }
+    return -1;
+}
+
+/**
  * Returns proper role names
  * @param {*} role 
  * @returns 
@@ -196,8 +216,7 @@ function leagueRoles(role){
  * @param {*} newLp 
  * @returns 
  */
-function calculateLpChange(client, oldTier, oldRank, oldLp, newTier, newRank, newLp){
-    logDebug(client, 'Calculating LP change');
+function calculateLpChange(oldTier, oldRank, oldLp, newTier, newRank, newLp){
     const TIERS = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'];
     const RANKS = ['IV', 'III', 'II', 'I'];
     if(oldTier == newTier){
