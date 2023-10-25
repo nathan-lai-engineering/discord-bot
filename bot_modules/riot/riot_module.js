@@ -20,7 +20,7 @@ exports.load = (client) => {
     let interval = 10 * 60 * 1000; // interval to check match history in second
 
     let checkRiotData = async () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000);
+        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 24;
         setTimeout(checkRiotData, interval);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -35,11 +35,9 @@ exports.load = (client) => {
 
             for(let discordId in riotAccounts){
                 let riotAccount = riotAccounts[discordId];
-                let res;
                 try{
-                    
-                    let apiString = `${apiPath}${riotAccount['puuids'][gametype]}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`;
-                    res = await axios({method: 'get', url: apiString});
+                    let apiString = `${apiPath}${riotAccount[gametype]['puuid']}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`;
+                    let res = await axios({method: 'get', url: apiString});
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
 
                     // record which tracked players are in each match
@@ -79,8 +77,8 @@ exports.load = (client) => {
             let match = matches[matchId];
             let gametype = match['gametype'];
             let members = match['members'];
+            
             let apiKey = client.apiKeys[gametype];
-
             let apiPath = API_PATHS[gametype]['matchInfo'];
             let apiString = `${apiPath}${matchId}?api_key=${apiKey}`
 
@@ -94,27 +92,17 @@ exports.load = (client) => {
             await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
             
             for(let guildId in guildChannels){
-
                 // get an object of all registered riot accounts in the match AND have tracking on for this guild mapped by PUUID
                 let matchRiotAccounts = formatMatchMembers(client, riotAccounts, members, subscribedMembers[guildId], gametype);
-
+                let lpString = " ";
                 // send embed message based on gametype 
-                let embed = 'This is supposed to be an embed message';
-
-                if(gametype == 'league'){
-                    embed = {embeds:[createLeagueEmbed(client, matches[matchId], matchRiotAccounts)]};
-                }
-                else if(gametype == 'tft'){
-                    embed = {embeds:[createTftEmbed(client, matches[matchId], matchRiotAccounts)]};
-                }
+                let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpString);
                 // send the bad boy
                 guildChannels[guildId].send(embed);
             }
-
         }
         logDebug(client, "[RIOT] All matches historied");
     };
-
     setTimeout(checkRiotData, 10000);
 }       
 
@@ -131,20 +119,20 @@ exports.load = (client) => {
 async function getRiotAccounts(client){
     let riotAccounts = {};
     let resRiotAccounts = await oracleQuery(
-        `SELECT discord_id, summoner_id, summoner_name, puuid, gametype
-        FROM riot_accounts INNER JOIN puuids
-        USING(summoner_id)`, [], {});
+        `SELECT discord_id, summoner_name, gametype, puuid, summoner_id
+        FROM riot_accounts INNER JOIN summoners
+        USING(discord_id)`, [], {});
     if(resRiotAccounts != null && resRiotAccounts.rows.length > 0){
         for(let rowRiotAccount of resRiotAccounts.rows){
-            if(!(rowRiotAccount[0] in riotAccounts)){
-                riotAccounts[rowRiotAccount[0]] = {
-                    summonerId: rowRiotAccount[1],
-                    summonerName: rowRiotAccount[2],
-                    puuids: {}
-
+            let discordId = rowRiotAccount[0];
+            if(!(discordId in riotAccounts)){
+                riotAccounts[discordId] = {
+                    summonerName: rowRiotAccount[1]
                 };
             }
-            riotAccounts[rowRiotAccount[0]]['puuids'][rowRiotAccount[4]] = rowRiotAccount[3];
+            riotAccounts[discordId][rowRiotAccount[2]] = {
+                puuid: rowRiotAccount[3],
+                summonerId: rowRiotAccount[4]};
         }
     }
     logDebug(client, '[RIOT] Riot accounts acquired');
@@ -206,15 +194,35 @@ function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMember
     let matchRiotAccounts = {};
     for(let discordId in riotAccounts){
         if(matchMembers.includes(discordId) && subscribedMembers.includes(discordId)){
-            let puuid = riotAccounts[discordId]['puuids'][gametype];
+            let puuid = riotAccounts[discordId][gametype]['puuid'];
             matchRiotAccounts[puuid] = {
                 summonerName: riotAccounts[discordId]['summonerName'],
-                summonerId: riotAccounts[discordId]['summonerId'],
+                summonerId: riotAccounts[discordId][gametype]['summonerId'],
             }
         }
     }
     logDebug(client, '[RIOT] Reformatted match riot accounts');
     return matchRiotAccounts;
+}
+
+/**
+ * Creates embed based on gametype
+ * @param {*} client 
+ * @param {*} match 
+ * @param {*} matchRiotAccounts 
+ * @param {*} gametype 
+ * @returns 
+ */
+function createEmbed(client, match, matchRiotAccounts, gametype, lpString){
+    // send embed message based on gametype 
+    let embed = 'This is supposed to be an embed message';
+    if(gametype == 'league'){
+        embed = {embeds:[createLeagueEmbed(client, match, matchRiotAccounts, lpString)]};
+    }
+    else if(gametype == 'tft'){
+        embed = {embeds:[createTftEmbed(client, match, matchRiotAccounts, lpString)]};
+    }
+    return embed;
 }
 
 /**
@@ -235,7 +243,7 @@ function formatMatchMembers(client, riotAccounts, matchMembers, subscribedMember
  * @param {*} leagueMatch 
  * @param {*} memberNames 
  */
-function createLeagueEmbed(client, leagueMatch, matchRiotAccounts){
+function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpString){
     logDebug(client, '[RIOT] Creating embed for LoL match');
     
     // create a list of all tracked players in match
@@ -279,7 +287,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts){
     participants.forEach(participant => {
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
-            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']} • ${lpString}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
             {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 
@@ -305,7 +313,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts){
  * @param {*} tftMatch 
  * @returns 
  */
-function createTftEmbed(client, tftMatch, matchRiotAccounts){
+function createTftEmbed(client, tftMatch, matchRiotAccounts, lpString){
     logDebug(client, '[RIOT] Creating embed for TFT match');
     
     // create a list of all tracked players in match and sort by placement
@@ -329,7 +337,7 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts){
         let lpString = "LP HERE";
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${summonerName}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(participant['placement'])}** • ${summonerName} • ${lpString}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
         );
@@ -371,3 +379,4 @@ async function updateRank(client, puuid, queue, tier, rank, leaguePoints){
             connection.close();
     }
 }
+
