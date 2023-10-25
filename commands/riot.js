@@ -139,9 +139,7 @@ async function riotRegister(interaction){
     if(Object.keys(summonerData).length > 0){
         let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
-        let summonerName, summonerId;
-        summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
-        summonerId = summonerData[Object.keys(summonerData)[0]]['id'];
+        let summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
 
         try{
             await connection.execute(
@@ -178,7 +176,7 @@ async function riotRegister(interaction){
                     {puuid: summonerData[gametype]['puuid'],
                     gametype: gametype,
                     discord_id: discordId,
-                    summoner_id: summonerId},
+                    summoner_id: summonerData[gametype]['id']},
                     {}
                 );
             }
