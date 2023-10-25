@@ -137,8 +137,7 @@ async function riotRegister(interaction){
     }
 
     if(Object.keys(summonerData).length > 0){
-        const oracleLogin = require('../oracledb.json');
-        let connection = await oracledb.getConnection(oracleLogin);
+        let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
         let summonerName, summonerId;
         summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
@@ -158,28 +157,28 @@ async function riotRegister(interaction){
             );
     
             await connection.execute(
-                `MERGE INTO riot_accounts USING dual ON (summoner_id=:summoner_id)
+                `MERGE INTO riot_accounts USING dual ON (discord_id=:discord_id)
                 WHEN MATCHED THEN UPDATE SET summoner_name=:summoner_name
                 WHEN NOT MATCHED THEN INSERT
-                VALUES(:summoner_id, :discord_id, :summoner_name)`,
-            {summoner_id: summonerId,
-            discord_id: discordId,
+                VALUES(:discord_id, :summoner_name)`,
+            {discord_id: discordId,
             summoner_name: summonerName
             },
             {});
     
             for(let gametype in summonerData){
                 await connection.execute(
-                    `INSERT INTO puuids (puuid, summoner_id, gametype)
-                    SELECT :puuid, :summoner_id, :gametype
+                    `INSERT INTO summoners (puuid, gametype, discord_id, summoner_id)
+                    SELECT :puuid, :gametype, :discord_id, :summoner_id 
                     FROM dual
                     WHERE NOT EXISTS(
-                        SELECT * FROM puuids
-                        WHERE (puuid=:puuid)
+                        SELECT * FROM summoners
+                        WHERE (puuid=:puuid AND gametype=:gametype)
                     )`,
                     {puuid: summonerData[gametype]['puuid'],
-                    summoner_id: summonerId,
-                    gametype: gametype},
+                    gametype: gametype,
+                    discord_id: discordId,
+                    summoner_id: summonerId},
                     {}
                 );
             }
