@@ -19,7 +19,7 @@ exports.load = (client) => {
     let interval = 10 * 60 * 1000; // interval to check match history in second
 
     let checkRiotData = async () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000) - 60 * 60 * 24;
+        let lastChecked = Math.floor((Date.now() - interval) / 1000);
         setTimeout(checkRiotData, interval);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -359,10 +359,10 @@ async function updateRank(client, queue, puuid, gametype, tier, rank, leaguePoin
     let connection = await oracledb.getConnection(client.dbLogin);
     try{
         await connection.execute(
-            `MERGE INTO ranks USING dual ON (puuid=:puuid, queue=:queue)
+            `MERGE INTO ranks USING dual ON (puuid=:puuid AND queue=:queue)
             WHEN MATCHED THEN UPDATE SET tier=:tier, tier_rank=:tier_rank, league_points=:league_points
             WHEN NOT MATCHED THEN INSERT
-            VALUES(queue=:queue, puuid=:puuid, gametype=:gametype, tier=:tier, tier_rank=:tier_rank, league_points=:league_points)`,
+            VALUES(:queue, :puuid, :gametype, :tier, :tier_rank, :league_points)`,
             {queue: queue,
             puuid: puuid,
             gametype: gametype,
@@ -459,7 +459,7 @@ async function manageLpStrings(client, match, matchRiotAccounts){
                 await updateRank(client, queueId, puuid, gametype, currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
                 let rankString = `${currentRank['tier'].slice(0,1).toUpperCase() + currentRank['tier'].slice(1).toLowerCase()} ${currentRank['rank']} ${currentRank['leaguePoints']} LP`
                 if(lastRank != null){
-                    let lpChange = calculateLpChange(lastRank['tier'], lastRank['tier_rank'], lastRank['league_points'], currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
+                    let lpChange = calculateLpChange(lastRank[3], lastRank[4], lastRank[5], currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
                     
                     lpStrings[puuid] = ` • ${lpChange} 🡆 ${rankString}`;
                 }
