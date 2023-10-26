@@ -461,7 +461,7 @@ async function manageLpStrings(client, match, matchRiotAccounts){
                 if(lastRank != null){
                     let lpChange = calculateLpChange(lastRank[3], lastRank[4], lastRank[5], currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
                     
-                    lpStrings[puuid] = ` • ${lpChange} 🡆 ${rankString}`;
+                    lpStrings[puuid] = ` • ${lpChange} ${rankString}`;
                 }
                 else {
                     lpStrings[puuid] = ` • ${rankString}`;

@@ -221,14 +221,15 @@ function calculateLpChange(oldTier, oldRank, oldLp, newTier, newRank, newLp){
     const RANKS = ['IV', 'III', 'II', 'I'];
     if(oldTier == newTier){
         if(oldRank == newRank){
-            return  `${oldLp <= newLp ? '+' : ''}${newLp - oldLp} LP`
+            let symbol = oldLp < newLp ? '<:up_arrow:1166628672552308776>' : '<:down_arrow:1166628706471649301>'
+            return  `${symbol} ${newLp - oldLp} LP ${symbol}`
         }
     }
     if(RANKS.indexOf(newRank) > RANKS.indexOf(oldRank) || TIERS.indexOf(newTier) > TIERS.indexOf(oldTier)){
-        return '**PROMOTED**'
+        return ':tada: **PROMOTED**:tada: '
     }
     else{
-        return '**DEMOTED**'
+        return ':anger:**DEMOTED**:anger:'
     }
 }
 
