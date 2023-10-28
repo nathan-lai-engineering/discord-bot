@@ -142,17 +142,7 @@ async function riotRegister(interaction){
         let summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
 
         try{
-            await connection.execute(
-                `INSERT INTO discord_accounts (discord_id, admin)
-                SELECT :discord_id, 0
-                FROM dual
-                WHERE NOT EXISTS(
-                    SELECT * FROM discord_accounts
-                    WHERE (discord_id = :discord_id)
-                )`,
-                {discord_id: discordId},
-                {}
-            );
+            await upsertUser(connection, discordId);
     
             await connection.execute(
                 `MERGE INTO riot_accounts USING dual ON (discord_id=:discord_id)
@@ -215,24 +205,17 @@ async function riotToggle(interaction){
 
     const oracleLogin = require('../oracledb.json');
     let connection = await oracledb.getConnection(oracleLogin);
+    let discordId = interaction.member.id;
+
     try{
-        await connection.execute(
-            `INSERT INTO discord_accounts (discord_id, admin)
-            SELECT :discord_id, 0
-            FROM dual
-            WHERE NOT EXISTS(
-                SELECT * FROM discord_accounts
-                WHERE (discord_id = :discord_id)
-            )`,
-            {discord_id: interaction.member.id},
-            {}
-        );
+        await upsertUser(connection, discordId);
+
         let result = await connection.execute(
             `SELECT toggle
             FROM notification_members
             WHERE guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id`,
             {guild_id: interaction.guild.id,
-            discord_id: interaction.member.id},
+            discord_id: discordId},
             {}
         );
 
@@ -266,4 +249,24 @@ async function riotToggle(interaction){
         if(connection)
             connection.close();
     }
+}
+
+/**
+ * common sql query
+ * @param {*} connection 
+ * @param {*} discordId 
+ * @returns 
+ */
+async function upsertUser(connection, discordId){
+    return await connection.execute(
+        `INSERT INTO discord_accounts (discord_id, admin)
+        SELECT :discord_id, 0
+        FROM dual
+        WHERE NOT EXISTS(
+            SELECT * FROM discord_accounts
+            WHERE (discord_id = :discord_id)
+        )`,
+        {discord_id: discordId},
+        {}
+    );
 }
