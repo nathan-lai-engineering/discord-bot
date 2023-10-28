@@ -68,7 +68,7 @@ function leaveOnEmpty(oldState){
     let client = oldState.client;
 
     if(oldState.channel != null) {
-        oldState.channel.fetch().then(channel => {
+        oldState.channel.fetch(true).then(channel => {
             if(channel != null && channelEmpty(channel)){
                 logDebug(client, "Left on empty " + channel.id);
                 let voice = client.distube.voices.get(oldState.guild.id)
