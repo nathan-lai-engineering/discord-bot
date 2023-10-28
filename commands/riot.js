@@ -55,6 +55,7 @@ async function riotSet(interaction){
     const oracleLogin = require('../oracledb.json');
     let connection = await oracledb.getConnection(oracleLogin);
     try{
+        // check if user is admin
         let result = await connection.execute(
             `SELECT admin
             FROM discord_accounts
@@ -63,8 +64,11 @@ async function riotSet(interaction){
             {}
         );
 
+        // only allow admins to perform command
         if(result.rows.length > 0){
             if(result.rows[0][0] == true){
+
+                // insert guild info if doesnt exist
                 await connection.execute(
                     `INSERT INTO guilds (guild_id)
                     SELECT :guild_id
@@ -77,6 +81,7 @@ async function riotSet(interaction){
                     {}
                 );
             
+                // upsert notification channel
                 await connection.execute(
                     `MERGE INTO notification_channels USING dual ON (guild_id=:guild_id AND notification_type='riot')
                     WHEN MATCHED THEN UPDATE SET channel_id=:channel_id
@@ -109,16 +114,17 @@ async function riotRegister(interaction){
     let summonerNameInput = interaction.options.getString('summoner_name');
     let discordId = interaction.member.id;
 
-    // secret method for registering someone else
+    // secret method for registering someone else by including discord id
     if(summonerNameInput.includes(":")){
         discordId = summonerNameInput.split(":")[0];
         summonerNameInput = summonerNameInput.split(":")[1];
     }
 
-    // acquire summoner data from both league and tft
-    var summonerData = {};
-    
 
+    
+    
+    // acquire summoner data for both league and tft from Riot Web API
+    var summonerData = {};
     for(let gametype in apiPaths){
         let apiKey = interaction.client.apiKeys[gametype];
         let apiPath = apiPaths[gametype]['summoner'];
@@ -136,14 +142,17 @@ async function riotRegister(interaction){
         }
     }
 
+    // update database with new summoner data
     if(Object.keys(summonerData).length > 0){
         let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
         let summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
 
         try{
+            // upsert discord account
             await upsertUser(connection, discordId);
     
+            // upsert riot account
             await connection.execute(
                 `MERGE INTO riot_accounts USING dual ON (discord_id=:discord_id)
                 WHEN MATCHED THEN UPDATE SET summoner_name=:summoner_name
@@ -154,6 +163,7 @@ async function riotRegister(interaction){
             },
             {});
     
+            // insert new summoner data if it doesnt exist (intentionally cannot update)
             for(let gametype in summonerData){
                 await connection.execute(
                     `INSERT INTO summoners (puuid, gametype, discord_id, summoner_id)
@@ -171,14 +181,14 @@ async function riotRegister(interaction){
                 );
             }
 
+            // upsert notification member to true
             await connection.execute(
                 `MERGE INTO notification_members USING dual ON (guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id)
-                WHEN MATCHED THEN UPDATE SET toggle=:toggle
+                WHEN MATCHED THEN UPDATE SET toggle=1
                 WHEN NOT MATCHED THEN INSERT
-                VALUES(:guild_id, 'riot', :discord_id, :toggle)`,
+                VALUES(:guild_id, 'riot', :discord_id, 1)`,
             {guild_id: interaction.guild.id,
-            discord_id: discordId,
-            toggle: 1},
+            discord_id: discordId},
             {autoCommit:true});
             interaction.reply({content: `You have registered to the Riot account of: ${summonerName}`, ephemeral:false});
         }
@@ -203,19 +213,19 @@ async function riotRegister(interaction){
 async function riotToggle(interaction){
     logDebug(interaction.client, 'Toggling Riot match history tracker');
 
-    const oracleLogin = require('../oracledb.json');
-    let connection = await oracledb.getConnection(oracleLogin);
-    let discordId = interaction.member.id;
+    let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
     try{
-        await upsertUser(connection, discordId);
+        // upsert discord account
+        await upsertUser(connection, interaction.member.id);
 
+        // select toggle from notification member
         let result = await connection.execute(
             `SELECT toggle
             FROM notification_members
             WHERE guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id`,
             {guild_id: interaction.guild.id,
-            discord_id: discordId},
+            discord_id: interaction.member.id},
             {}
         );
 
@@ -227,6 +237,7 @@ async function riotToggle(interaction){
                 toggle = 0;
         }
 
+        // upsert notification member with toggle data (false if it didnt exist before)
         await connection.execute(
             `MERGE INTO notification_members USING dual ON (guild_id=:guild_id AND notification_type='riot' AND discord_id=:discord_id)
             WHEN MATCHED THEN UPDATE SET toggle=:toggle
@@ -237,6 +248,7 @@ async function riotToggle(interaction){
         toggle: toggle},
         {autoCommit:true});
 
+        // inform user of result
         if(toggle == 1)
             interaction.reply({content: 'You are now subscribed to the Riot match history tracker', ephemeral: true});
         else
@@ -252,7 +264,7 @@ async function riotToggle(interaction){
 }
 
 /**
- * common sql query
+ * common sql query for upserting to discord_accounts
  * @param {*} connection 
  * @param {*} discordId 
  * @returns 
