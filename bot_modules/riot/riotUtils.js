@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, gamemodeImage};
 
 const {logDebug} = require('../../utils/log.js') 
 /**
@@ -240,6 +240,36 @@ function calculateLpChange(oldTier, oldRank, oldLp, newTier, newRank, newLp){
  */
 function sleep(ms) {
     return new Promise((resolve) => {
-      setTimeout(resolve, ms);
+        setTimeout(resolve, ms);
     });
-  }
+}
+
+/**
+ * given gamemode and queue id returns urls to image sof the corresponding gametype
+ * @param {*} queueId 
+ * @param {*} gametype 
+ * @returns 
+ */
+function gamemodeImage(queueId, gametype){
+    if(gametype == 'tft'){
+        return 'https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png';
+    }
+    switch(queueId){
+        case 450:
+            return 'https://i.imgur.com/A6kdxGy.png';
+        case 900:
+        case 1300:
+        case 1400:
+        case 1900:
+            return 'https://static.wikia.nocookie.net/leagueoflegends/images/4/4c/Featured_Game_Mode_icon.png/revision/latest?cb=20171101151726';
+        case 0:
+        case 400:
+        case 420:
+        case 430:
+        case 440:
+        case 700:
+            return 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/content/src/leagueclient/gamemodeassets/classic_sru/img/icon-victory.png';
+        default:
+            return 'https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png';
+    }
+}

@@ -1,7 +1,7 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios');
-const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType} = require('./riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, gamemodeImage} = require('./riotUtils.js');
 const oracledb = require('oracledb');
 const {oracleQuery} = require('../../utils/oracle');
 const API_PATHS = require('./riotApiPaths.json');
@@ -275,7 +275,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
     // create embed
     let embed = new Discord.EmbedBuilder();
     embed.setTitle(`League of Legends - ${leagueGametypes(matchData['info']['queueId'])}`);
-    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png');
+    embed.setThumbnail(gamemodeImage(matchData['info']['queueId'], leagueMatch['gametype']));
 
     embed.setDescription(`<t:${Math.floor(matchData['info']['gameStartTimestamp']/1000)}>`);
 
@@ -331,7 +331,7 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts, lpStrings){
     let embed = new Discord.EmbedBuilder();
     embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
     embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
-    embed.setThumbnail('https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png');
+    embed.setThumbnail(gamemodeImage(matchData['info']['queue_id'], tftMatch['gametype']));
     for(let participant of participants){
         let summonerName = matchRiotAccounts[participant['puuid']]['summonerName'];
         embed.addFields(
