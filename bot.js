@@ -123,7 +123,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
       return;
 
     //halloween tricks
-    let halloweenTrickChance = 0.1;
+    let halloweenTrickChance = 0.05;
     if(Math.random() < halloweenTrickChance){
       logDebug(client, `Deleted message by ${message.author.username}: ${message.content}`);
       return message.delete();
@@ -139,11 +139,13 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     }
     else if(Math.random() < halloweenTrickChance){
       let nickname = message.member.nickname;
-      message.member.setNickname('Big Fool', 'Halloween tricked').then(member => {
-        logDebug(client, `Changed the nickname of ${member.user.username}`);
-        setTimeout(() => {member.setNickname(nickname, 'Return to orignal from trick').catch(console.error)}, 1000 * 60);
-      })
-      .catch(console.error);
+      if(message.member.nickname != 'Big Fool'){
+        message.member.setNickname('Big Fool', 'Halloween tricked').then(member => {
+          logDebug(client, `Changed the nickname of ${member.user.username}`);
+          setTimeout(() => {member.setNickname(nickname, 'Return to orignal from trick').catch(console.error)}, 1000 * 60);
+        })
+        .catch(console.error);
+      }
     }
 
     for(key in client.messageListeners){
