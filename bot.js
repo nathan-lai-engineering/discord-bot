@@ -118,7 +118,13 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   });
 
   // MESSAGE CONTENT READER
-  client.on(Discord.Events.MessageCreate, async message => {  
+  client.on(Discord.Events.MessageCreate, async message => {
+    //halloween trick
+    if(Math.random() < 0.1){
+      logDebug(client, `Deleted message by ${message.author.username}: ${message.content}`);
+      return message.delete();
+    }
+
     for(key in client.messageListeners){
       client.messageListeners[key](message);
     }
