@@ -19,7 +19,8 @@ exports.load = (client) => {
     let interval = 10 * 60 * 1000; // interval to check match history in second
 
     let checkRiotData = async () => {
-        let lastChecked = Math.floor((Date.now() - interval) / 1000);
+        //let lastChecked = Math.floor((Date.now() - interval) / 1000); // preserved for debugging
+        let lastChecked = await getLastTimeChecked(client, interval);
         setTimeout(checkRiotData, interval);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -470,4 +471,48 @@ async function manageLpStrings(client, match, matchRiotAccounts){
         }
     }
     return lpStrings;
+}
+
+/**
+ * Gets the last unix time the web api was checked from database and update that with current time
+ * Leaves a "gap" between the current time updated and the actual web api check which leaves room for overlap (< 1 second)
+ * @param {*} client 
+ * @param {*} interval 
+ * @returns 
+ */
+async function getLastTimeChecked(client, interval){
+    logDebug(client, '[RIOT] Acquiring time of last API check');
+
+    // default value of around last time interval was checked
+    let lastTimeChecked = Math.floor((Date.now() - interval) / 1000);
+
+    let connection = await oracledb.getConnection(client.dbLogin);
+    try{
+        // get last time checked from database
+        let result = await connection.execute(`SELECT unix_time FROM timestamps WHERE name='riot'`, {}, {});
+
+        // setting to database value if it exists
+        if(result && result.rows.length > 0){
+            lastTimeChecked = result.rows[0][0];
+        }
+
+        // update the database with current time
+        await connection.execute(
+        `MERGE INTO timestamps USING dual ON (name=:name)
+        WHEN MATCHED THEN UPDATE SET unix_time=:unix_time
+        WHEN NOT MATCHED THEN INSERT
+        VALUES(:name, :unix_time)`,
+        {name:"riot",
+        unix_time: Math.floor(Date.now()/1000)}, 
+        {autoCommit:true});
+
+    }
+    catch(error){
+        logDebug(client, error);
+    }
+    finally{
+        if(connection)
+            connection.close();
+    }
+    return lastTimeChecked;
 }
