@@ -8,51 +8,51 @@ exports.load = (client) => {
     logDebug(client, 'Loading TikTok Embed module');
     client.enabledModules.push("tiktok_embed");
 
-    function messageListener(message){
-        if(isTikTokLink(message)){
-            logDebug(client, 'TikTok link detected, working...');
-            message.channel.send("Working...").then((toEdit) => {
-                try{
-                    tikVM(client, message.content).then(videoData => {
-                        if(videoData == null){
-                            logDebug(client, "Invalid video data, probably bad link");
-                            toEdit.delete();
-                            return;
-                        }
-                        let videoPath = './temp/tiktok.mp4'
-                        downloadVideoUrl(client, videoData.videoUrl, videoPath).then(() => {
-                            logDebug(client, 'Starting embed creation');
-                            if(videoData != null){
-                                let messagePayload = {};
-                                messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
+    client.on(Discord.Events.MessageCreate, async message => convertTiktokLink(message));
+}
 
-                                if(videoData.size >= 8388000){
-                                    videoPath = compressVideo(client, videoPath);
-                                }
+function convertTiktokLink(message){
+    if(isTikTokLink(message)){
+        logDebug(client, 'TikTok link detected, working...');
+        message.channel.send("Working...").then((toEdit) => {
+            try{
+                tikVM(client, message.content).then(videoData => {
+                    if(videoData == null){
+                        logDebug(client, "Invalid video data, probably bad link");
+                        toEdit.delete();
+                        return;
+                    }
+                    let videoPath = './temp/tiktok.mp4'
+                    downloadVideoUrl(client, videoData.videoUrl, videoPath).then(() => {
+                        logDebug(client, 'Starting embed creation');
+                        if(videoData != null){
+                            let messagePayload = {};
+                            messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
 
-                                messagePayload['files'] = [videoPath];
-
-                                message.channel.send(messagePayload).then(() => {
-                                    logDebug(client, 'TikTok Embed sent!');
-                                    toEdit.delete();
-                                    message.delete();
-                                    logDebug(client, 'TikTok old messages deleted');
-                                    fs.unlink(videoPath, (err) => logDebug(client, err));
-                                    logDebug(client, 'TikTok video deleted');
-                                });
+                            if(videoData.size >= 8388000){
+                                videoPath = compressVideo(client, videoPath);
                             }
-                        });
-                    });
-                }
-                catch(error){
-                    logDebug(client, error);
-                    console.log(error);
-                }
-            });
-        }
-    }
 
-    client.messageListeners.push(messageListener);
+                            messagePayload['files'] = [videoPath];
+
+                            message.channel.send(messagePayload).then(() => {
+                                logDebug(client, 'TikTok Embed sent!');
+                                toEdit.delete();
+                                message.delete();
+                                logDebug(client, 'TikTok old messages deleted');
+                                fs.unlink(videoPath, (err) => logDebug(client, err));
+                                logDebug(client, 'TikTok video deleted');
+                            });
+                        }
+                    });
+                });
+            }
+            catch(error){
+                logDebug(client, error);
+                console.log(error);
+            }
+        });
+    }
 }
 
 /**

@@ -56,7 +56,6 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   
   client.debugMode = true;
   client.enabledModules = [];
-  client.messageListeners = [];
 
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + client.apiKeys['discord']);
@@ -146,10 +145,6 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
         })
         .catch(console.error);
       }
-    }
-
-    for(key in client.messageListeners){
-      client.messageListeners[key](message);
     }
   });
 
