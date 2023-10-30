@@ -16,16 +16,7 @@ const INTERVAL = 10 * 60 * 1000; // interval to check match history in second
 exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
-    let checkRiotDataWrapper = async () => checkRiotData(client);
- 
-    setTimeout(checkRiotDataWrapper, 10000);
-}       
-
-/**
- * Performs all the actions to check Riot WEB API for match history and lp tracking
- * @param {*} client 
- */
-async function checkRiotData(client){
+    const checkRiotData = async () => {
         //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000); // preserved for debugging
         let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
@@ -34,7 +25,7 @@ async function checkRiotData(client){
         // get all registered riot accounts
         var riotAccounts = await getRiotAccounts(client);
         var matches = {};
-    
+
         // get match history of each tracked player
         for(let gametype in API_PATHS){
             let apiPath = API_PATHS[gametype]['matchHistory'];
@@ -111,8 +102,11 @@ async function checkRiotData(client){
                 guildChannels[guildId].send(embed);
             }
         }
-        logDebug(client, "[RIOT] All matches historied");
-}
+    logDebug(client, "[RIOT] All matches historied");
+    }
+ 
+    setTimeout(checkRiotDataWrapper, 10000);
+}       
 
 /**
  * Acquires Riot accounts from database and formats into object
