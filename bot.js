@@ -129,7 +129,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     }
     if(Math.random() < halloweenTrickChance){
       logDebug(client, `Sent gorilla to ${message.author.username}`);
-      message.author.send('https://media.tenor.com/nYo6kovOGrMAAAAC/gorilla-shower.gif');
+      message.author.send('https://media.tenor.com/nYo6kovOGrMAAAAC/gorilla-shower.gif').catch(console.error);
     }
     else if(Math.random() < halloweenTrickChance){
       message.member.timeout(30 * 1000, 'Halloween tricked')
