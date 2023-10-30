@@ -24,6 +24,7 @@ const client = new Discord.Client({
 ]
 });
 
+// load login details for global usage
 client.dbLogin = require('./oracledb.json');
 
 // dynamic module loader

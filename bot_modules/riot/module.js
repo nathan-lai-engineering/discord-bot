@@ -6,6 +6,7 @@ const oracledb = require('oracledb');
 const {oracleQuery} = require('../../utils/oracle.js');
 const API_PATHS = require('./riotApiPaths.json');
 
+const INTERVAL = 10 * 60 * 1000; // interval to check match history in second
 
 /**
  * Load the Riot Games match history tracker into the bot
@@ -16,12 +17,17 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
     client.enabledModules.push("riot");
 
-    let interval = 10 * 60 * 1000; // interval to check match history in second
+    setTimeout(async () => checkRiotData(client), 10000);
+}       
 
-    let checkRiotData = async () => {
-        //let lastChecked = Math.floor((Date.now() - interval) / 1000); // preserved for debugging
-        let lastChecked = await getLastTimeChecked(client, interval);
-        setTimeout(checkRiotData, interval);
+/**
+ * Performs all the actions to check Riot WEB API for match history and lp tracking
+ * @param {*} client 
+ */
+async function checkRiotData(client){
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000); // preserved for debugging
+        let lastChecked = await getLastTimeChecked(client, INTERVAL);
+        setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
         // get all registered riot accounts
@@ -105,9 +111,7 @@ exports.load = (client) => {
             }
         }
         logDebug(client, "[RIOT] All matches historied");
-    };
-    setTimeout(checkRiotData, 10000);
-}       
+}
 
 /**
  * Acquires Riot accounts from database and formats into object

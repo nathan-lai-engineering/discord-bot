@@ -11,6 +11,10 @@ exports.load = (client) => {
     client.on(Discord.Events.MessageCreate, async message => convertTiktokLink(message));
 }
 
+/**
+ * Converts a tik tok link to a viewable video embed by downloading from TikWM Web API
+ * @param {*} message 
+ */
 function convertTiktokLink(message){
     if(isTikTokLink(message)){
         logDebug(client, 'TikTok link detected, working...');
