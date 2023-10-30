@@ -26,44 +26,53 @@ const client = new Discord.Client({
 
 // load login details for global usage
 client.dbLogin = require('./oracledb.json');
+client.debugMode = true;
 
-// dynamic module loader
+
+// =============================================================
+// DYNAMIC CUSTOM MODULE HANDLING
+// =============================================================
 client.enabledModules = [];
+// get paths of all modules
 const modulePath = path.join(__dirname, 'bot_modules');
+let modules = [];
 for(let moduleName of fs.readdirSync(modulePath)){
   let moduleFullPath = path.join(path.join(modulePath, moduleName), 'module.js');
-  let module = require(moduleFullPath);
+  modules.push(require(moduleFullPath));
+}
+
+// loads the modules
+for(let module of modules){
   module.load(client);
 }
 
-// Setting up commands
+// =============================================================
+// DYNAMIC COMMAND HANDLING
+// =============================================================
 client.commands = new Discord.Collection();
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+var commandsFullPaths = commandFiles.map((file) => path.join(commandsPath, file));
 
-for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
+// loading all commands
+for (const filePath of commandsFullPaths) {
 	const command = require(filePath);
-	
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
-    if(client.debugMode)
-      console.log(client.commands);
 	}
 }
+if(client.debugMode)
+  console.log(client.commands.map((command) => command.data.name));
 
 // =============================================================
 // BOT OPERATION
 // =============================================================
-
 oracleQuery(`SELECT * FROM api_keys`).then(res => {
   // load api keys from database
   client.apiKeys = {};
   for(let apiKey of res.rows){
     client.apiKeys[apiKey[0]] = apiKey[1];
   }
-  
-  client.debugMode = true;
 
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + client.apiKeys['discord']);
@@ -80,13 +89,14 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   });
 
 
-  // COMMAND HANDLER
+  // =============================================================
+  // COMMAND EXECUTION
+  // =============================================================
   client.on(Discord.Events.InteractionCreate, async interaction => {
     // read the message
     if (!interaction.isChatInputCommand())
       return;
 
-    
     // check for existing command
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) {
