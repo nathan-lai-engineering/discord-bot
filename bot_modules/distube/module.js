@@ -12,7 +12,6 @@ exports.load = (client, disConfig) => {
         "leaveOnStop": false,
         "nsfw": true
         });
-    client.enabledModules.push("distube");
     client.distube.eventFunctionsQueue = {};
     client.distube.lastJoined = Date.now();
 

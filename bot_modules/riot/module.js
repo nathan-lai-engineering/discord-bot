@@ -15,9 +15,10 @@ const INTERVAL = 10 * 60 * 1000; // interval to check match history in second
  */
 exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
-    client.enabledModules.push("riot");
 
-    setTimeout(async () => checkRiotData(client), 10000);
+    let checkRiotDataWrapper = async () => checkRiotData(client);
+ 
+    setTimeout(checkRiotDataWrapper, 10000);
 }       
 
 /**

@@ -79,8 +79,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     client.apiKeys[apiKey[0]] = apiKey[1];
   }
 
-  console.log("Global config loaded.");
-  logDebug(client, 'Auth: ' + client.apiKeys['discord']);
+  logDebug(client, 'API keys loaded');
 
   // Completely loads the modules
   for(let modulePath of modules){

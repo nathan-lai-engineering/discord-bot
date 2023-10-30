@@ -6,7 +6,6 @@ const fs = require('fs');
 
 exports.load = (client) => {
     logDebug(client, 'Loading TikTok Embed module');
-    client.enabledModules.push("tiktok_embed");
 
     client.on(Discord.Events.MessageCreate, async message => convertTiktokLink(message));
 }
