@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 const axios = require('axios');
 const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, gamemodeImage} = require('./riotUtils.js');
 const oracledb = require('oracledb');
-const {oracleQuery} = require('../../utils/oracle');
+const {oracleQuery} = require('../../utils/oracle.js');
 const API_PATHS = require('./riotApiPaths.json');
 
 

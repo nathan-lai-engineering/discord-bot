@@ -24,6 +24,16 @@ const client = new Discord.Client({
 ]
 });
 
+client.dbLogin = require('./oracledb.json');
+
+// dynamic module loader
+client.enabledModules = [];
+const modulePath = path.join(__dirname, 'bot_modules');
+for(let moduleName of fs.readdirSync(modulePath)){
+  let moduleFullPath = path.join(path.join(modulePath, moduleName), 'module.js');
+  let module = require(moduleFullPath);
+  module.load(client);
+}
 
 // Setting up commands
 client.commands = new Discord.Collection();
@@ -45,8 +55,6 @@ for (const file of commandFiles) {
 // BOT OPERATION
 // =============================================================
 
-client.dbLogin = require('./oracledb.json');
-
 oracleQuery(`SELECT * FROM api_keys`).then(res => {
   // load api keys from database
   client.apiKeys = {};
@@ -55,7 +63,6 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   }
   
   client.debugMode = true;
-  client.enabledModules = [];
 
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + client.apiKeys['discord']);
@@ -67,18 +74,6 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
       activities: [{name: 'Doing a little trolling'}],
       status: 'online'
     });
-
-    // DISTUBE MODULE
-    const distubeModule = require("./bot_modules/distube_module.js");
-    distubeModule.load(client);
-
-    // TikTok Embed MODULE
-    const tiktokModule = require("./bot_modules/tiktok_module.js");
-    tiktokModule.load(client);
-
-    // RIOT tracker module
-    const riotModule = require("./bot_modules/riot/riot_module.js");
-    riotModule.load(client);
 
     logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
