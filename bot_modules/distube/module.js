@@ -1,6 +1,6 @@
 const { DisTube } = require('distube');
 const Discord = require("discord.js");
-const {playOutro} = require('../../commands/outro.js');
+const {playOutro} = require('./commands/outro.js');
 const {logDebug} = require('../../utils/log.js');
 
 

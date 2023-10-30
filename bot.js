@@ -27,36 +27,41 @@ const client = new Discord.Client({
 // load login details for global usage
 client.dbLogin = require('./oracledb.json');
 client.debugMode = true;
+client.enabledModules = ['distube', 'riot', 'tiktok'];
 
 
 // =============================================================
 // DYNAMIC CUSTOM MODULE HANDLING
 // =============================================================
-client.enabledModules = [];
-// get paths of all modules
+// get paths of all modules that are enabled
 const modulePath = path.join(__dirname, 'bot_modules');
 let modules = [];
 for(let moduleName of fs.readdirSync(modulePath)){
-  let moduleFullPath = path.join(path.join(modulePath, moduleName), 'module.js');
-  modules.push(require(moduleFullPath));
-}
-
-// loads the modules
-for(let module of modules){
-  module.load(client);
+  if(client.enabledModules.includes(moduleName)){
+    modules.push(path.join(modulePath, moduleName));
+  }
 }
 
 // =============================================================
 // DYNAMIC COMMAND HANDLING
 // =============================================================
 client.commands = new Discord.Collection();
+
+// full paths of default available commands
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 var commandsFullPaths = commandFiles.map((file) => path.join(commandsPath, file));
 
+// full paths of module specific commands
+for(let moduleFullPath of modules){
+  let moduleCommandsPath = path.join(moduleFullPath, 'commands');
+  let moduleCommandFiles = fs.readdirSync(moduleCommandsPath).filter(file => file.endsWith('.js'));
+  commandsFullPaths = commandsFullPaths.concat(moduleCommandFiles.map((file) => path.join(moduleCommandsPath, file)));
+}
+
 // loading all commands
 for (const filePath of commandsFullPaths) {
-	const command = require(filePath);
+	let command = require(filePath);
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
 	}
@@ -77,6 +82,14 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   console.log("Global config loaded.");
   logDebug(client, 'Auth: ' + client.apiKeys['discord']);
 
+  // Completely loads the modules
+  for(let modulePath of modules){
+    let moduleFullPath = path.join(modulePath, 'module.js');
+    let module = require(moduleFullPath);
+    module.load(client);
+  }
+  logDebug(client, 'Loaded modules: ' + client.enabledModules);
+
   // READY
   client.on("ready", () => {
     log('Bot connected!');
@@ -84,8 +97,6 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
       activities: [{name: 'Doing a little trolling'}],
       status: 'online'
     });
-
-    logDebug(client, "Modules loaded: " + client.enabledModules.toString());
   });
 
 

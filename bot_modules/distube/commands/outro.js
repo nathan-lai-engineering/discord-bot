@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const {logDebug} = require('../utils/log');
-const {oracleQuery} = require('../utils/oracle');
+const {logDebug} = require('../../../utils/log');
+const {oracleQuery} = require('../../../utils/oracle');
 const oracledb = require('oracledb');
 
 
@@ -79,7 +79,7 @@ module.exports = {
                     return;
                 }
 
-                const oracleLogin = require('../oracledb.json');
+                const oracleLogin = require('../../../oracledb.json');
                 let connection = await oracledb.getConnection(oracleLogin);
             
                 try{
@@ -241,7 +241,7 @@ function delayedSkipGradualHelper(client, guild, interval, volume){
  * @param {*} interaction 
  */
 async function outroToggle(client, interaction){
-    const oracleLogin = require('../oracledb.json');
+    const oracleLogin = require('../../../oracledb.json');
     const connection = await oracledb.getConnection(oracleLogin);
 
     try{

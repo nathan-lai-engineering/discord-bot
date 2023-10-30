@@ -484,11 +484,11 @@ async function manageLpStrings(client, match, matchRiotAccounts){
  * @param {*} interval 
  * @returns 
  */
-async function getLastTimeChecked(client, interval){
+async function getLastTimeChecked(client){
     logDebug(client, '[RIOT] Acquiring time of last API check');
 
     // default value of around last time interval was checked
-    let lastTimeChecked = Math.floor((Date.now() - interval) / 1000);
+    let lastTimeChecked = Math.floor((Date.now() - INTERVAL) / 1000);
 
     let connection = await oracledb.getConnection(client.dbLogin);
     try{

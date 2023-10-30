@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
-const {log, logDebug} = require('../utils/log.js');
+const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
 const axios = require('axios');
-const apiPaths = require('../bot_modules/riot/riotApiPaths.json');
+const apiPaths = require('../riotApiPaths.json');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -52,7 +52,7 @@ module.exports = {
 async function riotSet(interaction){
 
     logDebug(interaction.client, 'Updating Riot notification channel on database');
-    const oracleLogin = require('../oracledb.json');
+    const oracleLogin = require('../../../oracledb.json');
     let connection = await oracledb.getConnection(oracleLogin);
     try{
         // check if user is admin
