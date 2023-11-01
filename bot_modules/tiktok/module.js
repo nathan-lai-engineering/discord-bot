@@ -7,14 +7,14 @@ const fs = require('fs');
 exports.load = (client) => {
     logDebug(client, 'Loading TikTok Embed module');
 
-    client.on(Discord.Events.MessageCreate, async message => convertTiktokLink(message));
+    client.on(Discord.Events.MessageCreate, async message => convertTiktokLink(client, message));
 }
 
 /**
  * Converts a tik tok link to a viewable video embed by downloading from TikWM Web API
  * @param {*} message 
  */
-function convertTiktokLink(message){
+function convertTiktokLink(client, message){
     if(isTikTokLink(message)){
         logDebug(client, 'TikTok link detected, working...');
         message.channel.send("Working...").then((toEdit) => {
