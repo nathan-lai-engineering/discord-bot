@@ -120,8 +120,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
       if(interaction.options.getSubcommand(false) != null)
         commandString += " " + interaction.options.getSubcommand();
       if(interaction.options.data.length){
-        for(index in interaction.options.data[0].options){
-          let option = interaction.options.data[0].options[index];
+        for(let option of interaction.options.data){
           commandString += ` ${option.name}:${option.value}`;
         }
       }
