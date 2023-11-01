@@ -48,7 +48,10 @@ function halloween(client){
         // timeout
         else if(Math.random() < halloweenTrickChance){
             message.member.timeout(30 * 1000, 'Halloween tricked')
-            .then(logDebug(client, `Timed out ${message.author.username}`))
+            .then(() => {
+                logDebug(client, `Timed out ${message.author.username}`);
+                message.reply('You are now a ghost! Spooky!').catch(console.error);
+            })
             .catch(console.error);
         }
         // big fool nickname
@@ -60,6 +63,7 @@ function halloween(client){
                 setTimeout(() => {member.setNickname(nickname, 'Return to orignal from trick').catch(console.error)}, 1000 * 60);
             })
             .catch(console.error);
+            message.reply('Everyone look! Big fool alert!').catch(console.error);
             }
         }
     });
