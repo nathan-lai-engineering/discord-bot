@@ -17,8 +17,8 @@ module.exports = {
             interaction.reply({content:'Should you not be in a voice channel', ephemeral: true});
             return;
         }
-
-        interaction.client.distube.play(interaction.member.voice.channel, interaction.options.getString('song'), {
+        let songUrl = interaction.options.getString('song');
+        interaction.client.distube.play(interaction.member.voice.channel, songUrl, {
             member: interaction.member,
             textChannel: interaction.channel
         }); 
