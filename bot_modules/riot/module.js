@@ -105,7 +105,7 @@ exports.load = (client) => {
     logDebug(client, "[RIOT] All matches historied");
     }
  
-    setTimeout(checkRiotDataWrapper, 10000);
+    setTimeout(checkRiotData, 10000);
 }       
 
 /**
