@@ -10,7 +10,6 @@
     "discord-speech-recognition": "^3.1.1",
     "discord.js": "^14.7.1",
     "distube": "^4.0.4",
-    "firebase-admin": "^11.4.1",
     "fs": "^0.0.1-security",
     "opusscript": "^0.1.0",
     "oracledb": "^6.2.0",
