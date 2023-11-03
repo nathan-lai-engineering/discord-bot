@@ -76,27 +76,18 @@ if(client.debugMode)
 // COMMAND DEPLOYMENT
 // =============================================================
 const { clientId, guildId, token } = require('./discordconfig.json');
-(async () => {
-	try {
 
-		
-		// Construct and prepare an instance of the REST module
-		const rest = new Discord.REST({ version: '10' }).setToken(token);
-		console.log();
-    log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
+// Construct and prepare an instance of the REST module
+const rest = new Discord.REST({ version: '10' }).setToken(token);
+log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
 
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data = await rest.put(
-			Discord.Routes.applicationGuildCommands(clientId, guildId),
-			{ body: commandJSONs },
-		);
-
-		log(`Successfully reloaded ${data.length} application (/) commands.`);
-	} catch (error) {
-		// And of course, make sure you catch and log any errors!
-		console.error(error);
-	}
-})();
+// The put method is used to fully refresh all commands in the guild with the current set
+rest.put(
+  Discord.Routes.applicationGuildCommands(clientId, guildId),
+  { body: commandJSONs },
+)
+.then(data => log(`Successfully reloaded ${data.length} application (/) commands.`))
+.catch(console.error);
 
 // =============================================================
 // BOT OPERATION
