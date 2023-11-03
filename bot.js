@@ -11,6 +11,7 @@ const path = require("path");
 const Discord = require("discord.js");
 const {log, logDebug} = require('./utils/log');
 const {oracleQuery} = require('./utils/oracle');
+const { REST, Routes } = require('discord.js');
 
 // =============================================================
 // CLIENT INITIALIZATION
@@ -46,6 +47,7 @@ for(let moduleName of fs.readdirSync(modulePath)){
 // DYNAMIC COMMAND HANDLING
 // =============================================================
 client.commands = new Discord.Collection();
+const commandJSONs = [];
 
 // full paths of default available commands
 const commandsPath = path.join(__dirname, 'commands');
@@ -62,12 +64,39 @@ for(let moduleFullPath of modules){
 // loading all commands
 for (const filePath of commandsFullPaths) {
 	let command = require(filePath);
+  commandJSONs.push(command.data.toJSON());
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
 	}
 }
 if(client.debugMode)
   console.log(client.commands.map((command) => command.data.name));
+
+// =============================================================
+// COMMAND DEPLOYMENT
+// =============================================================
+const { clientId, guildId, token } = require('./discordconfig.json');
+(async () => {
+	try {
+
+		
+		// Construct and prepare an instance of the REST module
+		const rest = new Discord.REST({ version: '10' }).setToken(token);
+		console.log();
+    log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
+
+		// The put method is used to fully refresh all commands in the guild with the current set
+		const data = await rest.put(
+			Discord.Routes.applicationGuildCommands(clientId, guildId),
+			{ body: commandJSONs },
+		);
+
+		log(`Successfully reloaded ${data.length} application (/) commands.`);
+	} catch (error) {
+		// And of course, make sure you catch and log any errors!
+		console.error(error);
+	}
+})();
 
 // =============================================================
 // BOT OPERATION
