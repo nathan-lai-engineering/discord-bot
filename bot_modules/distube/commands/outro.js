@@ -5,7 +5,7 @@ const oracledb = require('oracledb');
 
 
 
-let maxDuration = 10;
+let maxDuration = 7;
 
 module.exports = {
 	data: new SlashCommandBuilder()
