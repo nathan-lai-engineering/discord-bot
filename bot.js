@@ -141,7 +141,8 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
         commandString += " " + interaction.options.getSubcommand();
       if(interaction.options.data.length){
         for(let option of interaction.options.data){
-          commandString += ` ${option.name}:${option.value}`;
+          if("value" in option)
+            commandString += ` ${option.name}:${option.value}`;
         }
       }
       logDebug(client, `EXECUTING COMMAND: ${interaction.user.username} => ${commandString}`);
