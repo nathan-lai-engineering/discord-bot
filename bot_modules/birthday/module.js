@@ -1,4 +1,6 @@
 const {log, logDebug} = require('../../utils/log.js');
+const {oracleQuery} = require('../../../utils/oracle.js');
+const oracledb = require('oracledb');
 
 exports.load = (client) => {
     logDebug(client, 'Loading Birthday tracker module');
@@ -17,7 +19,10 @@ exports.load = (client) => {
         if(now.getDate() != nextHour.getDate()){
             console.log('NEXT DAY IN THE NEXT HOUR');
             const sendBirthdayMessage = async () => {
-                
+                let guildChannels = await getGuildChannels(client);
+                for(let guildChannel of guildChannels){
+                    guildChannel.send("today is a new day");
+                }
             }
 
             setInterval(sendBirthdayMessage, timeUntilNextHour);
@@ -25,4 +30,20 @@ exports.load = (client) => {
     }
 
     checkBirthday();
+}
+
+
+
+async function getGuildChannels(client){
+    let guildChannels = {};
+    let resGuildChannels = await oracleQuery(
+        `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='birthday'`, {}, {});
+    if(resGuildChannels != null && resGuildChannels.rows.length > 0){
+        for(let resGuildChannel of resGuildChannels.rows){
+            guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
+            
+        }
+    }
+    logDebug(client, '[BIRTHDAY] Notification channel IDs acquired');
+    return guildChannels;
 }

@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
 
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('birthday')
