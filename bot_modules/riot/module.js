@@ -17,7 +17,7 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000); // preserved for debugging
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
         let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
@@ -258,7 +258,11 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
 
     // organize data for teams
     let result = 'Defeat';
-    if(participants[0]['win']){
+    console.log(matchData['info']['teams'])
+    if(matchData['info']['gameDuration'] < 60 * 5){
+        result = 'Remake';
+    }
+    else if(participants[0]['win']){
         result = 'Victory';
     }
     else if(participants[0]['gameEndedInEarlySurrender'] || participants[0]['gameEndedInSurrender']){
