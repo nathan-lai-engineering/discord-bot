@@ -14,11 +14,24 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('register')
-                .setDescription('registers your birthdate to the bot')),
+                .setDescription('registers your birthdate to the bot')
+                .addNumberOption(option => 
+                    option
+                        .setName('month')
+                        .setDescription('integer, the month')
+                        .setRequired(true))
+                .addNumberOption(option => 
+                    option
+                        .setName('day')
+                        .setDescription('integer, the day')
+                        .setRequired(true))),
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
             case 'set':
                 await birthdaySet(interaction);
+                break;
+            case 'register':
+                await birthdayRegister(interaction);
                 break;
             default:
                 interaction.reply({content:'What subcommand did you even try?', ephemeral: true});
@@ -77,4 +90,8 @@ async function birthdaySet(interaction){
         if(connection)
             connection.close();
     }
+}
+
+async function birthdayRegister(interaction){
+
 }
