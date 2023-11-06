@@ -258,7 +258,6 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
 
     // organize data for teams
     let result = 'Defeat';
-    console.log(matchData['info']['teams'])
     if(matchData['info']['gameDuration'] < 60 * 5){
         result = 'Remake';
     }

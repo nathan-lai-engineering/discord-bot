@@ -1,5 +1,5 @@
 const {log, logDebug} = require('../../utils/log.js');
-const {oracleQuery} = require('../../../utils/oracle.js');
+const {oracleQuery} = require('../../utils/oracle.js');
 const oracledb = require('oracledb');
 
 exports.load = (client) => {
@@ -20,15 +20,17 @@ exports.load = (client) => {
             console.log('NEXT DAY IN THE NEXT HOUR');
             const sendBirthdayMessage = async () => {
                 let guildChannels = await getGuildChannels(client);
-                for(let guildChannel of guildChannels){
+                for(let guildId in guildChannels){
+                    let guildChannel = guildChannels[guildId];
+
                     guildChannel.send("today is a new day");
                 }
             }
 
-            setInterval(sendBirthdayMessage, timeUntilNextHour);
+            setTimeout(sendBirthdayMessage, timeUntilNextHour);
+            //setTimeout(sendBirthdayMessage, 1);
         }
     }
-
     checkBirthday();
 }
 
@@ -41,7 +43,6 @@ async function getGuildChannels(client){
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
             guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
-            
         }
     }
     logDebug(client, '[BIRTHDAY] Notification channel IDs acquired');
