@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
+const { oracleQuery } = require('../../../utils/oracle.js');
 
 
 module.exports = {
@@ -93,5 +94,25 @@ async function birthdaySet(interaction){
 }
 
 async function birthdayRegister(interaction){
+    logDebug(interaction.client, 'Updating Discord Birthday on database');
+    let month = interaction.options.getNumber('month');
+    let day = interaction.options.getNumber('day');
+    if(month > 1 && month < 13){
+        if(day > 1 && day < 31){
+            await oracleQuery(
+                `MERGE INTO discord_accounts USING dual ON (discord_id=:discord_id)
+                WHEN MATCHED THEN UPDATE SET birth_month=:month, birth_day=:day
+                WHEN NOT MATCHED THEN INSERT
+                VALUES(:discord_id, 0, null, :month, :day)`,
+                {discord_id: interaction.member.id,
+                month: month,
+                day: day},
+                {autoCommit:true});
+                logDebug(interaction.client, "Birthday registered and uppdated to database");
+                return interaction.reply({content:'Birthday Registered!', ephemeral:true});
+        }
+    }
 
+    interaction.reply({content:'You did not put a real date', content: ephemeral});
+    logDebug(interaction.client, "Failure to input birthday date");
 }

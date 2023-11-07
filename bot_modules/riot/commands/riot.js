@@ -120,9 +120,6 @@ async function riotRegister(interaction){
         summonerNameInput = summonerNameInput.split(":")[1];
     }
 
-
-    
-    
     // acquire summoner data for both league and tft from Riot Web API
     var summonerData = {};
     for(let gametype in apiPaths){
