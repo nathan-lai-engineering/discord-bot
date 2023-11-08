@@ -22,11 +22,19 @@ exports.load = (client) => {
                 let guildChannels = await getGuildChannels(client);
                 for(let guildId in guildChannels){
                     let guildChannel = guildChannels[guildId];
-
-                    guildChannel.send("today is a new day");
+                    let result = await oracleQuery(
+                    `SELECT discord_id FROM discord_accounts WHERE birth_month=:month AND birth_day=:day`, 
+                    {month: nextHour.getMonth(),
+                    day: nextHour.getDate()}, 
+                    {});
+                    if(result && result.rows.length > 0){
+                        for(let row of result.rows){
+                            console.log(row[0]);
+                            guildChannel.send("today is someones birthday");
+                        }
+                    }
                 }
             }
-
             setTimeout(sendBirthdayMessage, timeUntilNextHour);
             //setTimeout(sendBirthdayMessage, 1);
         }
