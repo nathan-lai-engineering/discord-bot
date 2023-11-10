@@ -150,7 +150,6 @@ async function birthdayNext(interaction){
         {},
         {}
     );
-    console.log(result);
     if(result && result.rows.length > 0){
         let nextBirthdayRow = null;
         for(let row of result.rows){
