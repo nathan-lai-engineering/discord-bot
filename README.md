@@ -3,7 +3,7 @@ Discord bot created using the Discord.js API with data hosted on Oracle Autonomo
 
 
     
-Built with three modules: Distube, TikTok, Riot Games, Birthday, and Holiday 
+Built with five modules: Distube, TikTok, Riot Games, Birthday, and Holiday 
 
 Distube module utilizes Distube.js to play YouTube videos as well as playing user customized outro songs  
 
