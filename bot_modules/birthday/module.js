@@ -17,7 +17,6 @@ exports.load = (client) => {
 
         // this means the next interval is the next day
         if(now.getDate() != nextHour.getDate()){
-            console.log('NEXT DAY IN THE NEXT HOUR');
             const sendBirthdayMessage = async () => {
                 let guildChannels = await getGuildChannels(client);
                 for(let guildId in guildChannels){
@@ -29,14 +28,13 @@ exports.load = (client) => {
                     {});
                     if(result && result.rows.length > 0){
                         for(let row of result.rows){
-                            console.log(row[0]);
-                            guildChannel.send("today is someones birthday");
+                            guildChannel.send(`:partying_face: @everyone Today is <@${row[0]}>'s birthday! :partying_face:`);
                         }
                     }
                 }
             }
-            setTimeout(sendBirthdayMessage, timeUntilNextHour);
-            //setTimeout(sendBirthdayMessage, 1);
+            //setTimeout(sendBirthdayMessage, timeUntilNextHour);
+            setTimeout(sendBirthdayMessage, 1);
         }
     }
     checkBirthday();

@@ -40,6 +40,11 @@ module.exports = {
 	},
 };
 
+/**
+ * Sets the channel to post the birthday notification to
+ * @param {*} interaction 
+ * @returns 
+ */
 async function birthdaySet(interaction){
     logDebug(interaction.client, 'Updating Birthday notification channel on database');
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
@@ -93,12 +98,17 @@ async function birthdaySet(interaction){
     }
 }
 
+/**
+ * Sets the birthday month and day in the database
+ * @param {*} interaction 
+ * @returns 
+ */
 async function birthdayRegister(interaction){
     logDebug(interaction.client, 'Updating Discord Birthday on database');
-    let month = interaction.options.getNumber('month');
+    let month = interaction.options.getNumber('month') - 1;
     let day = interaction.options.getNumber('day');
-    if(month > 1 && month < 13){
-        if(day > 1 && day < 31){
+    if(month >= 0 && month <= 11){
+        if(day >= 1 && day <= 31){
             await oracleQuery(
                 `MERGE INTO discord_accounts USING dual ON (discord_id=:discord_id)
                 WHEN MATCHED THEN UPDATE SET birth_month=:month, birth_day=:day
@@ -108,7 +118,7 @@ async function birthdayRegister(interaction){
                 month: month,
                 day: day},
                 {autoCommit:true});
-                logDebug(interaction.client, "Birthday registered and uppdated to database");
+                logDebug(interaction.client, "Birthday registered and updated to database");
                 return interaction.reply({content:'Birthday Registered!', ephemeral:true});
         }
     }
