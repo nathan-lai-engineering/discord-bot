@@ -64,11 +64,16 @@ function createEvent(client, event, eventText){
     });
 }
 
+/**
+ * Leaves the channel if the bot is the last one inside
+ * @param {*} oldState 
+ */
 function leaveOnEmpty(oldState){
     let client = oldState.client;
 
     if(oldState.channel != null) {
-        oldState.channel.fetch(true).then(channel => {
+        oldState.channel.fetch(true)
+        client.channels.fetch(oldState.channelId).then(channel => {
             if(channel != null && channelEmpty(channel)){
                 logDebug(client, "Left on empty " + channel.id);
                 let voice = client.distube.voices.get(oldState.guild.id)
@@ -79,6 +84,11 @@ function leaveOnEmpty(oldState){
     }
 }
 
+/**
+ * Boolean true or false if a channel is empty with the bot
+ * @param {*} channel 
+ * @returns 
+ */
 function channelEmpty(channel){
     let empty = true;
     let botPresent = false;
@@ -89,9 +99,15 @@ function channelEmpty(channel){
         else
             botPresent = true;
     });
+    if((botPresent && empty))
+        console.log(channel.members);
     return (botPresent && empty);
 }
 
+/**
+ * Joins if the bot is not involved in any voice channels
+ * @param {*} newState 
+ */
 function joinOnUnjoined(newState){
     let client = newState.client;
     if(Date.now() - client.distube.lastJoined > 100){
