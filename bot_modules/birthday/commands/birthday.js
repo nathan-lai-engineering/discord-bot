@@ -25,7 +25,11 @@ module.exports = {
                     option
                         .setName('day')
                         .setDescription('integer, the day')
-                        .setRequired(true))),
+                        .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('next')
+                    .setDescription('tells you the next upcoming birthday')),
 	async execute(interaction) {
         switch(interaction.options.getSubcommand()){
             case 'set':
@@ -33,6 +37,9 @@ module.exports = {
                 break;
             case 'register':
                 await birthdayRegister(interaction);
+                break;
+            case 'next':
+                await birthdayNext(interaction);
                 break;
             default:
                 interaction.reply({content:'What subcommand did you even try?', ephemeral: true});
@@ -125,4 +132,42 @@ async function birthdayRegister(interaction){
 
     interaction.reply({content:'You did not put a real date', content: ephemeral});
     logDebug(interaction.client, "Failure to input birthday date");
+}
+
+/**
+ * Replies to the user with the next birthday
+ * @param {} interaction 
+ */
+async function birthdayNext(interaction){
+    const today = new Date();
+    let month = today.getMonth();
+    let date = today.getDate();
+    let year = today.getFullYear();
+    const result = await oracleQuery(
+        `SELECT discord_id, birth_month, birth_day 
+        FROM discord_accounts
+        ORDER BY birth_month, birth_day`,
+        {},
+        {}
+    );
+    console.log(result);
+    if(result && result.rows.length > 0){
+        let nextBirthdayRow = null;
+        for(let row of result.rows){
+            if((row[1] > month || (row[1] == month && row[2] > date)) 
+                && nextBirthdayRow == null){
+                nextBirthdayRow = row;
+            }
+        }
+        if(nextBirthdayRow == null){
+            nextBirthdayRow = result.rows[0];
+        }
+        let birthdate = new Date(year, nextBirthdayRow[1], nextBirthdayRow[2]);
+        let timeDiff = (birthdate - today) / (1000 * 60 * 60 * 24);
+        let dayDiff = Math.floor(timeDiff);
+        let hourDiff = Math.floor((timeDiff - dayDiff) * 24);
+        interaction.reply({content: `Next birthday is <@${nextBirthdayRow[0]}>'s in **${dayDiff} days** & **${hourDiff} hours**`, ephemeral: true});
+    }
+    else
+        logDebug(interaction.client, 'Birthday next had no results');
 }
