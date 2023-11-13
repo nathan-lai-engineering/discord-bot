@@ -28,7 +28,7 @@ const client = new Discord.Client({
 });
 
 // load login details for global usage
-client.dbLogin = require('./oracledb.json');
+client.dbLogin = require('./external/oracledb.json');
 client.debugMode = true;
 client.enabledModules = ['distube', 'riot', 'tiktok', 'holidays', 'birthday'];
 
@@ -77,7 +77,7 @@ if(client.debugMode)
 // =============================================================
 // COMMAND DEPLOYMENT
 // =============================================================
-const { clientId, guildId, token } = require('./discordconfig.json');
+const { clientId, guildId, token } = require('./external/discordconfig.json');
 
 // Construct and prepare an instance of the REST module
 const rest = new Discord.REST({ version: '10' }).setToken(token);

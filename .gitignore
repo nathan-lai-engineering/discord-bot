@@ -15,11 +15,7 @@ run.bat
 .idea/
 temp
 
-firebase.json
-discordconfig.json
-oracledb.json
-oraclepasswords.txt
-oracle_wallet
+external
 .$*
 
 # macOS
