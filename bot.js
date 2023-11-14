@@ -75,23 +75,6 @@ if(client.debugMode)
   console.log(client.commands.map((command) => command.data.name));
 
 // =============================================================
-// COMMAND DEPLOYMENT
-// =============================================================
-const { clientId, guildId, token } = require('./external/discordconfig.json');
-
-// Construct and prepare an instance of the REST module
-const rest = new Discord.REST({ version: '10' }).setToken(token);
-log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
-
-// The put method is used to fully refresh all commands in the guild with the current set
-rest.put(
-  Discord.Routes.applicationGuildCommands(clientId, guildId),
-  { body: commandJSONs },
-)
-.then(data => log(`Successfully reloaded ${data.length} application (/) commands.`))
-.catch(console.error);
-
-// =============================================================
 // BOT OPERATION
 // =============================================================
 oracleQuery(`SELECT * FROM api_keys`).then(res => {
@@ -118,6 +101,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
       activities: [{name: 'Doing a little trolling'}],
       status: 'online'
     });
+    deployCommands(client);
   });
 
 
@@ -161,3 +145,37 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
     console.log(error);
   }
 });
+
+/**
+ * Dynamically deploy commands using stored data from database
+ * @param {*} client 
+ */
+async function deployCommands(client){
+  const clientId = client.user.id;
+  const token = client.apiKeys['discord'];
+  let res = await oracleQuery(
+    `SELECT guild_id FROM GUILDS`,
+    {},
+    {}
+  );
+  if(res && res.rows.length > 0){
+    log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
+    for(let guildRow of res.rows){
+      console.log(guildRow)
+      let guildId = guildRow[0];
+
+      // Construct and prepare an instance of the REST module
+      const rest = new Discord.REST({ version: '10' }).setToken(token);
+
+    
+      // The put method is used to fully refresh all commands in the guild with the current set
+      rest.put(
+        Discord.Routes.applicationGuildCommands(clientId, guildId),
+        { body: commandJSONs },
+      )
+      .then(data => log(`Successfully reloaded ${data.length} application (/) commands in guild: ${guildId}`))
+      .catch(console.error);
+    }
+  }
+
+}

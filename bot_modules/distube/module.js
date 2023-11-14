@@ -100,9 +100,6 @@ function channelEmpty(channel){
         botPresent = true;
     }
 
-    if((botPresent && empty))
-        console.log(channel.members);
-    console.log(botPresent, empty);
     return (botPresent && empty);
 }
 
