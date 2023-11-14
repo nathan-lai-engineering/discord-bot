@@ -28,7 +28,7 @@ const client = new Discord.Client({
 });
 
 // load login details for global usage
-client.dbLogin = require('./external/oracledb.json');
+client.dbLogin = require('./oracledb.json');
 client.debugMode = true;
 client.enabledModules = ['distube', 'riot', 'tiktok', 'holidays', 'birthday'];
 
@@ -161,13 +161,11 @@ async function deployCommands(client){
   if(res && res.rows.length > 0){
     log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
     for(let guildRow of res.rows){
-      console.log(guildRow)
       let guildId = guildRow[0];
 
       // Construct and prepare an instance of the REST module
       const rest = new Discord.REST({ version: '10' }).setToken(token);
 
-    
       // The put method is used to fully refresh all commands in the guild with the current set
       rest.put(
         Discord.Routes.applicationGuildCommands(clientId, guildId),

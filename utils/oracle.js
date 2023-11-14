@@ -10,7 +10,7 @@ module.exports = {oracleQuery}
  * @returns 
  */
 async function oracleQuery(sqlString, binds=[], config={}){
-    const oracleLogin = require('../external/oracledb.json');
+    const oracleLogin = require('../oracledb.json');
     const connection = await oracledb.getConnection(oracleLogin);
 
     var result = null
