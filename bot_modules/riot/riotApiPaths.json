@@ -1,11 +1,13 @@
 {
     "league": {
+        "account": "https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/",
         "summoner": "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/",
         "matchHistory": "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/",
         "matchInfo": "https://americas.api.riotgames.com/lol/match/v5/matches/",
         "rank": "https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/"
     },
     "tft":{
+        "account": "https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/",
         "summoner": "https://na1.api.riotgames.com/tft/summoner/v1/summoners/by-name/",
         "matchHistory": "https://americas.api.riotgames.com/tft/match/v1/matches/by-puuid/",
         "matchInfo": "https://americas.api.riotgames.com/tft/match/v1/matches/",

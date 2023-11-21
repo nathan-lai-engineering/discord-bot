@@ -291,7 +291,7 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
     participants.forEach(participant => {
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
-            {name: `${participant['summonerName']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}${lpStrings[participant['puuid']]}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: `${participant['riotIdName']}#${participant['riotIdTagline']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}${lpStrings[participant['puuid']]}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
             {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 
