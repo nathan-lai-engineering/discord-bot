@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-11-21T22:41:55.752Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.3 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="MoOA8Meert_rX8bmW1Tp" version="22.0.3" type="device">
+<mxfile host="Electron" modified="2023-11-22T01:34:36.427Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.3 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="tET6QjLEDoEoRLAzOF_x" version="22.0.3" type="device">
   <diagram name="Page" id="z6iWdsMWru9Ucd2KQlUm">
     <mxGraphModel dx="2268" dy="828" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -52,11 +52,8 @@
         <mxCell id="yEuS01cdQiujWkr5JIMt-32" value="FK" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="190" y="845" width="60" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="yEuS01cdQiujWkr5JIMt-33" value="summoner_name" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="490" y="430" width="110" height="30" as="geometry" />
-        </mxCell>
         <mxCell id="yEuS01cdQiujWkr5JIMt-35" value="riot_id" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="340" y="715" width="90" height="30" as="geometry" />
+          <mxGeometry x="340" y="715" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="yEuS01cdQiujWkr5JIMt-37" value="discord_id" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="370" y="430" width="60" height="30" as="geometry" />
@@ -222,7 +219,7 @@
         <mxCell id="xnvNQHVsTAZZ_-OnzUZo-3" value="PK" style="text;html=1;strokeColor=#d6b656;fillColor=#fff2cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="220" y="745" width="60" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="xnvNQHVsTAZZ_-OnzUZo-4" value="summoners" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+        <mxCell id="xnvNQHVsTAZZ_-OnzUZo-4" value="riot_accounts" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="140" y="715" width="80" height="30" as="geometry" />
         </mxCell>
         <mxCell id="xnvNQHVsTAZZ_-OnzUZo-6" value="FK" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
@@ -253,13 +250,13 @@
           <mxGeometry x="740" y="760" width="60" height="30" as="geometry" />
         </mxCell>
         <mxCell id="p1s2ygTlfaNwDJSVveeb-8" value="birth_month" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="600" y="430" width="70" height="30" as="geometry" />
+          <mxGeometry x="490" y="430" width="70" height="30" as="geometry" />
         </mxCell>
         <mxCell id="p1s2ygTlfaNwDJSVveeb-9" value="birth_day" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="670" y="430" width="60" height="30" as="geometry" />
+          <mxGeometry x="560" y="430" width="60" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="tPqPA55Yj1uC4LS8ASsd-1" value="riot_tag" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="430" y="715" width="90" height="30" as="geometry" />
+        <mxCell id="tPqPA55Yj1uC4LS8ASsd-1" value="riot_tag" style="text;html=1;strokeColor=default;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="400" y="715" width="50" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
