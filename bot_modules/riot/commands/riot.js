@@ -130,10 +130,11 @@ async function riotRegister(interaction){
     var accountData = {
         riotId: riotIdInput,
         riotTag: riotTagInput,
-        puuids: {}
+        puuids: {},
+        summonerIds: {}
     };
 
-    // load in account data
+    // read riot web api for id, tag, and puuid
     for(let gametype in apiPaths){
         let apiKey = interaction.client.apiKeys[gametype];
         let apiPath = apiPaths[gametype]['account'];
@@ -147,6 +148,24 @@ async function riotRegister(interaction){
             accountData['riotId'] = resData['gameName'];
             accountData['riotTag'] = resData['tagLine'];
             accountData['puuids'][gametype] = resData['puuid'];
+        }
+        catch(error){
+            logDebug(interaction.client, error);
+        }
+    }
+
+    // read riot web api for summoner id
+    for(let gametype in apiPaths){
+        let apiKey = interaction.client.apiKeys[gametype];
+        let apiPath = apiPaths[gametype]['summonerPuuid'];
+        let apiString = `${apiPath}${accountData['puuids'][gametype]}?api_key=${apiKey}`
+        try{
+            let res = await axios({
+                method: 'get',
+                url: apiString
+            });
+            let summonerId = res.data['id'];
+            accountData['summonerIds'][gametype] = summonerId;
         }
         catch(error){
             logDebug(interaction.client, error);
@@ -177,8 +196,8 @@ async function riotRegister(interaction){
             // upsert puuids information
             for(let gametype in apiPaths){
                 await connection.execute(
-                    `INSERT INTO puuids (puuid, gametype, discord_id)
-                    SELECT :puuid, :gametype, :discord_id
+                    `INSERT INTO puuids (puuid, gametype, discord_id, summoner_id)
+                    SELECT :puuid, :gametype, :discord_id, :summoner_id
                     FROM dual
                     WHERE NOT EXISTS(
                         SELECT * FROM puuids
@@ -186,11 +205,12 @@ async function riotRegister(interaction){
                     )`,
                 {puuid: accountData['puuids'][gametype],
                 gametype: gametype,
-                discord_id: discordId
+                discord_id: discordId,
+                summoner_id: accountData['summonerIds'][gametype]
                 },
                 {});
-
                 let apiKey = interaction.client.apiKeys[gametype];
+                await updateRank(connection, accountData['summonerIds'][gametype], gametype, apiKey, accountData['puuids'][gametype]);
             }
 
             // upsert notification member to true
@@ -295,20 +315,43 @@ async function upsertUser(connection, discordId){
     );
 }
 
-async function 
-
-async function updateRank(connection, puuid, gametype, apiKey){
+/**
+ * Using a connection, updates the rank information for a given gametype using summonerId
+ * @param {*} connection 
+ * @param {*} summonerId 
+ * @param {*} gametype 
+ * @param {*} apiKey 
+ * @param {*} puuid 
+ */
+async function updateRank(connection, summonerId, gametype, apiKey, puuid){
     let apiPath = apiPaths[gametype]['rank'];
-    let apiString = `${apiPath}${accountData['puuids'][gametype]}?api_key=${apiKey}`;
+    let apiString = `${apiPath}${summonerId}?api_key=${apiKey}`;
     try{
         let res = await axios({
             method: 'get',
             url: apiString
         });
-        let summonerId = 
-
+        var resData = res.data;
     }
     catch(error){
         logDebug(interaction.client, error);
+    }
+    if(resData && resData.length > 0){
+        for(let queueData of resData){
+            await connection.execute(
+                `MERGE INTO ranks USING dual ON (queue=:queue and puuid=:puuid)
+                WHEN MATCHED THEN UPDATE SET tier=:tier, tier_rank=:tier_rank, league_points=:league_points
+                WHEN NOT MATCHED THEN INSERT
+                VALUES(:queue, :puuid, :gametype, :tier, :tier_rank, :league_points)`,
+            {queue: queueData['queueType'],
+                puuid: puuid,
+                gametype: gametype,
+                tier: queueData['tier'],
+                tier_rank: queueData['rank'],
+                league_points: queueData['leaguePoints']
+            },
+            {});
+        }
+
     }
 }
