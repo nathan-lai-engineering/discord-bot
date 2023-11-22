@@ -18,8 +18,13 @@ module.exports = {
                 .setDescription('registers your Riot username to your discord')
                 .addStringOption(option =>
                     option
-                        .setName('summoner_name')
-                        .setDescription('summoner name')
+                        .setName('riot_id')
+                        .setDescription('your riot_id')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option
+                        .setName('riot_tag')
+                        .setDescription('your riot tag (after the hashtag)')
                         .setRequired(true)))
         .addSubcommand(subcommand =>
             subcommand
@@ -111,39 +116,47 @@ async function riotSet(interaction){
  */
 async function riotRegister(interaction){
     logDebug(interaction.client, 'Looking up riot account of user');
-    let summonerNameInput = interaction.options.getString('summoner_name');
+    let riotIdInput = interaction.options.getString('riot_id');
+    const riotTagInput = interaction.options.getString('riot_tag');
     let discordId = interaction.member.id;
 
     // secret method for registering someone else by including discord id
-    if(summonerNameInput.includes(":")){
-        discordId = summonerNameInput.split(":")[0];
-        summonerNameInput = summonerNameInput.split(":")[1];
+    if(riotIdInput.includes(":")){
+        discordId = riotIdInput.split(":")[0];
+        riotIdInput = riotIdInput.split(":")[1];
     }
 
-    // acquire summoner data for both league and tft from Riot Web API
-    var summonerData = {};
+    // acquire account data for both league and tft from Riot Web API
+    var accountData = {
+        riotId: riotIdInput,
+        riotTag: riotTagInput,
+        puuids: {}
+    };
+
+    // load in account data
     for(let gametype in apiPaths){
         let apiKey = interaction.client.apiKeys[gametype];
-        let apiPath = apiPaths[gametype]['summoner'];
-        let apiString = `${apiPath}${summonerNameInput}?api_key=${apiKey}`
+        let apiPath = apiPaths[gametype]['account'];
+        let apiString = `${apiPath}${riotIdInput}/${riotTagInput}?api_key=${apiKey}`
         try{
             let res = await axios({
                 method: 'get',
                 url: apiString
             });
-            summonerData[gametype] = res.data;
-
+            let resData = res.data;
+            accountData['riotId'] = resData['gameName'];
+            accountData['riotTag'] = resData['tagLine'];
+            accountData['puuids'][gametype] = resData['puuid'];
         }
         catch(error){
             logDebug(interaction.client, error);
         }
     }
 
-    // update database with new summoner data
-    if(Object.keys(summonerData).length > 0){
+    // update database with new account data
+    if(Object.keys(accountData).length > 0){
         let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
-        let summonerName = summonerData[Object.keys(summonerData)[0]]['name'];
 
         try{
             // upsert discord account
@@ -152,30 +165,32 @@ async function riotRegister(interaction){
             // upsert riot account
             await connection.execute(
                 `MERGE INTO riot_accounts USING dual ON (discord_id=:discord_id)
-                WHEN MATCHED THEN UPDATE SET summoner_name=:summoner_name
+                WHEN MATCHED THEN UPDATE SET riot_id=:riot_id, riot_tag=:riot_tag
                 WHEN NOT MATCHED THEN INSERT
-                VALUES(:discord_id, :summoner_name)`,
+                VALUES(:discord_id, :riot_id, :riot_tag)`,
             {discord_id: discordId,
-            summoner_name: summonerName
+            riot_id: accountData['riotId'],
+            riot_tag: accountData['riotTag']
             },
             {});
-    
-            // insert new summoner data if it doesnt exist (intentionally cannot update)
-            for(let gametype in summonerData){
+
+            // upsert puuids information
+            for(let gametype in apiPaths){
                 await connection.execute(
-                    `INSERT INTO summoners (puuid, gametype, discord_id, summoner_id)
-                    SELECT :puuid, :gametype, :discord_id, :summoner_id 
+                    `INSERT INTO puuids (puuid, gametype, discord_id)
+                    SELECT :puuid, :gametype, :discord_id
                     FROM dual
                     WHERE NOT EXISTS(
-                        SELECT * FROM summoners
-                        WHERE (puuid=:puuid AND gametype=:gametype)
+                        SELECT * FROM puuids
+                        WHERE (puuid=:puuid and gametype=:gametype)
                     )`,
-                    {puuid: summonerData[gametype]['puuid'],
-                    gametype: gametype,
-                    discord_id: discordId,
-                    summoner_id: summonerData[gametype]['id']},
-                    {}
-                );
+                {puuid: accountData['puuids'][gametype],
+                gametype: gametype,
+                discord_id: discordId
+                },
+                {});
+
+                let apiKey = interaction.client.apiKeys[gametype];
             }
 
             // upsert notification member to true
@@ -187,7 +202,7 @@ async function riotRegister(interaction){
             {guild_id: interaction.guild.id,
             discord_id: discordId},
             {autoCommit:true});
-            interaction.reply({content: `You have registered to the Riot account of: ${summonerName}`, ephemeral:false});
+            interaction.reply({content: `You have registered to the Riot account of: ${accountData['riotId']}#${accountData['riotTag']}`, ephemeral:false});
         }
         catch(error){
             logDebug(interaction.client, error);
@@ -278,4 +293,22 @@ async function upsertUser(connection, discordId){
         {discord_id: discordId},
         {}
     );
+}
+
+async function 
+
+async function updateRank(connection, puuid, gametype, apiKey){
+    let apiPath = apiPaths[gametype]['rank'];
+    let apiString = `${apiPath}${accountData['puuids'][gametype]}?api_key=${apiKey}`;
+    try{
+        let res = await axios({
+            method: 'get',
+            url: apiString
+        });
+        let summonerId = 
+
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
 }
