@@ -17,8 +17,8 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
-        let lastChecked = await getLastTimeChecked(client, INTERVAL);
+        let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60 * 24 * 2; // preserved for debugging
+        //let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -37,7 +37,6 @@ exports.load = (client) => {
                     let apiString = `${apiPath}${riotAccount[gametype]['puuid']}/ids?startTime=${lastChecked}&start=0&count=20&api_key=${apiKey}`;
                     let res = await axios({method: 'get', url: apiString});
                     await sleep(50); // 1 api call every 50 ms to stay under 20 api calls every 1000 ms limit
-
                     // record which tracked players are in each match
                     for(let matchId of res.data){
                         if(!(matchId in matches)){
@@ -289,9 +288,10 @@ function createLeagueEmbed(client, leagueMatch, matchRiotAccounts, lpStrings){
 
     // create chunks for each player 
     participants.forEach(participant => {
+        let summonerName = matchRiotAccounts[participant['puuid']]['summonerName'];
         embed.addFields(
             {name: ' ', value: '⸻⸻'}, //seperator 
-            {name: `${participant['riotIdName']}#${participant['riotIdTagline']} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}${lpStrings[participant['puuid']]}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
+            {name: `${summonerName} • ${leagueRoles(participant['teamPosition'])} ${participant['championName']}${lpStrings[participant['puuid']]}`, value: `KDA: ${participant['kills']}/${participant['deaths']}/${participant['assists']}`},
             {name: ` `, value: `Gold: ${participant['goldEarned']} • Vision: ${participant['visionScore']} • CS: ${participant['totalMinionsKilled'] + participant['neutralMinionsKilled']}`},
             {name: ` `, value: `Damage: ${participant['totalDamageDealtToChampions']} • Heal: ${participant['totalHealsOnTeammates']} • Shield: ${participant['totalDamageShieldedOnTeammates']}`},
 

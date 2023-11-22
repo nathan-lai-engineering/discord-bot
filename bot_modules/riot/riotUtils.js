@@ -73,12 +73,14 @@ function topTraits(traitsList){
 function traitsName(trait){
     let traitName = trait.split("_")[1];
     let traitsDictionary = {
-        "Armorclad": "Juggernaut",
-        "Preserver": "Invoker",
-        "Marksman": "Gunner"
+        "PopBand": "K/DA",
+        "Fighter": "Mosher"
     }
     if(traitName in traitsDictionary){
         traitName = traitsDictionary[traitName];
+    }
+    else{
+        traitName = traitName.replace(/([A-Z])/g, ' $1').trim();
     }
     return traitName;
 }
