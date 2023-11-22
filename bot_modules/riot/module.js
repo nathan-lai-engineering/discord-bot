@@ -17,8 +17,8 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60 * 24 * 2; // preserved for debugging
-        //let lastChecked = await getLastTimeChecked(client, INTERVAL);
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60 * 24 * 2; // preserved for debugging
+        let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -499,7 +499,7 @@ async function getLastTimeChecked(client){
         }
 
         // update the database with current time
-        /*
+        
         await connection.execute(
         `MERGE INTO timestamps USING dual ON (name=:name)
         WHEN MATCHED THEN UPDATE SET unix_time=:unix_time
@@ -507,7 +507,7 @@ async function getLastTimeChecked(client){
         VALUES(:name, :unix_time)`,
         {name:"riot",
         unix_time: Math.floor(Date.now()/1000)}, 
-        {autoCommit:true});*/
+        {autoCommit:true});
 
     }
     catch(error){
