@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, gamemodeImage};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, getRankedId, gamemodeImage};
 
 const {logDebug} = require('../../utils/log.js') 
 /**
@@ -171,7 +171,7 @@ function leagueGametypes(queueId){
  * @param {*} queueType 
  * @returns 
  */
-function getRankedType(queuetype){
+function getRankedId(queuetype){
     if(queuetype.includes('RANKED')){
         if(queuetype.includes('SOLO')){
             return 420;
@@ -184,6 +184,24 @@ function getRankedType(queuetype){
         }
     }
     return -1;
+}
+
+/**
+ * Given a number queue, return a queuetype if it is a ranked game
+ * @param {*} queueId 
+ * @returns 
+ */
+function getRankedType(queueId){
+    switch(queueId){
+        case 1100:
+            return 'RANKED_TFT';
+        case 440:
+            return 'RANKED_FLEX_SR';
+        case 420:
+            return 'RANKED_SOLO_5X5';
+        default:
+            return '';
+    }
 }
 
 /**

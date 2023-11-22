@@ -1,7 +1,7 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const axios = require('axios');
-const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, gamemodeImage} = require('./riotUtils.js');
+const {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, getRankedId, gamemodeImage} = require('./riotUtils.js');
 const oracledb = require('oracledb');
 const {oracleQuery} = require('../../utils/oracle.js');
 const API_PATHS = require('./riotApiPaths.json');
@@ -105,7 +105,7 @@ exports.load = (client) => {
     logDebug(client, "[RIOT] All matches historied");
     }
  
-    //setTimeout(checkRiotData, 10000);
+    setTimeout(checkRiotData, 10000);
 }       
 
 /**
@@ -120,20 +120,20 @@ exports.load = (client) => {
 async function getRiotAccounts(client){
     let riotAccounts = {};
     let resRiotAccounts = await oracleQuery(
-        `SELECT discord_id, summoner_name, gametype, puuid, summoner_id
-        FROM riot_accounts INNER JOIN summoners
+        `SELECT discord_id, riot_id, riot_tag, gametype, puuid, summoner_id
+        FROM riot_accounts INNER JOIN puuids
         USING(discord_id)`, [], {});
     if(resRiotAccounts != null && resRiotAccounts.rows.length > 0){
         for(let rowRiotAccount of resRiotAccounts.rows){
             let discordId = rowRiotAccount[0];
             if(!(discordId in riotAccounts)){
                 riotAccounts[discordId] = {
-                    summonerName: rowRiotAccount[1]
+                    summonerName: rowRiotAccount[1] + " #" + rowRiotAccount[2]
                 };
             }
-            riotAccounts[discordId][rowRiotAccount[2]] = {
-                puuid: rowRiotAccount[3],
-                summonerId: rowRiotAccount[4]};
+            riotAccounts[discordId][rowRiotAccount[3]] = {
+                puuid: rowRiotAccount[4],
+                summonerId: rowRiotAccount[5]};
         }
     }
     logDebug(client, '[RIOT] Riot accounts acquired');
@@ -397,7 +397,7 @@ async function getCurrentRank(client, summonerId, gametype, queueId){
         let apiString = `${API_PATHS[gametype]['rank']}${summonerId}?api_key=${client.apiKeys[gametype]}`
         let res = await axios({method:'get', url: apiString});
         sleep(50);
-        let rankQueue = res.data.find((queue) => getRankedType(queue['queueType']) == queueId);
+        let rankQueue = res.data.find((queue) => getRankedId(queue['queueType']) == queueId);
         if(rankQueue != undefined){
             return rankQueue;
         }
@@ -410,7 +410,7 @@ async function getCurrentRank(client, summonerId, gametype, queueId){
 
 /**
  * Returns the ranked row from database
- * @param {*} client 
+ * @param {*} client acquiring last
  * @param {*} puuid 
  * @param {*} gametype 
  * @param {*} queue 
@@ -425,7 +425,7 @@ async function getLastRank(client, puuid, queue){
         puuid: puuid}, 
         {}
     );
-    if(res.rows.length > 0){
+    if(res && res.rows.length > 0){
         return res.rows[0];
     }
     return null;
@@ -458,8 +458,8 @@ async function manageLpStrings(client, match, matchRiotAccounts){
             // gets LeagueEntryDTO
             let currentRank = await getCurrentRank(client, summonerId, gametype, queueId);
             if(currentRank != null){
-                let lastRank = await getLastRank(client, puuid, queueId);
-                await updateRank(client, queueId, puuid, gametype, currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
+                let lastRank = await getLastRank(client, puuid, getRankedType(queueId));
+                await updateRank(client, currentRank['queueType'], puuid, gametype, currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
                 let rankString = `${currentRank['tier'].slice(0,1).toUpperCase() + currentRank['tier'].slice(1).toLowerCase()} ${currentRank['rank']} ${currentRank['leaguePoints']} LP`
                 if(lastRank != null){
                     let lpChange = calculateLpChange(lastRank[3], lastRank[4], lastRank[5], currentRank['tier'], currentRank['rank'], currentRank['leaguePoints']);
@@ -499,6 +499,7 @@ async function getLastTimeChecked(client){
         }
 
         // update the database with current time
+        /*
         await connection.execute(
         `MERGE INTO timestamps USING dual ON (name=:name)
         WHEN MATCHED THEN UPDATE SET unix_time=:unix_time
@@ -506,7 +507,7 @@ async function getLastTimeChecked(client){
         VALUES(:name, :unix_time)`,
         {name:"riot",
         unix_time: Math.floor(Date.now()/1000)}, 
-        {autoCommit:true});
+        {autoCommit:true});*/
 
     }
     catch(error){
