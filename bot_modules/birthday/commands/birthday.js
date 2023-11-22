@@ -120,7 +120,7 @@ async function birthdayRegister(interaction){
                 `MERGE INTO discord_accounts USING dual ON (discord_id=:discord_id)
                 WHEN MATCHED THEN UPDATE SET birth_month=:month, birth_day=:day
                 WHEN NOT MATCHED THEN INSERT
-                VALUES(:discord_id, 0, null, :month, :day)`,
+                VALUES(:discord_id, 0, :month, :day)`,
                 {discord_id: interaction.member.id,
                 month: month,
                 day: day},
