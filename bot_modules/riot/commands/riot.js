@@ -222,7 +222,18 @@ async function riotRegister(interaction){
             {guild_id: interaction.guild.id,
             discord_id: discordId},
             {autoCommit:true});
-            interaction.reply({content: `You have registered to the Riot account of: ${accountData['riotId']}#${accountData['riotTag']}`, ephemeral:false});
+            try{
+                interaction.reply({content: `You have registered to the Riot account of: ${accountData['riotId']}#${accountData['riotTag']}`, ephemeral:false});
+            }
+            catch(error){
+                try{
+                    interaction.reply({content: `You have registered to the Riot account of: ${accountData['riotId']}#${accountData['riotTag']}`, ephemeral:false});
+                }
+                catch(error){
+                    logDebug(client, "[Riot] Riot register reply error");
+                }
+            }
+
         }
         catch(error){
             logDebug(interaction.client, error);
