@@ -17,7 +17,7 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60 * 24 * 2; // preserved for debugging
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
         let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
@@ -332,7 +332,7 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts, lpStrings){
 
     // create embed
     let embed = new Discord.EmbedBuilder();
-    embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'])}`);
+    embed.setTitle(`Teamfight Tactics - ${tftGametypes(matchData['info']['tft_game_type'], matchData['info']['queue_id'])}`);
     embed.setDescription(`<t:${Math.floor(matchData['info']['game_datetime']/1000)}>`);
     embed.setThumbnail(gamemodeImage(matchData['info']['queue_id'], tftMatch['gametype']));
     for(let participant of participants){

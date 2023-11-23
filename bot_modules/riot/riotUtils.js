@@ -115,14 +115,17 @@ function position(positionNumber){
  * @param {*} gametype 
  * @returns 
  */
-function tftGametypes(gametype){
-    const TFT_GAMETYPES = {
-        'pairs': 'Double up',
-        'standard': 'Ranked'
+function tftGametypes(gametype, queueId){
+    switch(gametype){
+        case 'pairs':
+            return 'Double Up';
+        case 'standard':
+            if(queueId == 1100){
+                return 'Ranked';
+            }
+        default:
+            return 'Normal'
     }
-    if(!(gametype in TFT_GAMETYPES))
-        return gametype;
-    return TFT_GAMETYPES[gametype];
 }
 
 /**
