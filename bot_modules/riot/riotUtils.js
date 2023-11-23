@@ -73,8 +73,14 @@ function topTraits(traitsList){
 function traitsName(trait){
     let traitName = trait.split("_")[1];
     let traitsDictionary = {
-        "PopBand": "K/DA",
-        "Fighter": "Mosher"
+        "PopBand": "Heartsteel",
+        "KDA": "K/DA",
+        "Fighter": "Mosher",
+        "PunkRock": "Punk",
+        "Funk": "Disco",
+        "EDM": "EDM",
+        "8Bit": "8-Bit",
+        "Quickshot": "Rapidfire"
     }
     if(traitName in traitsDictionary){
         traitName = traitsDictionary[traitName];
