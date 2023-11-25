@@ -1,4 +1,4 @@
-module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, getRankedId, gamemodeImage};
+module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, getRankedId, gamemodeImage, hasTftVictory};
 
 const {logDebug} = require('../../utils/log.js') 
 /**
@@ -280,13 +280,17 @@ function sleep(ms) {
  * @param {*} gametype 
  * @returns 
  */
-function gamemodeImage(queueId, gametype){
+function gamemodeImage(queueId, gametype, victory){
     if(gametype == 'tft'){
-        return 'https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png';
+        if(victory)
+            return 'https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png';
+        return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/teamfight-tactics-lost.png';
     }
     switch(queueId){
         case 450:
-            return 'https://i.imgur.com/A6kdxGy.png';
+            if(victory)
+                return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/aram-victory.png';
+            return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/aram-loss.png';
         case 900:
         case 1300:
         case 1400:
@@ -302,4 +306,19 @@ function gamemodeImage(queueId, gametype){
         default:
             return 'https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png';
     }
+}
+
+/**
+ * Simple condition to see if a list of participants has a winner within
+ * @param {*} participants 
+ * @returns 
+ */
+function hasTftVictory(participants){
+    for(let participant in participants){
+        let placement = participant['placement'];
+        if(placement > 5){
+            return true;
+        }
+    }
+    return false;
 }
