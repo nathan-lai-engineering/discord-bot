@@ -186,14 +186,15 @@ function leagueGametypes(queueId){
  */
 function getRankedId(queuetype){
     if(queuetype.includes('RANKED')){
-        if(queuetype.includes('SOLO')){
-            return 420;
-        }
-        if(queuetype.includes('FLEX')){
-            return 440;
-        }
-        if(queuetype.includes('TFT')){
-            return 1100;
+        switch(queuetype){
+            case 'RANKED_TFT':
+                return 1100;
+            case 'RANKED_TFT_DOUBLE_UP':
+                return 1160;
+            case 'RANKED_SOLO_5x5':
+                return 420;
+            case 'RANKED_FLEX_SR':
+                return 440;
         }
     }
     return -1;
