@@ -81,7 +81,8 @@ function traitsName(trait){
         "EDM": "EDM",
         "8Bit": "8-Bit",
         "Quickshot": "Rapidfire",
-        "CrowdDive": "Crowd Diver"
+        "CrowdDive": "Crowd Diver",
+        "Deadeye": "Big Shot"
     }
     if(traitName in traitsDictionary){
         traitName = traitsDictionary[traitName];
@@ -282,8 +283,11 @@ function sleep(ms) {
  */
 function gamemodeImage(queueId, gametype, victory){
     if(gametype == 'tft'){
-        if(victory)
-            return 'https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png';
+        if(victory){
+            if(victory == 1)
+                return 'https://raw.githubusercontent.com/github/explore/13aab762268b5ca2d073fa16ec071e727a81ee66/topics/teamfight-tactics/teamfight-tactics.png';
+            return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/teamfight-tactics-win-loss.png';
+        }
         return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/teamfight-tactics-lost.png';
     }
     switch(queueId){
@@ -309,16 +313,22 @@ function gamemodeImage(queueId, gametype, victory){
 }
 
 /**
- * Simple condition to see if a list of participants has a winner within
+ * Multiple conditions, false if no victories, 1 if all victories, 2 if mixed loss/win
  * @param {*} participants 
  * @returns 
  */
 function hasTftVictory(participants){
-    for(let participant in participants){
+    let victories = 0;
+    for(let participant of participants){
         let placement = participant['placement'];
-        if(placement > 5){
-            return true;
+        if(placement < 5){
+            victories += 1;
         }
+    }
+    if(victories > 0){
+        if(victories == participants.length)
+            return 1;
+        return 2;
     }
     return false;
 }
