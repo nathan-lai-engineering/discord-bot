@@ -337,9 +337,15 @@ function createTftEmbed(client, tftMatch, matchRiotAccounts, lpStrings){
     embed.setThumbnail(gamemodeImage(matchData['info']['queue_id'], tftMatch['gametype'], hasTftVictory(participants)));
     for(let participant of participants){
         let summonerName = matchRiotAccounts[participant['puuid']]['summonerName'];
+
+        // divide placement by 2 to account for teams
+        let placement = participant['placement'];
+        if(matchData['info']['tft_game_type'] == 'pairs')
+            placement = Math.ceil(placement / 2);
+
         embed.addFields(
             {name: ' ', value: '⸻⸻'},
-            {name: `**${position(participant['placement'])}** • ${summonerName}${lpStrings[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
+            {name: `**${position(placement)}** • ${summonerName}${lpStrings[participant['puuid']]}`, value: `Eliminated at **${secondsToTime(participant['time_eliminated'])}** on round **${roundToString(participant['last_round'])}**`},
             {name: ' ', value: `Played **${topTraits(participant['traits'])}**`},
             {name: ' ', value: `Level: ${participant['level']} • Gold left: ${participant['gold_left']} • Damage dealt: ${participant['total_damage_to_players']}`},
         );
