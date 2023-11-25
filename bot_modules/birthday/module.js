@@ -33,7 +33,6 @@ exports.load = (client) => {
                     }
                 }
             }
-            log('There is a birthday coming up!');
             setTimeout(sendBirthdayMessage, timeUntilNextHour);
             //setTimeout(sendBirthdayMessage, 1);
         }

@@ -80,7 +80,8 @@ function traitsName(trait){
         "Funk": "Disco",
         "EDM": "EDM",
         "8Bit": "8-Bit",
-        "Quickshot": "Rapidfire"
+        "Quickshot": "Rapidfire",
+        "CrowdDive": "Crowd Diver"
     }
     if(traitName in traitsDictionary){
         traitName = traitsDictionary[traitName];
