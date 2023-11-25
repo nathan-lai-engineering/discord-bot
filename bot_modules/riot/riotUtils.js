@@ -306,7 +306,9 @@ function gamemodeImage(queueId, gametype, victory){
         case 430:
         case 440:
         case 700:
-            return 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/content/src/leagueclient/gamemodeassets/classic_sru/img/icon-victory.png';
+            if(victory)
+                return 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/content/src/leagueclient/gamemodeassets/classic_sru/img/icon-victory.png';
+            return 'https://raw.githubusercontent.com/nathan-lai-engineering/discord-bot/master/assets/league-normals-loss.png';
         default:
             return 'https://raw.githubusercontent.com/github/explore/b088bf18ff2af3f2216294ffb10f5a07eb55aa31/topics/league-of-legends/league-of-legends.png';
     }
