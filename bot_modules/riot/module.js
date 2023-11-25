@@ -17,8 +17,8 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
-        //let lastChecked = await getLastTimeChecked(client, INTERVAL);
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
+        let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -456,7 +456,6 @@ async function manageLpStrings(client, match, matchRiotAccounts){
     }
     else if(gametype == 'tft'){
         queueId = matchData['info']['queue_id'];
-        console.log(queueId)
     }
     for(let puuid in matchRiotAccounts){
         lpStrings[puuid] = "";
