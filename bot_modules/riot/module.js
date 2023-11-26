@@ -101,7 +101,7 @@ exports.load = (client) => {
                 guildChannels[guildId].send(embed);
             }
         }
-    logDebug(client, "[RIOT] All matches historied");
+    logDebug(client, "[RIOT] All matches historied ⸻  ✓");
     }
  
     setTimeout(checkRiotData, 10000);

@@ -253,6 +253,8 @@ function calculateLpChange(oldTier, oldRank, oldLp, newTier, newRank, newLp){
     const RANKS = ['IV', 'III', 'II', 'I'];
     if(oldTier == newTier){
         if(oldRank == newRank){
+            if(oldLp == newLp) // dont bother adding symbols or displaying change if there is n ochange
+                return '';
             let symbol = oldLp < newLp ? '<:up_arrow:1166628672552308776>' : '<:down_arrow:1166628706471649301>'
             return  `${symbol} ${newLp - oldLp} LP ${symbol}`
         }
