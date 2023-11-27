@@ -212,7 +212,9 @@ function getRankedType(queueId){
         case 440:
             return 'RANKED_FLEX_SR';
         case 420:
-            return 'RANKED_SOLO_5X5';
+            return 'RANKED_SOLO_5x5';
+        case 1160:
+            return 'RANKED_TFT_DOUBLE_UP';
         default:
             return '';
     }
@@ -255,7 +257,7 @@ function calculateLpChange(oldTier, oldRank, oldLp, newTier, newRank, newLp){
         if(oldRank == newRank){
             if(oldLp == newLp) // dont bother adding symbols or displaying change if there is n ochange
                 return '';
-            let symbol = oldLp < newLp ? '<:up_arrow:1166628672552308776>' : '<:down_arrow:1166628706471649301>'
+            let symbol = oldLp < newLp ? '<:up_arrow:1178476562585227406>' : '<:down_arrow:1166628706471649301>'
             return  `${symbol} ${newLp - oldLp} LP ${symbol}`
         }
     }
