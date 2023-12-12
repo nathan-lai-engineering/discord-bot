@@ -1,6 +1,6 @@
 module.exports = {roundToString, secondsToTime, topTraits, position, tftGametypes, leagueGametypes, leagueRoles, calculateLpChange, sleep, getRankedType, getRankedId, gamemodeImage, hasTftVictory};
 
-const {logDebug} = require('../../utils/log.js') 
+const {log, logDebug} = require('../../utils/log.js') 
 /**
  * converts a number to stage string
  * 6-3 = 35
@@ -174,7 +174,10 @@ function leagueGametypes(queueId){
             return 'Nexus Blitz';
         case 1400:
             return 'Ultimate Spellbook';
+        case 1700:
+            return 'Arena'
         default:
+            log(`[RIOT] please add ${queueId}`);
             return 'Tutorial';
     }
 }
@@ -304,6 +307,7 @@ function gamemodeImage(queueId, gametype, victory){
         case 1300:
         case 1400:
         case 1900:
+        case 1700:
             return 'https://static.wikia.nocookie.net/leagueoflegends/images/4/4c/Featured_Game_Mode_icon.png/revision/latest?cb=20171101151726';
         case 0:
         case 400:
