@@ -15,7 +15,7 @@ exports.load = (client) => {
             url: apiUrl,
             data: {
                 text: [message.content],
-                target_lang: "EN"
+                target_lang: "EN-US"
             },
             headers: {
                 'Authorization': `DeepL-Auth-Key ${client.apiKeys['deepl']}`,
@@ -25,7 +25,7 @@ exports.load = (client) => {
         .then(res => {
             console.log(res.data);
             if(res){
-                if(res.data.detected_source_language && res.data.detected_source_language != "EN" && res.data.text){
+                if(res.data.detected_source_language && !res.data.detected_source_language.includes("EN") && res.data.text){
                     message.reply(`From ${res.data.detected_source_language}: ${res.data.text}`).catch(console.error);
                 }
             }
