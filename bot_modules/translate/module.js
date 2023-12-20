@@ -1,32 +1,20 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
-const axios = require('axios');
+import * as deepl from 'deepl-node';
 
 exports.load = (client) => {
     logDebug(client, 'Loading Translate module');
     client.on(Discord.Events.MessageCreate, async message => {
         if(message.author.bot)
           return;
-
-        let apiUrl = 'https://api-free.deepl.com/v2/translate';  
-
-        axios({
-            method: 'get',
-            url: apiUrl,
-            data: {
-                text: [message.content],
-                target_lang: "EN-US"
-            },
-            headers: {
-                'Authorization': `DeepL-Auth-Key ${client.apiKeys['deepl']}`,
-                'Content-Type': 'application/json',
-            }
-        })
+ 
+        const translator = new deepl.Translator(client.apiKeys['deepl']);
+        translator.translateText(message.content, null, 'en')
         .then(res => {
-            console.log(res.data);
+            console.log(res);
             if(res){
-                if(res.data.detected_source_language && !res.data.detected_source_language.includes("EN") && res.data.text){
-                    message.reply(`From ${res.data.detected_source_language}: ${res.data.text}`).catch(console.error);
+                if(res.detected_source_language && !res.detected_source_language.includes("EN") && res.text){
+                    message.reply(`From ${res.detected_source_language}: ${res.text}`).catch(console.error);
                 }
             }
         })
