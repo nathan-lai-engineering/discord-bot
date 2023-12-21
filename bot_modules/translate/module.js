@@ -11,9 +11,11 @@ exports.load = (client) => {
         const translator = new deepl.Translator(client.apiKeys['deepl']);
         translator.translateText(message.content, null, 'en-US')
         .then(res => {
-            console.log(res);
             if(res){
-                if(res.detectedSourceLang && !res.detectedSourceLang.toLowerCase().includes("en") && res.text){
+                if(res.detectedSourceLang 
+                    && !res.detectedSourceLang.toLowerCase().includes("en") 
+                    && res.text
+                    && res.text != message.content){
                     message.reply(`${res.detectedSourceLang} -> English: ${res.text}`).catch(console.error);
                 }
             }
