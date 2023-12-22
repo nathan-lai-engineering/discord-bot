@@ -1,6 +1,7 @@
 const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const deepl = require('deepl-node');
+const SOURCE_LANGAUGES = require('./sourceLanguages.json');
 
 exports.load = (client) => {
     logDebug(client, 'Loading Translate module');
@@ -16,7 +17,10 @@ exports.load = (client) => {
                     && !res.detectedSourceLang.toLowerCase().includes("en") 
                     && res.text
                     && res.text != message.content){
-                    message.reply(`${res.detectedSourceLang} -> English: ${res.text}`).catch(console.error);
+                    let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
+                    if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
+                        replyString = `${SOURCE_LANGAUGES[res.detectedSourceLang.toUpperCase()]} → English: ${res.text}` // convert to full name from code
+                    message.reply(replyString).catch(console.error);
                 }
             }
         })
