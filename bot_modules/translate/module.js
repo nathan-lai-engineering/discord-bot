@@ -16,7 +16,8 @@ exports.load = (client) => {
                 if(res.detectedSourceLang 
                     && !res.detectedSourceLang.toLowerCase().includes("en") 
                     && res.text
-                    && res.text != message.content){
+                    && res.text != message.content
+                    && message.content.length < 1){
                     let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
                     if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
                         replyString = `${SOURCE_LANGAUGES[res.detectedSourceLang.toUpperCase()]} → English: ${res.text}` // convert to full name from code
