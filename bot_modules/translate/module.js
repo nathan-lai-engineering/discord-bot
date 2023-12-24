@@ -6,7 +6,7 @@ const SOURCE_LANGAUGES = require('./sourceLanguages.json');
 exports.load = (client) => {
     logDebug(client, 'Loading Translate module');
     client.on(Discord.Events.MessageCreate, async message => {
-        if(!client.apiKeys || message.author.bot)
+        if(!client.apiKeys || message.author.bot || !message.content || message.content.length <= 1)
           return;
  
         const translator = new deepl.Translator(client.apiKeys['deepl']);
@@ -16,8 +16,7 @@ exports.load = (client) => {
                 if(res.detectedSourceLang 
                     && !res.detectedSourceLang.toLowerCase().includes("en") 
                     && res.text
-                    && res.text != message.content
-                    && message.content.length < 1){
+                    && res.text != message.content){
                     let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
                     if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
                         replyString = `${SOURCE_LANGAUGES[res.detectedSourceLang.toUpperCase()]} → English: ${res.text}` // convert to full name from code
@@ -26,6 +25,18 @@ exports.load = (client) => {
             }
         })
         .catch(error => console.log(error));
+    });
+    
+    client.on(Discord.Events.MessageCreate, async message => {
+        if(!client.apiKeys || message.author.bot)
+          return;
+        let direction = "+";
+        if(Math.random() > 0.9){
+            if(Math.random() > 0.5){
+                direction = "-";
+            }
+            message.reply(`${direction}${Math.ceil(Math.random() * 100)} GP`).catch(console.error);
+        }
     });
 
 }
