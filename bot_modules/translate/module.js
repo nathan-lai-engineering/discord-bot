@@ -6,12 +6,13 @@ const SOURCE_LANGAUGES = require('./sourceLanguages.json');
 exports.load = (client) => {
     logDebug(client, 'Loading Translate module');
     client.on(Discord.Events.MessageCreate, async message => {
-        if(!client.apiKeys || message.author.bot || !message.content || message.content.length <= 1)
+        if(!client.apiKeys || message.author.bot || !message.content || message.content.length <= 1 || message.content.startsWith('$'))
           return;
  
         const translator = new deepl.Translator(client.apiKeys['deepl']);
         translator.translateText(message.content, null, 'en-US')
         .then(res => {
+            logDebug(client, `[TRANSLATE] ${res.text} | ${res.detectedSourceLang}`);
             if(res){
                 if(res.detectedSourceLang 
                     && !res.detectedSourceLang.toLowerCase().includes("en") 
@@ -28,7 +29,7 @@ exports.load = (client) => {
     });
     
     client.on(Discord.Events.MessageCreate, async message => {
-        if(!client.apiKeys || message.author.bot)
+        if(!client.apiKeys || message.author.bot || (message.content && message.content.startsWith('$')))
           return;
         let direction = "+";
         if(Math.random() > 0.9){
