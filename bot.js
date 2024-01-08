@@ -61,8 +61,13 @@ var commandsFullPaths = commandFiles.map((file) => path.join(commandsPath, file)
 // full paths of module specific commands
 for(let moduleFullPath of modules){
   let moduleCommandsPath = path.join(moduleFullPath, 'commands');
-  let moduleCommandFiles = fs.readdirSync(moduleCommandsPath).filter(file => file.endsWith('.js'));
-  commandsFullPaths = commandsFullPaths.concat(moduleCommandFiles.map((file) => path.join(moduleCommandsPath, file)));
+  if(fs.existsSync(moduleCommandsPath)){
+    let moduleCommandFilesDir = fs.readdirSync(moduleCommandsPath);
+    if(moduleCommandFilesDir.length > 0){
+      let moduleCommandFiles = moduleCommandFilesDir.filter(file => file.endsWith('.js'));
+      commandsFullPaths = commandsFullPaths.concat(moduleCommandFiles.map((file) => path.join(moduleCommandsPath, file)));
+    }
+  }
 }
 
 // loading all commands
