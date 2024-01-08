@@ -35,18 +35,23 @@ async function oracleQuery(sqlString, binds=[], config={}){
  */
 function getOracleCredentials(){
     let localPath = './oracledb.json'; // this is exclusively for local computer dev testing
+    let dbLogin = null;
     if(fs.existsSync(localPath)){
         log("[ORACLE] Using local log in information");
-        return require(`.${localPath}`);
+        dbLogin = require(`.${localPath}`);
     }
-    log("[ORACLE] Using environment log in information");
-    return { // using environment variables for HEROKU hosting
-        "user": process.env.oracle_user,
-        "password": process.env.password,
-        "configDir": process.env.oracle_directory,
-        "walletLocation": process.env.oracle_directory,
-        "walletPassword": process.env.oracle_wallet_password,
-        "connectString": process.env.oracle_connect_string
+    else {
+        log("[ORACLE] Using environment log in information");
+        dbLogin = { // using environment variables for HEROKU hosting
+            "user": process.env.oracle_user,
+            "password": process.env.password,
+            "configDir": process.env.oracle_directory,
+            "walletLocation": process.env.oracle_directory,
+            "walletPassword": process.env.oracle_wallet_password,
+            "connectString": process.env.oracle_connect_string
+        };
     }
+    console.log(dbLogin);
+    return dbLogin;
 }
 
