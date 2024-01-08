@@ -16,7 +16,6 @@ run.bat
 temp
 passwords
 oracledb.json
-oracle_wallet
 
 external
 .$*

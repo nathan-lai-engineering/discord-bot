@@ -10,8 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const Discord = require("discord.js");
 const {log, logDebug} = require('./utils/log');
-const {oracleQuery} = require('./utils/oracle');
-const { REST, Routes } = require('discord.js');
+const {oracleQuery, getOracleCredentials} = require('./utils/oracle');
 
 // =============================================================
 // CLIENT INITIALIZATION
@@ -27,8 +26,11 @@ const client = new Discord.Client({
 ]
 });
 
+
+
 // load login details for global usage
-client.dbLogin = require('./oracledb.json');
+
+client.dbLogin = getOracleCredentials();
 client.debugMode = true;
 client.enabledModules = ['distube', 'riot', 'tiktok', 'holidays', 'birthday', 'translate'];
 
