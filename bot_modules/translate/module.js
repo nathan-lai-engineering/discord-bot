@@ -9,6 +9,10 @@ exports.load = (client) => {
         if(!client.apiKeys || message.author.bot || !message.content || message.content.length <= 1 || message.content.startsWith('$'))
           return;
  
+        // hardcoded specifically for alex
+        if(message.content == "kucing")
+            return message.reply("Indonesian → English: cat");
+
         const translator = new deepl.Translator(client.apiKeys['deepl']);
         translator.translateText(message.content, null, 'en-US')
         .then(res => {
