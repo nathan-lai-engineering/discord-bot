@@ -1,0 +1,304 @@
+{
+    "sets": {
+        "10": {
+            "traits": ["emo", "spellweaver", "8-bit", "big shot", "k/da", "crowd diver", "punk", "rapidfire", "heartsteel", "sentinel", "superfan", "disco","dazzler", "pentakill", "bruiser", "mosher", "edgelord", "jazz", "edm", "executioner", "hyperpop", "breakout", "illbeats", "maestro", "wildcard", "mixmaster", "true damage", "country", "guardian"],
+            "champions": [
+                {
+                    "name": "annie",
+                    "cost": 1,
+                    "traits": ["emo", "spellweaver"]
+                },
+                {
+                    "name": "corki",
+                    "cost": 1,
+                    "traits": ["8-bit", "big shot"]
+                },
+                {
+                    "name": "evelynn",
+                    "cost": 1,
+                    "traits": ["k/da", "crowd diver"]
+                },
+                {
+                    "name": "jinx",
+                    "cost": 1,
+                    "traits": ["punk", "rapidfire"]
+                },
+                {
+                    "name": "ksante",
+                    "cost": 1,
+                    "traits": ["heartsteel", "sentinel"]
+                },
+                {
+                    "name": "kennen",
+                    "cost": 1,
+                    "traits": ["true damage", "superfan", "guardian"]
+                },
+                {
+                    "name": "lillia",
+                    "cost": 1,
+                    "traits": ["k/da", "superfan", "sentinel"]
+                },
+                {
+                    "name": "nami",
+                    "cost": 1,
+                    "traits": ["disco", "dazzler"]
+                },
+                {
+                    "name": "olaf",
+                    "cost": 1,
+                    "traits": ["pentakill", "bruiser"]
+                },
+                {
+                    "name": "tahm kench",
+                    "cost": 1,
+                    "traits": ["country", "bruiser"]
+                },
+                {
+                    "name": "taric",
+                    "cost": 1,
+                    "traits": ["disco", "guardian"]
+                },
+                {
+                    "name": "vi",
+                    "cost": 1,
+                    "traits": ["punk", "mosher"]
+                },
+                {
+                    "name": "yasuo",
+                    "cost": 1,
+                    "traits": ["true damage", "edgelord"]
+                },
+                {
+                    "name": "aphelios",
+                    "cost": 2,
+                    "traits": ["heartsteel", "rapidfire"]
+                },
+                {
+                    "name": "bard",
+                    "cost": 2,
+                    "traits": ["jazz", "dazzler"]
+                },
+                {
+                    "name": "garen",
+                    "cost": 2,
+                    "traits": ["8-bit", "sentinel"]
+                },
+                {
+                    "name": "gnar",
+                    "cost": 2,
+                    "traits": ["pentakill", "superfan", "mosher"]
+                },
+                {
+                    "name": "gragas",
+                    "cost": 2,
+                    "traits": ["disco", "bruiser"]
+                },
+                {
+                    "name": "jax",
+                    "cost": 2,
+                    "traits": ["edm", "mosher"]
+                },
+                {
+                    "name": "kaisa",
+                    "cost": 2,
+                    "traits": ["k/da", "big shot"]
+                },
+                {
+                    "name": "katarina",
+                    "cost": 2,
+                    "traits": ["country", "crowd diver"]
+                },
+                {
+                    "name": "kayle",
+                    "cost": 2,
+                    "traits": ["pentakill", "edgelord"]
+                },
+                {
+                    "name": "pantheon",
+                    "cost": 2,
+                    "traits": ["punk", "guardian"]
+                },
+                {
+                    "name": "senna",
+                    "cost": 2,
+                    "traits": ["true damage", "rapidfire"]
+                },
+                {
+                    "name": "seraphine",
+                    "cost": 2,
+                    "traits": ["k/da", "spellweaver"]
+                },
+                {
+                    "name": "twitch",
+                    "cost": 2,
+                    "traits": ["punk", "executioner"]
+                },
+                {
+                    "name": "amumu",
+                    "cost": 3,
+                    "traits": ["emo", "guardian"]
+                },
+                {
+                    "name": "ekko",
+                    "cost": 3,
+                    "traits": ["true damage", "spellweaver", "sentinel"]
+                },
+                {
+                    "name": "lulu",
+                    "cost": 3,
+                    "traits": ["hyperpop", "dazzler"]
+                },
+                {
+                    "name": "lux",
+                    "cost": 3,
+                    "traits": ["edm", "dazzler"]
+                },
+                {
+                    "name": "miss fortune",
+                    "cost": 3,
+                    "traits": ["jazz", "big shot"]
+                },
+                {
+                    "name": "mordekaiser",
+                    "cost": 3,
+                    "traits": ["pentakill", "sentinel"]
+                },
+                {
+                    "name": "neeko",
+                    "cost": 3,
+                    "traits": ["k/da", "superfan", "guardian"]
+                },
+                {
+                    "name": "riven",
+                    "cost": 3,
+                    "traits": ["8-bit", "edgelord"]
+                },
+                {
+                    "name": "samira",
+                    "cost": 3,
+                    "traits": ["country", "executioner"]
+                },
+                {
+                    "name": "sett",
+                    "cost": 3,
+                    "traits": ["heartsteel", "bruiser", "mosher"]
+                },
+                {
+                    "name": "urgot",
+                    "cost": 3,
+                    "traits": ["country", "mosher"]
+                },
+                {
+                    "name": "vex",
+                    "cost": 3,
+                    "traits": ["emo", "executioner"]
+                },
+                {
+                    "name": "yone",
+                    "cost": 3,
+                    "traits": ["heartsteel", "edgelord", "crowd diver"]
+                },
+                {
+                    "name": "ahri",
+                    "cost": 4,
+                    "traits": ["k/da", "spellweaver"]
+                },
+                {
+                    "name": "akali",
+                    "cost": 4,
+                    "traits": ["breakout", "true damage", "k/da", "executioner"]
+                },
+                {
+                    "name": "blitzcrank",
+                    "cost": 4,
+                    "traits": ["disco", "sentinel"]
+                },
+                {
+                    "name": "caitlyn",
+                    "cost": 4,
+                    "traits": ["8-bit", "rapidfire"]
+                },
+                {
+                    "name": "ezreal",
+                    "cost": 4,
+                    "traits": ["heartsteel", "big shot"]
+                },
+                {
+                    "name": "karthus",
+                    "cost": 4,
+                    "traits": ["pentakill", "executioner"]
+                },
+                {
+                    "name": "poppy",
+                    "cost": 4,
+                    "traits": ["emo", "mosher"]
+                },
+                {
+                    "name": "thresh",
+                    "cost": 4,
+                    "traits": ["country", "guardian"]
+                },
+                {
+                    "name": "twisted fate",
+                    "cost": 4,
+                    "traits": ["disco", "dazzler"]
+                },
+                {
+                    "name": "viego",
+                    "cost": 4,
+                    "traits": ["pentakill", "edgelord"]
+                },
+                {
+                    "name": "zac",
+                    "cost": 4,
+                    "traits": ["edm", "bruiser"]
+                },
+                {
+                    "name": "zed",
+                    "cost": 4,
+                    "traits": ["edm", "crowd diver"]
+                },
+                {
+                    "name": "illaoi",
+                    "cost": 5,
+                    "traits": ["illbeats", "bruiser"]
+                },
+                {
+                    "name": "jhin",
+                    "cost": 5,
+                    "traits": ["maestro", "big shot"]
+                },
+                {
+                    "name": "kayne",
+                    "cost": 5,
+                    "traits": ["wildcard", "heartsteel", "edgelord"]
+                },
+                {
+                    "name": "lucian",
+                    "cost": 5,
+                    "traits": ["jazz", "rapidfire"]
+                },
+                {
+                    "name": "qiyana",
+                    "cost": 5,
+                    "traits": ["true damage", "crowd diver"]
+                },
+                {
+                    "name": "sona",
+                    "cost": 5,
+                    "traits": ["mixmaster", "spellweaver"]
+                },
+                {
+                    "name": "yorick",
+                    "cost": 5,
+                    "traits": ["pentakill", "mosher", "guardian"]
+                },
+                {
+                    "name": "ziggs",
+                    "cost": 5,
+                    "traits": ["hyperpop", "dazzler"]
+                }
+            ]
+        }
+    }
+}
