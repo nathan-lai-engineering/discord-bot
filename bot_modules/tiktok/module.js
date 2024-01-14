@@ -36,9 +36,9 @@ function convertTiktokLink(client, message){
                             let messagePayload = {};
                             messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
 
-                            if(videoData.size >= 8388000){
-                                videoPath = compressVideo(client, videoPath);
-                            }
+                            //if(videoData.size >= 8388000){
+                            //    videoPath = compressVideo(client, videoPath);
+                            //}
 
                             messagePayload['files'] = [videoPath];
 
