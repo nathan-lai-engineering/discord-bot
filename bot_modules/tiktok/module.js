@@ -25,6 +25,10 @@ function convertTiktokLink(client, message){
                         toEdit.delete();
                         return;
                     }
+
+                    if (!fs.existsSync('./temp')){
+                        fs.mkdirSync('./temp');
+                    }
                     let videoPath = './temp/tiktok.mp4'
                     downloadVideoUrl(client, videoData.videoUrl, videoPath).then(() => {
                         logDebug(client, 'Starting embed creation');
