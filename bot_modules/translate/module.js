@@ -31,18 +31,5 @@ exports.load = (client) => {
         })
         .catch(error => console.log(error));
     });
-    
-    client.on(Discord.Events.MessageCreate, async message => {
-        if(!client.apiKeys || message.author.bot || (message.content && message.content.startsWith('$')))
-          return;
-        let direction = "+";
-        if(Math.random() > 0.9){
-            if(Math.random() > 0.5){
-                direction = "-";
-            }
-            message.reply(`${direction}${Math.ceil(Math.random() * 100)} GP`).catch(console.error);
-        }
-    });
-
 }
 
