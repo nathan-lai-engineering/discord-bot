@@ -26,13 +26,13 @@ function convertTiktokLink(client, message){
                         return;
                     }
 
-                    if (!fs.existsSync('./temp')){
-                        fs.mkdirSync('./temp');
-                    }
-                    let videoPath = './temp/tiktok.mp4'
-                    downloadVideoUrl(client, videoData.videoUrl, videoPath).then(() => {
-                        logDebug(client, 'Starting embed creation');
-                        if(videoData != null){
+                    if(videoData.type == 'video'){
+                        if (!fs.existsSync('./temp')){
+                            fs.mkdirSync('./temp');
+                        }
+                        let videoPath = './temp/tiktok.mp4'
+                        downloadVideoUrl(client, videoData.fileUrls[0], videoPath).then(() => {
+                            logDebug(client, 'Starting embed creation');
                             let messagePayload = {};
                             messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
 
@@ -50,8 +50,24 @@ function convertTiktokLink(client, message){
                                 fs.unlink(videoPath, (err) => logDebug(client, err));
                                 logDebug(client, 'TikTok video deleted');
                             });
-                        }
-                    });
+                            
+                        });
+                    }
+                    else {
+                        logDebug(client, 'Starting embed creation');
+                        let messagePayload = {};
+                        messagePayload['embeds'] = [createTikTokEmbed(message, videoData)];
+                        messagePayload['files'] = videoData.fileUrls;
+
+                        message.channel.send(messagePayload).then(() => {
+                            logDebug(client, 'TikTok Embed sent!');
+                            toEdit.delete();
+                            message.delete();
+                            logDebug(client, 'TikTok old messages deleted');
+                            logDebug(client, 'TikTok video deleted');
+                        });
+                    }
+                    
                 });
             }
             catch(error){
@@ -173,22 +189,29 @@ function tikVM(client, tiktokUrl){
     }).then(res => {
         try{
             logDebug(client, 'Response from TikVM received.');
+            console.log(res.data);
             let data = res.data.data;
-            let videoData = {};
-            videoData.videoUrl = data.play;
-            if(videoData.videoUrl == undefined || videoData.videoUrl == null){
-                return null;
+            let tiktokData = {};
+
+            if('images' in data){
+                tiktokData.fileUrls = data.images;
+                tiktokData.type = 'image';
             }
-            videoData.id = data.author.id;
-            videoData.caption = data.title;
-            videoData.size = data.size;
-            videoData.viewCount = data.play_count;
-            videoData.likeCount = data.digg_count;
-            videoData.commentCount = data.comment_count;
-            videoData.shareCount = data.share_count;
-            videoData.authorName = data.author.nickname;
-            videoData.avatar = data.author.avatar;
-            return videoData;
+            else {
+                tiktokData.fileUrls = [data.play];
+                tiktokData.type = 'video';
+            }
+
+            tiktokData.id = data.author.id;
+            tiktokData.caption = data.title;
+            tiktokData.size = data.size;
+            tiktokData.viewCount = data.play_count;
+            tiktokData.likeCount = data.digg_count;
+            tiktokData.commentCount = data.comment_count;
+            tiktokData.shareCount = data.share_count;
+            tiktokData.authorName = data.author.nickname;
+            tiktokData.avatar = data.author.avatar;
+            return tiktokData;
         }
         catch(error){
             logDebug(client, error);
