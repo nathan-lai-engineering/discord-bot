@@ -25,7 +25,7 @@ exports.load = (client) => {
                     
                     // use jaro-winkler algorithm to determine similarity and only send translation if its under threshold
                     let similarity = distance(res.text.replace(/[^a-zA-Z ]/g, ""), message.content.replace(/[^a-zA-Z ]/g, ""), {caseSensitive: false});
-                    if(similarity < 0.9){
+                    if(similarity < 0.9 && res.text != message.content){
                         logDebug(client, `[TRANSLATE] simarility: ${similarity}`);
                         let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
                         if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
