@@ -2,6 +2,7 @@ const {log, logDebug} = require('../../utils/log.js');
 const Discord = require("discord.js");
 const deepl = require('deepl-node');
 const SOURCE_LANGAUGES = require('./sourceLanguages.json');
+const distance = require('jaro-winkler');
 
 exports.load = (client) => {
     logDebug(client, 'Loading Translate module');
@@ -10,7 +11,7 @@ exports.load = (client) => {
           return;
  
         // hardcoded specifically for alex
-        if(message.content == "kucing")
+        if(message.content.toLowerCase() == "kucing")
             return message.reply("Indonesian → English: cat");
 
         const translator = new deepl.Translator(client.apiKeys['deepl']);
@@ -20,12 +21,18 @@ exports.load = (client) => {
             if(res){
                 if(res.detectedSourceLang 
                     && !res.detectedSourceLang.toLowerCase().includes("en") 
-                    && res.text
-                    && res.text != message.content){
-                    let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
-                    if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
-                        replyString = `${SOURCE_LANGAUGES[res.detectedSourceLang.toUpperCase()]} → English: ${res.text}` // convert to full name from code
-                    message.reply(replyString).catch(console.error);
+                    && res.text){
+                    
+                    // use jaro-winkler algorithm to determine similarity and only send translation if its under threshold
+                    let similarity = distance(res.text, message.content, {caseSensitive: false});
+                    if(similarity < 0.9){
+                        let replyString = `${res.detectedSourceLang} -> English: ${res.text}`; // default
+                        if(res.detectedSourceLang.toUpperCase() in SOURCE_LANGAUGES)
+                            replyString = `${SOURCE_LANGAUGES[res.detectedSourceLang.toUpperCase()]} → English: ${res.text}` // convert to full name from code
+                        message.reply(replyString).catch(console.error);
+                    }
+
+
                 }
             }
         })
