@@ -164,6 +164,9 @@ async function deployCommands(client){
     {},
     {}
   );
+  client.guilds.fetch().then((guilds)=>{
+    console.log(guilds);
+  })
   if(res && res.rows.length > 0){
     log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
     for(let guildRow of res.rows){
