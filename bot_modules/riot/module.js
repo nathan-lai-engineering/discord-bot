@@ -497,7 +497,7 @@ async function getLastTimeChecked(client){
     let connection = await oracledb.getConnection(client.dbLogin);
     try{
         // get last time checked from database
-        let result = await connection.execute(`SELECT unix_time FROM timestamps WHERE name='riot'`, {}, {});
+        let result = await connection.execute(`SELECT unix_time FROM timestamps WHERE name='riot_flowerfall'`, {}, {});
 
         // setting to database value if it exists
         if(result && result.rows.length > 0){
@@ -511,7 +511,7 @@ async function getLastTimeChecked(client){
         WHEN MATCHED THEN UPDATE SET unix_time=:unix_time
         WHEN NOT MATCHED THEN INSERT
         VALUES(:name, :unix_time)`,
-        {name:"riot",
+        {name:"riot_flowerfall",
         unix_time: Math.floor(Date.now()/1000)}, 
         {autoCommit:true});
 
