@@ -159,18 +159,10 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
 async function deployCommands(client){
   const clientId = client.user.id;
   const token = client.apiKeys['discord_flowerfall'];
-  let res = await oracleQuery(
-    `SELECT guild_id FROM GUILDS`,
-    {},
-    {}
-  );
+
   client.guilds.fetch().then((guilds)=>{
-    console.log(guilds);
-  })
-  if(res && res.rows.length > 0){
     log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
-    for(let guildRow of res.rows){
-      let guildId = guildRow[0];
+    for(let guildId of guilds.keys()){
 
       // Construct and prepare an instance of the REST module
       const rest = new Discord.REST({ version: '10' }).setToken(token);
@@ -183,6 +175,5 @@ async function deployCommands(client){
       .then(data => log(`Successfully reloaded ${data.length} application (/) commands in guild: ${guildId}`))
       .catch(console.error);
     }
-  }
-
+  });
 }
