@@ -31,7 +31,7 @@ const client = new Discord.Client({
 // load login details for global usage
 client.dbLogin = getOracleCredentials();
 client.debugMode = true;
-client.enabledModules = ['riot', 'tiktok', 'holidays', 'birthday', 'translate'];
+client.enabledModules = ['riot', 'tiktok', 'translate'];
 
 
 // =============================================================
@@ -104,7 +104,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   client.on("ready", () => {
     log('Bot connected!');
     client.user.setPresence({
-      activities: [{name: 'Doing a little trolling'}],
+      activities: [{name: 'FLOWERFALL ON TOP'}],
       status: 'online'
     });
     deployCommands(client);
@@ -146,7 +146,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
 
   // BOT LOGIN
   try {
-    client.login(client.apiKeys['discord']);
+    client.login(client.apiKeys['discord_flowerfall']);
   } catch (error) {
     console.log(error);
   }
@@ -158,7 +158,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
  */
 async function deployCommands(client){
   const clientId = client.user.id;
-  const token = client.apiKeys['discord'];
+  const token = client.apiKeys['discord_flowerfall'];
   let res = await oracleQuery(
     `SELECT guild_id FROM GUILDS`,
     {},
