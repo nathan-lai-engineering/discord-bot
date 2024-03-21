@@ -57,8 +57,7 @@ module.exports = {
 async function riotSet(interaction){
 
     logDebug(interaction.client, 'Updating Riot notification channel on database');
-    const oracleLogin = require('../../../oracledb.json');
-    let connection = await oracledb.getConnection(oracleLogin);
+    let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
         // check if user is admin
         let result = await connection.execute(
