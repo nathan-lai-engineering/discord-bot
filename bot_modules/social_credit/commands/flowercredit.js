@@ -18,8 +18,7 @@ module.exports = {
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
-                        .setDescription('whether to hide the response message, hidden by default'))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
+                        .setDescription('whether to hide the response message, hidden by default')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('remove')
@@ -32,8 +31,7 @@ module.exports = {
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
-                        .setDescription('whether to hide the response message, hidden by default'))
-                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
+                        .setDescription('whether to hide the response message, hidden by default')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('get')
@@ -106,6 +104,9 @@ async function getCreditScore(interaction){
  * @returns 
  */
 async function addCreditScore(interaction, isAdding){
+    if(!interaction.member.permissions.has('ADMINISTRATOR')){
+        return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
+    }
     logDebug(interaction.client, `[Flowercredit] Getting credit score for ${interaction.user.username}`);
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
@@ -135,6 +136,7 @@ async function addCreditScore(interaction, isAdding){
                     VALUES(:discord_id, :social_credit)`, 
                     {discord_id: interaction.member.id,
                     social_credit: socialCredit}, {autoCommit: true});
+                logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
                 if(isAdding){
                     return interaction.reply({content: `<@${interaction.member.id}>'s FlowerFall social credit score increased by ${interaction.options.getNumber('social_credits')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
                 }
