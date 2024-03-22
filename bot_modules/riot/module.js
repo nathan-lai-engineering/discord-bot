@@ -157,7 +157,7 @@ async function getGuildChannels(client){
 
             let botGuilds = await client.guilds.fetch();
             console.log(botGuilds.keys());
-            if(resGuildChannel[1] in botGuilds.keys())
+            if(resGuildChannel[0] in botGuilds.keys())
                 guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
             
         }
