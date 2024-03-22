@@ -17,11 +17,8 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        let botGuilds = await client.guilds.fetch();
-        console.log(botGuilds.keys());
-
-        let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
-        //let lastChecked = await getLastTimeChecked(client, INTERVAL);
+        //let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
+        let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
         logDebug(client, '[RIOT] Beginning interval check on Riot Web API');
 
@@ -95,13 +92,16 @@ exports.load = (client) => {
                 // get an object of all registered riot accounts in the match AND have tracking on for this guild mapped by PUUID
                 let matchRiotAccounts = formatMatchMembers(riotAccounts, members, subscribedMembers[guildId], gametype);
 
-                // builds lp string and manages all ranked info
-                let lpStrings = await manageLpStrings(client, match, matchRiotAccounts);
+                if(Object.keys(matchRiotAccounts).length > 0){
+                    // builds lp string and manages all ranked info
+                    let lpStrings = await manageLpStrings(client, match, matchRiotAccounts);
 
-                // send embed message based on gametype 
-                let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpStrings);
-                // send the bad boy
-                guildChannels[guildId].send(embed);
+                    // send embed message based on gametype 
+                    let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpStrings);
+                    // send the bad boy
+                    guildChannels[guildId].send(embed);
+                }
+
             }
         }
     logDebug(client, "[RIOT] All matches historied ⸻  ✓");
@@ -153,13 +153,9 @@ async function getGuildChannels(client){
         `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {});
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
-            console.log(resGuildChannel[0]);
-
             let botGuilds = await client.guilds.fetch();
-            console.log(botGuilds.keys());
             if(botGuilds.some((guildId) => guildId == resGuildChannel[0])){
                 guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
-                console.log('pass');
             }
         }
     }
