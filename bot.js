@@ -31,7 +31,7 @@ const client = new Discord.Client({
 // load login details for global usage
 client.dbLogin = getOracleCredentials();
 client.debugMode = true;
-client.enabledModules = ['riot', 'tiktok', 'translate'];
+client.enabledModules = ['riot', 'tiktok', 'translate', 'social_credit'];
 
 
 // =============================================================
