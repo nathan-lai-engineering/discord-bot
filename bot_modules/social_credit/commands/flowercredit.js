@@ -1,4 +1,5 @@
 const { PermissionFlagsBits, SlashCommandBuilder } = require("discord.js");
+const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
 
 module.exports = {
@@ -11,7 +12,7 @@ module.exports = {
                 .setDescription('adds social credit score, admin-only')
                 .addNumberOption(option => 
                     option
-                        .setName('social credit')
+                        .setName('social_credit')
                         .setDescription('the amount you want to increase by')
                         .setRequired(true))
                 .addBooleanOption(option => 
@@ -25,7 +26,7 @@ module.exports = {
                 .setDescription('remove social credit score, admin-only')
                 .addNumberOption(option => 
                     option
-                        .setName('social credit')
+                        .setName('social_credit')
                         .setDescription('the amount you want to decrease by')
                         .setRequired(true))
                 .addBooleanOption(option => 
