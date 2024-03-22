@@ -97,7 +97,7 @@ async function getCreditScore(interaction){
         }
     }
     catch(error){
-        logDebug(client, error);
+        logDebug(interaction.client, error);
     }
     finally{
         if(connection)
@@ -166,7 +166,7 @@ async function addCreditScore(interaction, isAdding){
         }
     }
     catch(error){
-        logDebug(client, error);
+        logDebug(interaction.client, error);
     }
     finally{
         if(connection)
