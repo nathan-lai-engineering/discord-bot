@@ -10,15 +10,15 @@ module.exports = {
             subcommand
                 .setName('add')
                 .setDescription('adds social credit score, admin-only')
-                .addStringOption(option => 
-                    option
-                        .setName('person_name')
-                        .setDescription('name to get their score, will show self if blank'))
                 .addNumberOption(option => 
                     option
                         .setName('social_credit')
                         .setDescription('the amount you want to increase by')
                         .setRequired(true))
+                .addStringOption(option => 
+                    option
+                        .setName('person_name')
+                        .setDescription('name to get their score, will show self if blank'))
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
@@ -27,15 +27,15 @@ module.exports = {
             subcommand
                 .setName('remove')
                 .setDescription('remove social credit score, admin-only')
-                .addStringOption(option => 
-                    option
-                        .setName('person_name')
-                        .setDescription('name to get their score, will show self if blank'))
                 .addNumberOption(option => 
                     option
                         .setName('social_credit')
                         .setDescription('the amount you want to decrease by')
                         .setRequired(true))
+                .addStringOption(option => 
+                    option
+                        .setName('person_name')
+                        .setDescription('name to get their score, will show self if blank'))
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
