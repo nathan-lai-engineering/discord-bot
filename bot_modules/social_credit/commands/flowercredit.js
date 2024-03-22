@@ -10,6 +10,10 @@ module.exports = {
             subcommand
                 .setName('add')
                 .setDescription('adds social credit score, admin-only')
+                .addStringOption(option => 
+                    option
+                        .setName('person_name')
+                        .setDescription('name to get their score, will show self if blank'))
                 .addNumberOption(option => 
                     option
                         .setName('social_credit')
@@ -23,6 +27,10 @@ module.exports = {
             subcommand
                 .setName('remove')
                 .setDescription('remove social credit score, admin-only')
+                .addStringOption(option => 
+                    option
+                        .setName('person_name')
+                        .setDescription('name to get their score, will show self if blank'))
                 .addNumberOption(option => 
                     option
                         .setName('social_credit')
@@ -109,44 +117,53 @@ async function addCreditScore(interaction, isAdding){
     }
     logDebug(interaction.client, `[Flowercredit] Getting credit score for ${interaction.user.username}`);
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
+
+    let targetId = interaction.member.id;
+    if(interaction.options.getString('person_name'))
+        targetId = interaction.options.getString('person_name');
+
     try{
+        let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
+        if(!targetMember)
+            return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
+
         let result = await connection.execute(
             `SELECT social_credit
             FROM flowerfall_social_credit
             WHERE discord_id=:0`,
-            [interaction.member.id],
+            [targetId],
             {}
         );
+        let socialCredit = 0;
 
         // responds with the credit score amount
         if(result.rows.length > 0){
             if(result.rows[0][0]){
-                let socialCredit = result.rows[0][0];
-                if(isAdding){
-                    socialCredit += interaction.options.getNumber('social_credit');
-                }
-                else{
-                    socialCredit -= interaction.options.getNumber('social_credits');
-                }
-
-                result = await connection.execute(
-                    `MERGE INTO social_credit USING dual ON (discord_id =: discord_id)
-                    WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
-                    WHEN NOT MATCHED THEN INSERT
-                    VALUES(:discord_id, :social_credit)`, 
-                    {discord_id: interaction.member.id,
-                    social_credit: socialCredit}, {autoCommit: true});
-                logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
-                if(isAdding){
-                    return interaction.reply({content: `<@${interaction.member.id}>'s FlowerFall social credit score increased by ${interaction.options.getNumber('social_credits')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-                }
-                else{
-                    return interaction.reply({content: `<@${interaction.member.id}>'s FlowerFall social credit score decreased by ${interaction.options.getNumber('social_credits')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-                }
-
+                socialCredit = result.rows[0][0];
             }
         }
 
+        if(isAdding){
+            socialCredit += interaction.options.getNumber('social_credit');
+        }
+        else{
+            socialCredit -= interaction.options.getNumber('social_credits');
+        }
+
+        result = await connection.execute(
+            `MERGE INTO social_credit USING dual ON (discord_id =: discord_id)
+            WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
+            WHEN NOT MATCHED THEN INSERT
+            VALUES(:discord_id, :social_credit)`, 
+            {discord_id: targetId,
+            social_credit: socialCredit}, {autoCommit: true});
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
+        if(isAdding){
+            return interaction.reply({content: `<@${targetId}>'s FlowerFall social credit score increased by ${interaction.options.getNumber('social_credits')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+        }
+        else{
+            return interaction.reply({content: `<@${targetId}>'s FlowerFall social credit score decreased by ${interaction.options.getNumber('social_credits')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+        }
     }
     catch(error){
         logDebug(client, error);
