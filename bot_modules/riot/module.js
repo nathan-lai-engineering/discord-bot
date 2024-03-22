@@ -17,9 +17,6 @@ exports.load = (client) => {
     logDebug(client, 'Loading Riot Games module');
 
     const checkRiotData = async () => {
-        let botGuilds = await client.guilds.fetch();
-        console.log(botGuilds.keys());
-
         let lastChecked = Math.floor((Date.now() - INTERVAL) / 1000) - 60 * 60; // preserved for debugging
         //let lastChecked = await getLastTimeChecked(client, INTERVAL);
         setTimeout(checkRiotData, INTERVAL);
@@ -153,11 +150,8 @@ async function getGuildChannels(client){
         `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {});
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
-            console.log(resGuildChannel[0]);
-
             let botGuilds = await client.guilds.fetch();
-            console.log(botGuilds.keys());
-            if(resGuildChannel[0] in botGuilds.keys())
+            if(resGuildChannel[1] in botGuilds.keys())
                 guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
             
         }
