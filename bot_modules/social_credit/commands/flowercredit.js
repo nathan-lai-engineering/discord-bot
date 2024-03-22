@@ -38,7 +38,7 @@ module.exports = {
                 .setDescription('gets your or someone elses social credit score')
                 .addStringOption(option => 
                     option
-                        .setName('the person to look at')
+                        .setName('@person_name')
                         .setDescription('name to get their score, will show self if blank'))
                 .addBooleanOption(option => 
                     option
