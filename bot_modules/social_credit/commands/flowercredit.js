@@ -151,7 +151,7 @@ async function addCreditScore(interaction, isAdding){
         }
 
         result = await connection.execute(
-            `MERGE INTO social_credit USING dual ON (discord_id =: discord_id)
+            `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
             WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
             WHEN NOT MATCHED THEN INSERT
             VALUES(:discord_id, :social_credit)`, 
