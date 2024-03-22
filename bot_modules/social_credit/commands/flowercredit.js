@@ -123,7 +123,7 @@ async function addCreditScore(interaction, isAdding){
         targetId = interaction.options.getString('person_name');
 
     try{
-        let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
+        let targetMember = await interaction.guild.members.fetch({user: targetId.replace(/[^0-9]/g, ''), force: true});
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
