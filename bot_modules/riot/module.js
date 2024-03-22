@@ -150,7 +150,9 @@ async function getGuildChannels(client){
         `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {});
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
-            guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
+            let botGuilds = await client.guilds.fetch();
+            if(resGuildChannel[0] in botGuilds.keys())
+                guildChannels[resGuildChannel[0]] = await client.channels.fetch(resGuildChannel[1]);
             
         }
     }
