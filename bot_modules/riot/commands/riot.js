@@ -59,45 +59,33 @@ async function riotSet(interaction){
     logDebug(interaction.client, 'Updating Riot notification channel on database');
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
-        // check if user is admin
-        let result = await connection.execute(
-            `SELECT admin
-            FROM discord_accounts
-            WHERE discord_id=:0`,
-            [interaction.member.id],
+        if(!interaction.member.permissions.has('ADMINISTRATOR')){
+            return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
+        }
+
+        // insert guild info if doesnt exist
+        await connection.execute(
+            `INSERT INTO guilds (guild_id)
+            SELECT :guild_id
+            FROM dual
+            WHERE NOT EXISTS(
+                SELECT * FROM guilds
+                WHERE (guild_id = :guild_id)
+            )`,
+            {guild_id: interaction.guild.id},
             {}
         );
-
-        // only allow admins to perform command
-        if(result.rows.length > 0){
-            if(result.rows[0][0] == true){
-
-                // insert guild info if doesnt exist
-                await connection.execute(
-                    `INSERT INTO guilds (guild_id)
-                    SELECT :guild_id
-                    FROM dual
-                    WHERE NOT EXISTS(
-                        SELECT * FROM guilds
-                        WHERE (guild_id = :guild_id)
-                    )`,
-                    {guild_id: interaction.guild.id},
-                    {}
-                );
-            
-                // upsert notification channel
-                await connection.execute(
-                    `MERGE INTO notification_channels USING dual ON (guild_id=:guild_id AND notification_type='riot')
-                    WHEN MATCHED THEN UPDATE SET channel_id=:channel_id
-                    WHEN NOT MATCHED THEN INSERT
-                    VALUES(:guild_id, 'riot', :channel_id)`,
-                {guild_id: interaction.guild.id,
-                channel_id: interaction.channel.id},
-                {autoCommit:true});
-                return interaction.reply({content: 'Channel successfully set!', ephemeral: true});
-            }
-        }
-        interaction.reply({content: 'You are no admin!', ephemeral: true});
+    
+        // upsert notification channel
+        await connection.execute(
+            `MERGE INTO notification_channels USING dual ON (guild_id=:guild_id AND notification_type='riot')
+            WHEN MATCHED THEN UPDATE SET channel_id=:channel_id
+            WHEN NOT MATCHED THEN INSERT
+            VALUES(:guild_id, 'riot', :channel_id)`,
+        {guild_id: interaction.guild.id,
+        channel_id: interaction.channel.id},
+        {autoCommit:true});
+        return interaction.reply({content: 'Channel successfully set!', ephemeral: true});
     }
     catch(error){
         logDebug(interaction.client, error);
