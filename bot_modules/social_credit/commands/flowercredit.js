@@ -77,23 +77,28 @@ module.exports = {
 async function getCreditScore(interaction){
     logDebug(interaction.client, `[Flowercredit] Getting credit score for ${interaction.user.username}`);
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
+
     try{
+        let targetId = interaction.member.id;
+        if(interaction.options.getString('person_name'))
+            targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+
         let result = await connection.execute(
             `SELECT social_credit
             FROM flowerfall_social_credit
             WHERE discord_id=:0`,
-            [interaction.member.id],
+            [targetId],
             {}
         );
 
         // responds with the credit score amount
         if(result.rows.length > 0){
             if(result.rows[0][0]){
-                return interaction.reply({content: `<@${interaction.member.id}> has a credit score of ${result.rows[0][0]}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+                return interaction.reply({content: `<@${targetId}> has a credit score of ${result.rows[0][0]}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
             }
         }
         else {
-            return interaction.reply({content: `<@${interaction.member.id}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+            return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
         }
     }
     catch(error){
@@ -120,10 +125,10 @@ async function addCreditScore(interaction, isAdding){
 
     let targetId = interaction.member.id;
     if(interaction.options.getString('person_name'))
-        targetId = interaction.options.getString('person_name');
+        targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
 
     try{
-        let targetMember = await interaction.guild.members.fetch({user: targetId.replace(/[^0-9]/g, ''), force: true});
+        let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
