@@ -19,7 +19,7 @@ module.exports = {
                     option
                         .setName('hide')
                         .setDescription('whether to hide the response message, hidden by default'))
-                .setDefaultMembersPermissions(PermissionFlagsBits.Administrator))
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('remove')
@@ -33,7 +33,7 @@ module.exports = {
                     option
                         .setName('hide')
                         .setDescription('whether to hide the response message, hidden by default'))
-                .setDefaultMembersPermissions(PermissionFlagsBits.Administrator))
+                .setDefaultMemberPermissions(PermissionFlagsBits.Administrator))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('get')
