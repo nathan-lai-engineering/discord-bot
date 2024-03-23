@@ -173,10 +173,10 @@ async function addCreditScore(interaction, isAdding){
             social_credit: socialCredit}, {autoCommit: true});
         logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
         if(isAdding){
-            return interaction.reply({content: `<@${targetId}>'s FlowerFall social credit score increased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+            return interaction.reply({content: `<@${targetId}>'s social credit score increased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
         }
         else{
-            return interaction.reply({content: `<@${targetId}>'s FlowerFall social credit score decreased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+            return interaction.reply({content: `<@${targetId}>'s social credit score decreased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
         }
     }
     catch(error){
