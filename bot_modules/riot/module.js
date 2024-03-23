@@ -92,13 +92,15 @@ exports.load = (client) => {
                 // get an object of all registered riot accounts in the match AND have tracking on for this guild mapped by PUUID
                 let matchRiotAccounts = formatMatchMembers(riotAccounts, members, subscribedMembers[guildId], gametype);
 
-                // builds lp string and manages all ranked info
-                let lpStrings = await manageLpStrings(client, match, matchRiotAccounts);
+                if(Object.keys(matchRiotAccounts).length > 0){
+                    // builds lp string and manages all ranked info
+                    let lpStrings = await manageLpStrings(client, match, matchRiotAccounts);
 
-                // send embed message based on gametype 
-                let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpStrings);
-                // send the bad boy
-                guildChannels[guildId].send(embed);
+                    // send embed message based on gametype 
+                    let embed = createEmbed(client, match, matchRiotAccounts, gametype, lpStrings);
+                    // send the bad boy
+                    guildChannels[guildId].send(embed);
+                }
             }
         }
     logDebug(client, "[RIOT] All matches historied ⸻  ✓");
