@@ -308,6 +308,7 @@ function gamemodeImage(queueId, gametype, victory){
         case 1400:
         case 1900:
         case 1700:
+        case 1020:
             return 'https://static.wikia.nocookie.net/leagueoflegends/images/4/4c/Featured_Game_Mode_icon.png/revision/latest?cb=20171101151726';
         case 0:
         case 400:
