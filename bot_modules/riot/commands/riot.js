@@ -67,7 +67,7 @@ async function riotSet(interaction){
             [interaction.member.id],
             {}
         );
-        if(adminFlag.rows && adminFlag.rows.length >0 && !adminFlag.rows[0][0]){
+        if(!adminFlag.rows || !adminFlag.rows.length > 0 || !adminFlag.rows[0][0]){
             return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
         }
 
