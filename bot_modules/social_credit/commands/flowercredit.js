@@ -163,7 +163,7 @@ async function addCreditScore(interaction, isAdding){
             socialCredit += interaction.options.getNumber('social_credit');
         }
         else{
-            socialCredit -= interaction.options.getNumber('social_credits');
+            socialCredit -= interaction.options.getNumber('social_credit');
         }
 
         result = await connection.execute(
