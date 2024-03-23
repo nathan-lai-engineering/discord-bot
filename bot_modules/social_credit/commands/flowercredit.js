@@ -118,7 +118,35 @@ async function getCreditScore(interaction){
  * @returns 
  */
 async function addCreditScore(interaction, isAdding){
-    if(!interaction.member.permissions.has(0x0000000000000008)){
+    try{
+        console.log(interaction.member.permissions.has('ADMINISTRATOR'));
+    }
+    catch(error){
+        console.log(error);
+    }
+
+    try{
+        console.log(interaction.member.permissionsIn(interaction.channel).has('ADMINISTRATOR'));
+    }
+    catch(error){
+        console.log(error);
+    }
+
+    try{
+        console.log(interaction.member.permissions.any('ADMINISTRATOR'));
+    }
+    catch(error){
+        console.log(error);
+    }
+
+    try{
+        console.log(interaction.member.permissions.Flags);
+    }
+    catch(error){
+        console.log(error);
+    }
+
+    if(!interaction.member.permissions.has('ADMINISTRATOR')){
         return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
     }
     
