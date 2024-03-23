@@ -75,13 +75,14 @@ module.exports = {
  * @returns 
  */
 async function getCreditScore(interaction){
-    logDebug(interaction.client, `[Flowercredit] Getting credit score for ${interaction.user.username}`);
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
     try{
         let targetId = interaction.member.id;
         if(interaction.options.getString('person_name'))
             targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+
+        logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${interaction.member.id}`);
 
         let result = await connection.execute(
             `SELECT social_credit
@@ -117,15 +118,17 @@ async function getCreditScore(interaction){
  * @returns 
  */
 async function addCreditScore(interaction, isAdding){
-    if(!interaction.member.permissions.has('ADMINISTRATOR')){
+    if(!interaction.member.permissions.has(0x0000000000000008)){
         return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
     }
-    logDebug(interaction.client, `[Flowercredit] Getting credit score for ${interaction.user.username}`);
+    
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
     let targetId = interaction.member.id;
     if(interaction.options.getString('person_name'))
         targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+
+    logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${targetId}`);
 
     try{
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
