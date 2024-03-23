@@ -118,38 +118,6 @@ async function getCreditScore(interaction){
  * @returns 
  */
 async function addCreditScore(interaction, isAdding){
-    try{
-        console.log(interaction.member.permissions.has('ADMINISTRATOR'));
-    }
-    catch(error){
-        console.log(error);
-    }
-
-    try{
-        console.log(interaction.member.permissionsIn(interaction.channel).has('ADMINISTRATOR'));
-    }
-    catch(error){
-        console.log(error);
-    }
-
-    try{
-        console.log(interaction.member.permissions.any('ADMINISTRATOR'));
-    }
-    catch(error){
-        console.log(error);
-    }
-
-    try{
-        console.log(interaction.member.permissions.Flags);
-    }
-    catch(error){
-        console.log(error);
-    }
-
-    if(!interaction.member.permissions.has('ADMINISTRATOR')){
-        return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
-    }
-    
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
 
     let targetId = interaction.member.id;
@@ -159,6 +127,18 @@ async function addCreditScore(interaction, isAdding){
     logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${targetId}`);
 
     try{
+        // check if user is admin
+        let adminFlag = await connection.execute(
+            `SELECT admin
+            FROM discord_accounts
+            WHERE discord_id=:0`,
+            [interaction.member.id],
+            {}
+        );
+        if(adminFlag.rows && adminFlag.rows.length >0 && !adminFlag.rows[0][0]){
+            return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
+        }
+
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});

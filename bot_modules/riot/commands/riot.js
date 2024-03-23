@@ -59,7 +59,15 @@ async function riotSet(interaction){
     logDebug(interaction.client, 'Updating Riot notification channel on database');
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
-        if(!interaction.member.permissions.has(0x0000000000000008)){
+        // check if user is admin
+        let adminFlag = await connection.execute(
+            `SELECT admin
+            FROM discord_accounts
+            WHERE discord_id=:0`,
+            [interaction.member.id],
+            {}
+        );
+        if(adminFlag.rows && adminFlag.rows.length >0 && !adminFlag.rows[0][0]){
             return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
         }
 
