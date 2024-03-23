@@ -94,9 +94,7 @@ async function getCreditScore(interaction){
 
         // responds with the credit score amount
         if(result.rows.length > 0){
-            if(result.rows[0][0]){
-                return interaction.reply({content: `<@${targetId}> has a credit score of ${result.rows[0][0]}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-            }
+            return interaction.reply({content: `<@${targetId}> has a credit score of ${result.rows[0][0]}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
         }
         else {
             return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
