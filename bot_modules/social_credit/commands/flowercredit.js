@@ -22,7 +22,7 @@ module.exports = {
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
-                        .setDescription('whether to hide the response message, hidden by default')))
+                        .setDescription('whether to hide the response message, shown by default')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('remove')
@@ -39,7 +39,7 @@ module.exports = {
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
-                        .setDescription('whether to hide the response message, hidden by default')))
+                        .setDescription('whether to hide the response message, shown by default')))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('get')
@@ -173,10 +173,10 @@ async function addCreditScore(interaction, isAdding){
             social_credit: socialCredit}, {autoCommit: true});
         logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
         if(isAdding){
-            return interaction.reply({content: `<@${targetId}>'s social credit score increased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+            return interaction.reply({content: `<@${targetId}>'s social credit score increased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
         }
         else{
-            return interaction.reply({content: `<@${targetId}>'s social credit score decreased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+            return interaction.reply({content: `<@${targetId}>'s social credit score decreased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
         }
     }
     catch(error){
