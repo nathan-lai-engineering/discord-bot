@@ -18,7 +18,24 @@ module.exports = {
                 .addStringOption(option => 
                     option
                         .setName('person_name')
-                        .setDescription('name to get their score, will show self if blank'))
+                        .setDescription('name to get their score, will add to self if blank'))
+                .addBooleanOption(option => 
+                    option
+                        .setName('hide')
+                        .setDescription('whether to hide the response message, shown by default')))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('set')
+                .setDescription('sets social credit score, admin-only')
+                .addNumberOption(option => 
+                    option
+                        .setName('social_credit')
+                        .setDescription('the amount you want to')
+                        .setRequired(true))
+                .addStringOption(option => 
+                    option
+                        .setName('person_name')
+                        .setDescription('name to get their score, will set self if blank'))
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
@@ -35,7 +52,7 @@ module.exports = {
                 .addStringOption(option => 
                     option
                         .setName('person_name')
-                        .setDescription('name to get their score, will show self if blank'))
+                        .setDescription('name to get their score, will remove from self if blank'))
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
@@ -51,7 +68,19 @@ module.exports = {
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
-                        .setDescription('whether to hide the response message, hidden by default'))),
+                        .setDescription('whether to hide the response message, hidden by default')))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('ranking')
+                .setDescription('shows the ranking for social credit')
+                .addBooleanOption(option => 
+                    option
+                        .setName('hide')
+                        .setDescription('whether to hide the response message, hidden by default')))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('fullreset')
+                .setDescription('resets everyones social credit to 0, admin only')),
 	async execute(interaction) {
             switch(interaction.options.getSubcommand()){
                 case 'add':
@@ -60,8 +89,14 @@ module.exports = {
                 case 'remove':
                     addCreditScore(interaction, false);
                     break;
+                case 'set': //TODO
+                    break;
                 case 'get':
                     getCreditScore(interaction);
+                    break;
+                case 'ranking': //TODO
+                    break;
+                case 'fullreset': //TODO
                     break;
                 default:
                     interaction.reply({content:'What subcommand did you even try?', ephemeral: true});
