@@ -18,7 +18,8 @@ module.exports = {
                 .addStringOption(option => 
                     option
                         .setName('person_name')
-                        .setDescription('name to get their score, will add to self if blank'))
+                        .setDescription('name to edit their score'))
+                        .setRequired(true)
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
@@ -35,7 +36,8 @@ module.exports = {
                 .addStringOption(option => 
                     option
                         .setName('person_name')
-                        .setDescription('name to get their score, will set self if blank'))
+                        .setDescription('name to edit their score'))
+                        .setRequired(true)
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
@@ -52,7 +54,8 @@ module.exports = {
                 .addStringOption(option => 
                     option
                         .setName('person_name')
-                        .setDescription('name to get their score, will remove from self if blank'))
+                        .setDescription('name to edit their score'))
+                        .setRequired(true)
                 .addBooleanOption(option => 
                     option
                         .setName('hide')
