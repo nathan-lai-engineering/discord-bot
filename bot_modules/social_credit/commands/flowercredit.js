@@ -92,7 +92,7 @@ module.exports = {
                 case 'remove':
                     addCreditScore(interaction, false);
                     break;
-                case 'set': //TODO
+                case 'set':
                     setCreditScore(interaction, null, interaction.options.getNumber('social_credit'));
                     break;
                 case 'get':
@@ -175,6 +175,13 @@ async function getCreditScore(interaction){
     }
 }
 
+/**
+ * sets credit score to a specific value
+ * @param {*} interaction 
+ * @param {*} connection 
+ * @param {*} setNumber 
+ * @returns 
+ */
 async function setCreditScore(interaction, connection, setNumber){
     let freshConnection = false;
     if(!connection){
@@ -189,9 +196,11 @@ async function setCreditScore(interaction, connection, setNumber){
 
     try{
         // check if user is admin
-        let adminFlag = await isAdmin(interaction, connection);
-        if(!adminFlag)
-            return;
+        if(freshConnection){
+            let adminFlag = await isAdmin(interaction, connection);
+            if(!adminFlag)
+                return;
+        }
 
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
@@ -236,16 +245,9 @@ async function addCreditScore(interaction, isAdding){
 
     try{
         // check if user is admin
-        let adminFlag = await connection.execute(
-            `SELECT admin
-            FROM discord_accounts
-            WHERE discord_id=:0`,
-            [interaction.member.id],
-            {}
-        );
-        if(!adminFlag.rows || !adminFlag.rows.length > 0 || !adminFlag.rows[0][0]){
-            return interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
-        }
+        let adminFlag = await isAdmin(interaction, connection);
+        if(!adminFlag)
+            return;
 
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
@@ -274,20 +276,14 @@ async function addCreditScore(interaction, isAdding){
             socialCredit -= interaction.options.getNumber('social_credit');
         }
 
-        result = await connection.execute(
-            `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
-            WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
-            WHEN NOT MATCHED THEN INSERT
-            VALUES(:discord_id, :social_credit)`, 
-            {discord_id: targetId,
-            social_credit: socialCredit}, {autoCommit: true});
+        setCreditScore(interaction, connection, socialCredit);
+
         logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
-        if(isAdding){
-            return interaction.reply({content: `<@${targetId}>'s social credit score increased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
+        let changeText = 'increased';
+        if(!isAdding){
+            changeText = 'decreased'; 
         }
-        else{
-            return interaction.reply({content: `<@${targetId}>'s social credit score decreased by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
-        }
+        return interaction.reply({content: `<@${targetId}>'s social credit score ${changeText} by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
     }
     catch(error){
         logDebug(interaction.client, error);
