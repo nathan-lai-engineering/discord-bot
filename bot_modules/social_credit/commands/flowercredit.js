@@ -90,6 +90,7 @@ module.exports = {
                     addCreditScore(interaction, false);
                     break;
                 case 'set': //TODO
+                    setCreditScore(interaction, null, interaction.options.getNumber('social_credit'));
                     break;
                 case 'get':
                     getCreditScore(interaction);
@@ -103,6 +104,33 @@ module.exports = {
             }
 	},
 };
+
+/**
+ * Async boolean check against database for admin perm
+ * @param {*} interaction 
+ * @param {*} connection 
+ * @returns 
+ */
+async function isAdmin(interaction, connection){
+    try{
+        // check if user is admin
+        let adminFlag = await connection.execute(
+            `SELECT admin
+            FROM discord_accounts
+            WHERE discord_id=:0`,
+            [interaction.member.id],
+            {}
+        );
+        if(!adminFlag.rows || !adminFlag.rows.length > 0 || !adminFlag.rows[0][0]){
+            interaction.reply({content: `You aren't an admin, you can't do that FlowerFool`, ephemeral: true});
+            return false;
+        }
+        return true;
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
+}
 
 /**
  * 
@@ -133,6 +161,50 @@ async function getCreditScore(interaction){
         }
         else {
             return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+        }
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
+    finally{
+        if(connection)
+            connection.close();
+    }
+}
+
+async function setCreditScore(interaction, connection, setNumber){
+    let freshConnection = false;
+    if(!connection){
+        connection = await oracledb.getConnection(interaction.client.dbLogin);
+        freshConnection = true;
+    }
+        
+
+    let targetId = interaction.member.id;
+    if(interaction.options.getString('person_name'))
+        targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+
+    try{
+        // check if user is admin
+        let adminFlag = await isAdmin(interaction, connection);
+        if(!adminFlag)
+            return;
+
+        let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
+        if(!targetMember)
+            return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
+
+        result = await connection.execute(
+            `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
+            WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
+            WHEN NOT MATCHED THEN INSERT
+            VALUES(:discord_id, :social_credit)`, 
+            {discord_id: targetId,
+            social_credit: setNumber}, {autoCommit: true});
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${setNumber}`);
+
+        if(freshConnection){
+            return interaction.reply({content: `<@${targetId}>'s social credit score set to ${setNumber}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
         }
     }
     catch(error){
