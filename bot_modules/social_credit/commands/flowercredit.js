@@ -141,7 +141,9 @@ async function isAdmin(interaction, connection){
  * @param {*} targetId 
  * @returns 
  */
-async function getCreditScore(dbLogin, targetId, connection){
+async function getCreditScore(interaction, targetId, connection){
+    const dbLogin = interaction.client.dbLogin;
+
     let newConnection = false;
     if(!connection){
         connection = await oracledb.getConnection(dbLogin);
@@ -182,7 +184,7 @@ async function getCreditScore(dbLogin, targetId, connection){
 async function flowercreditGet(interaction){
     let targetId = interaction.options.getString('person_name') ?? interaction.member.id;
 
-    const creditScore = await getCreditScore(interaction.client.dbLogin, targetId);
+    const creditScore = await getCreditScore(interaction, targetId);
 
     let respondText = "";
     if (creditScore) {
