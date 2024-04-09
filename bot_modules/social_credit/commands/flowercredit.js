@@ -295,10 +295,10 @@ async function flowerfallcreditAdd(interaction){
 
     const toAdd = interaction.options.getNumber('social_credit');
 
-    const socialCredit = addCreditScore(interaction, targetId, toAdd);
+    const socialCredit = await addCreditScore(interaction, targetId, toAdd);
 
     let respondText = `<@${targetId}> has successfully received ${toAdd} social credit for a total of ${socialCredit} social credit!`;
-    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
 }
 
 /**
@@ -312,10 +312,10 @@ async function flowerfallcreditRemove(interaction){
 
     const toAdd = -(interaction.options.getNumber('social_credit'));
 
-    const socialCredit = addCreditScore(interaction, targetId, toAdd);
+    const socialCredit = await addCreditScore(interaction, targetId, toAdd);
 
     let respondText = `<@${targetId}> has unfortunately lost ${toAdd} social credit for a total of ${socialCredit} social credit!`;
-    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
 }
 
 async function getRanking(interaction){
