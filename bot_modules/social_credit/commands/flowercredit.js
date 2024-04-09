@@ -10,15 +10,15 @@ module.exports = {
             subcommand
                 .setName('add')
                 .setDescription('adds social credit score, admin-only')
-                .addNumberOption(option => 
-                    option
-                        .setName('social_credit')
-                        .setDescription('the amount you want to increase by')
-                        .setRequired(true))
                 .addStringOption(option => 
                     option
                         .setName('person_name')
                         .setDescription('name to edit their score')
+                        .setRequired(true))
+                .addNumberOption(option => 
+                    option
+                        .setName('social_credit')
+                        .setDescription('the amount you want to increase by')
                         .setRequired(true))
                 .addBooleanOption(option => 
                     option
@@ -28,15 +28,15 @@ module.exports = {
             subcommand
                 .setName('set')
                 .setDescription('sets social credit score, admin-only')
-                .addNumberOption(option => 
-                    option
-                        .setName('social_credit')
-                        .setDescription('the amount you want to')
-                        .setRequired(true))
                 .addStringOption(option => 
                     option
                         .setName('person_name')
                         .setDescription('name to edit their score')
+                        .setRequired(true))
+                .addNumberOption(option => 
+                    option
+                        .setName('social_credit')
+                        .setDescription('the amount you want to')
                         .setRequired(true))
                 .addBooleanOption(option => 
                     option
@@ -46,15 +46,15 @@ module.exports = {
             subcommand
                 .setName('remove')
                 .setDescription('remove social credit score, admin-only')
-                .addNumberOption(option => 
-                    option
-                        .setName('social_credit')
-                        .setDescription('the amount you want to decrease by')
-                        .setRequired(true))
                 .addStringOption(option => 
                     option
                         .setName('person_name')
                         .setDescription('name to edit their score')
+                        .setRequired(true))
+                .addNumberOption(option => 
+                    option
+                        .setName('social_credit')
+                        .setDescription('the amount you want to decrease by')
                         .setRequired(true))
                 .addBooleanOption(option => 
                     option
@@ -149,9 +149,6 @@ async function getCreditScore(interaction, targetId, connection){
         connection = await oracledb.getConnection(dbLogin);
         newConnection = true;
     }
-        
-    if(targetId)
-        targetId = targetId.replace(/[^0-9]/g, '');
 
     try{
         logDebug(interaction.client, `[Flowercredit] Getting credit score for ${targetId}`);
@@ -182,7 +179,7 @@ async function getCreditScore(interaction, targetId, connection){
  * @returns 
  */
 async function flowercreditGet(interaction){
-    let targetId = interaction.options.getString('person_name') ?? interaction.member.id;
+    let targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '') ?? interaction.member.id;
 
     const creditScore = await getCreditScore(interaction, targetId);
 
@@ -229,7 +226,7 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
-        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${setNumber}`);   
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${socialCredit}`);   
 
         return connection.execute(
             `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
