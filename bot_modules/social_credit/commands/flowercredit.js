@@ -99,6 +99,7 @@ module.exports = {
                     flowercreditGet(interaction);
                     break;
                 case 'ranking': //TODO
+                    flowerfallRanking(interaction);
                     break;
                 case 'fullreset': //TODO
                     break;
@@ -318,7 +319,12 @@ async function flowerfallcreditRemove(interaction){
     return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
 }
 
-async function getRanking(interaction){
+/**
+ * Queries the top social credit owners
+ * @param {*} interaction 
+ * @returns 
+ */
+async function getTopSocialCredit(interaction){
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
         let result = await connection.execute(
@@ -328,6 +334,9 @@ async function getRanking(interaction){
             {},
             {}
         );
+        if(result){
+            return result.rows;
+        }
     }
     catch(error){
         logDebug(interaction.client, error);
@@ -336,4 +345,22 @@ async function getRanking(interaction){
         if(connection)
             connection.close();
     }
+}
+
+/**
+ * Creates and sends an embed to show the top social creditors
+ * @param {*} interaction 
+ */
+async function flowerfallRanking(interaction){
+    let creditors = await getTopSocialCredit(interaction);
+
+    // create embed
+    let embed = new Discord.EmbedBuilder();
+    embed.setTitle(`Flowerfall Best Citizens`);
+    embed.setThumbnail('https://media.discordapp.net/attachments/1215912927970721854/1227103402719318029/BURNEVERYTHING.png?ex=66273019&is=6614bb19&hm=b9a3411dfdb5a5dcbf80e2c537297aa5b3f10ad5a86f500812e7553af34cf6e8&=&format=webp&quality=lossless');
+
+    embed.setDescription(`Ranking of the top Flowerfall members!`);
+    embed.setFooter("This is an evaluation of your self-worth as a human being. -Blazeris");
+
+    return interaction.reply({embeds: [embed]});
 }
