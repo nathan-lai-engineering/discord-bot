@@ -182,7 +182,7 @@ async function getCreditScore(dbLogin, targetId, connection){
 async function flowercreditGet(interaction){
     let targetId = interaction.options.getString('person_name') ?? interaction.member.id;
 
-    const creditScore = await getCreditScore(interaction.client.dblogin, targetId);
+    const creditScore = await getCreditScore(interaction.client.dbLogin, targetId);
 
     let respondText = "";
     if (creditScore) {
@@ -204,7 +204,7 @@ async function flowercreditGet(interaction){
  * @returns 
  */
 async function setCreditScore(interaction, targetId, socialCredit, connection){
-    const dbLogin = interaction.client.dblogin;
+    const dbLogin = interaction.client.dbLogin;
 
     let newConnection = false;
     if(!connection){
