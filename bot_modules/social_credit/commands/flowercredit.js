@@ -147,7 +147,7 @@ async function getCreditScore(dbLogin, targetId){
         if(targetId)
             targetId = targetId.replace(/[^0-9]/g, '');
 
-        logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${interaction.member.id}`);
+        logDebug(interaction.client, `[Flowercredit] Getting credit score for ${targetId}`);
 
         let result = await connection.execute(
             `SELECT social_credit
@@ -170,24 +170,23 @@ async function getCreditScore(dbLogin, targetId){
 }
 
 /**
- * 
+ * Responds to an interaction from getting credit score
  * @param {*} interaction 
  * @returns 
  */
 async function flowercreditGet(interaction){
-    return getCreditScore(interaction.client.dblogin, interaction.options.getString('person_name')).then(creditScore => {
-        // responds with the credit score amount
-        if(creditScore){
-            return interaction.reply({content: `<@${targetId}> has a credit score of ${creditScore}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-        }
-        else {
-            return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-        }
-    });
+    const creditScore = await getCreditScore(interaction.client.dblogin, interaction.options.getString('person_name'));
+
+    let respondText = "";
+    if (creditScore) {
+        respondText = `<@${targetId}> has a credit score of ${creditScore}`
+    }
+    else {
+        respondText = `<@${targetId}> has a credit score of 0`
+        
+    }
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
 }
-
-
-
 
 
 /**
