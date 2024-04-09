@@ -179,7 +179,8 @@ async function getCreditScore(interaction, targetId, connection){
  * @returns 
  */
 async function flowercreditGet(interaction){
-    let targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '') ?? interaction.member.id;
+    let targetId = interaction.options.getString('person_name') ?? interaction.member.id;
+    targetId = targetId.replace(/[^0-9]/g, '');
 
     const creditScore = await getCreditScore(interaction, targetId);
 
