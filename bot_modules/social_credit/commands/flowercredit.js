@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, SlashCommandBuilder } = require("discord.js");
 const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
+const Discord = require("discord.js");
 
 module.exports = {
 	data: new SlashCommandBuilder()
