@@ -254,9 +254,9 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
  * @returns 
  */
 async function flowercreditSet(interaction){
-    await setCreditScore(interaction, interaction.options.getString('person_name'), interaction.options.getNumber('credit_score'))
+    await setCreditScore(interaction, interaction.options.getString('person_name'), interaction.options.getNumber('social_credit'))
 
-    let respondText = `${interaction.options.getString('person_name')}'s social credit set to ${interaction.options.getNumber('credit_score')}`;
+    let respondText = `${interaction.options.getString('person_name')}'s social credit set to ${interaction.options.getNumber('social_credit')}`;
 
     return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
 }
