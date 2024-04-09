@@ -363,5 +363,10 @@ async function flowerfallRanking(interaction){
     embed.setDescription(`Ranking of the top Flowerfall members!`);
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
 
+    for(let i = 0; i < Math.min(creditors.length, 20); i++){
+        let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
+        embed.addFields({name: creditorMember.user.username, value: creditors[i][1]});
+    }
+
     return interaction.reply({embeds: [embed]});
 }
