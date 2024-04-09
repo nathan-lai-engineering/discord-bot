@@ -310,9 +310,9 @@ async function flowerfallcreditRemove(interaction){
     let targetId = interaction.options.getString('person_name');
     targetId = targetId.replace(/[^0-9]/g, '');
 
-    const toAdd = -(interaction.options.getNumber('social_credit'));
+    const toAdd = interaction.options.getNumber('social_credit');
 
-    const socialCredit = await addCreditScore(interaction, targetId, toAdd);
+    const socialCredit = await addCreditScore(interaction, targetId, -(toAdd));
 
     let respondText = `<@${targetId}> has unfortunately lost ${toAdd} social credit for a total of ${socialCredit} social credit!`;
     return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
