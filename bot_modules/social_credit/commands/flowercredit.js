@@ -87,10 +87,10 @@ module.exports = {
 	async execute(interaction) {
             switch(interaction.options.getSubcommand()){
                 case 'add':
-                    //addCreditScore(interaction, true);
+                    flowerfallcreditAdd(interaction);
                     break;
                 case 'remove':
-                    //addCreditScore(interaction, false);
+                    flowerfallcreditRemove(interaction);
                     break;
                 case 'set':
                     flowercreditSet(interaction);
@@ -162,7 +162,7 @@ async function getCreditScore(interaction, targetId, connection){
         );
         if(result && result.rows.length > 0)
             return result.rows[0][0];
-        return null;
+        return 0;
     }
     catch(error){
         logDebug(interaction.client, error);
@@ -220,14 +220,14 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
         if(newConnection){
             let adminFlag = await isAdmin(interaction, connection);
             if(!adminFlag)
-                return null;
+                return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
         }
 
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
-        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${socialCredit}`);   
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${targetMember.user.username} to ${socialCredit} social credit`);   
 
         return connection.execute(
             `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
@@ -249,7 +249,7 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
 }
 
 /**
- * Responds to an interaction from getting credit score
+ * Responds to an interaction from setting credit score
  * @param {*} interaction 
  * @returns 
  */
@@ -261,71 +261,61 @@ async function flowercreditSet(interaction){
     return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
 }
 
-
 /**
- * adds or removes credit score from someone
+ * Adds social credit to a person through db
  * @param {*} interaction 
- * @param {*} isAdding 
+ * @param {*} targetId 
+ * @param {*} toAdd 
  * @returns 
  */
-async function addCreditScore(interaction, isAdding){
+async function addCreditScore(interaction, targetId, toAdd){
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
-
-    let targetId = interaction.member.id;
-    if(interaction.options.getString('person_name'))
-        targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
-
-    logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${targetId}`);
-
     try{
-        // check if user is admin
-        let adminFlag = await isAdmin(interaction, connection);
-        if(!adminFlag)
-            return;
-
-        let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
-        if(!targetMember)
-            return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
-
-        let result = await connection.execute(
-            `SELECT social_credit
-            FROM flowerfall_social_credit
-            WHERE discord_id=:0`,
-            [targetId],
-            {}
-        );
-        let socialCredit = 0;
-
-        // responds with the credit score amount
-        if(result.rows.length > 0){
-            if(result.rows[0][0]){
-                socialCredit = result.rows[0][0];
-            }
-        }
-
-        if(isAdding){
-            socialCredit += interaction.options.getNumber('social_credit');
-        }
-        else{
-            socialCredit -= interaction.options.getNumber('social_credit');
-        }
-
-        setCreditScore(interaction, connection, socialCredit);
-
-        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username}`);
-        let changeText = 'increased';
-        if(!isAdding){
-            changeText = 'decreased'; 
-        }
-        return interaction.reply({content: `<@${targetId}>'s social credit score ${changeText} by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
+        let creditScore = await getCreditScore(interaction, targetId, connection);
+        creditScore += toAdd;
+        await setCreditScore(interaction, targetId, creditScore);
+        return creditScore;
     }
     catch(error){
         logDebug(interaction.client, error);
     }
     finally{
-        if(connection)
-            connection.close();
+        connection.close();
     }
+}
+
+/**
+ * Responds to an interaction from adding credit score 
+ * @param {*} interaction 
+ * @returns 
+ */
+async function flowerfallcreditAdd(interaction){
+    const targetId = interaction.options.getString('person_name');
+    targetId = targetId.replace(/[^0-9]/g, '');
+
+    const toAdd = interaction.options.getNumber('social_credit');
+
+    const socialCredit = addCreditScore(interaction, targetId, toAdd);
+
+    let respondText = `<@${targetId}> has successfully received ${toAdd} social credit for a total of ${socialCredit} social credit!`;
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
+}
+
+/**
+ * Responds to an interaction from removing credit score 
+ * @param {*} interaction 
+ * @returns 
+ */
+async function flowerfallcreditRemove(interaction){
+    const targetId = interaction.options.getString('person_name');
+    targetId = targetId.replace(/[^0-9]/g, '');
+
+    const toAdd = -(interaction.options.getNumber('social_credit'));
+
+    const socialCredit = addCreditScore(interaction, targetId, toAdd);
+
+    let respondText = `<@${targetId}> has unfortunately lost ${toAdd} social credit for a total of ${socialCredit} social credit!`;
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
 }
 
 async function getRanking(interaction){
