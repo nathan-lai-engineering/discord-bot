@@ -96,7 +96,7 @@ module.exports = {
                     setCreditScore(interaction, null, interaction.options.getNumber('social_credit'));
                     break;
                 case 'get':
-                    getCreditScore(interaction);
+                    flowercreditGet(interaction);
                     break;
                 case 'ranking': //TODO
                     break;
@@ -136,17 +136,16 @@ async function isAdmin(interaction, connection){
 }
 
 /**
- * 
- * @param {*} interaction 
+ * Returns a credit score corresponding to an id from database
+ * @param {*} dbLogin 
+ * @param {*} targetId 
  * @returns 
  */
-async function getCreditScore(interaction){
-    let connection = await oracledb.getConnection(interaction.client.dbLogin);
-
+async function getCreditScore(dbLogin, targetId){
+    let connection = await oracledb.getConnection(dbLogin);
     try{
-        let targetId = interaction.member.id;
-        if(interaction.options.getString('person_name'))
-            targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+        if(targetId)
+            targetId = targetId.replace(/[^0-9]/g, '');
 
         logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} getting credit score for ${interaction.member.id}`);
 
@@ -157,14 +156,9 @@ async function getCreditScore(interaction){
             [targetId],
             {}
         );
-
-        // responds with the credit score amount
-        if(result.rows.length > 0){
-            return interaction.reply({content: `<@${targetId}> has a credit score of ${result.rows[0][0]}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-        }
-        else {
-            return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
-        }
+        if(result && result.rows.length > 0)
+            return result.rows[0][0];
+        return null;
     }
     catch(error){
         logDebug(interaction.client, error);
@@ -174,6 +168,27 @@ async function getCreditScore(interaction){
             connection.close();
     }
 }
+
+/**
+ * 
+ * @param {*} interaction 
+ * @returns 
+ */
+async function flowercreditGet(interaction){
+    return getCreditScore(interaction.client.dblogin, interaction.options.getString('person_name')).then(creditScore => {
+        // responds with the credit score amount
+        if(creditScore){
+            return interaction.reply({content: `<@${targetId}> has a credit score of ${creditScore}`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+        }
+        else {
+            return interaction.reply({content: `<@${targetId}> has a credit score of 0`, ephemeral: interaction.options.getBoolean('hide') ?? true});
+        }
+    });
+}
+
+
+
+
 
 /**
  * sets credit score to a specific value
@@ -284,6 +299,26 @@ async function addCreditScore(interaction, isAdding){
             changeText = 'decreased'; 
         }
         return interaction.reply({content: `<@${targetId}>'s social credit score ${changeText} by ${interaction.options.getNumber('social_credit')} to ${socialCredit}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
+    finally{
+        if(connection)
+            connection.close();
+    }
+}
+
+async function getRanking(interaction){
+    let connection = await oracledb.getConnection(interaction.client.dbLogin);
+    try{
+        let result = await connection.execute(
+            `SELECT *
+            FROM flowerfall_social_credit
+            ORDER BY social_credit DESC`,
+            {},
+            {}
+        );
     }
     catch(error){
         logDebug(interaction.client, error);
