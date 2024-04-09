@@ -87,13 +87,13 @@ module.exports = {
 	async execute(interaction) {
             switch(interaction.options.getSubcommand()){
                 case 'add':
-                    addCreditScore(interaction, true);
+                    //addCreditScore(interaction, true);
                     break;
                 case 'remove':
-                    addCreditScore(interaction, false);
+                    //addCreditScore(interaction, false);
                     break;
                 case 'set':
-                    setCreditScore(interaction, null, interaction.options.getNumber('social_credit'));
+                    flowercreditSet(interaction);
                     break;
                 case 'get':
                     flowercreditGet(interaction);
@@ -141,12 +141,17 @@ async function isAdmin(interaction, connection){
  * @param {*} targetId 
  * @returns 
  */
-async function getCreditScore(dbLogin, targetId){
-    let connection = await oracledb.getConnection(dbLogin);
-    try{
-        if(targetId)
-            targetId = targetId.replace(/[^0-9]/g, '');
+async function getCreditScore(dbLogin, targetId, connection){
+    let newConnection = false;
+    if(!connection){
+        connection = await oracledb.getConnection(dbLogin);
+        newConnection = true;
+    }
+        
+    if(targetId)
+        targetId = targetId.replace(/[^0-9]/g, '');
 
+    try{
         logDebug(interaction.client, `[Flowercredit] Getting credit score for ${targetId}`);
 
         let result = await connection.execute(
@@ -164,7 +169,7 @@ async function getCreditScore(dbLogin, targetId){
         logDebug(interaction.client, error);
     }
     finally{
-        if(connection)
+        if(newConnection)
             connection.close();
     }
 }
@@ -188,59 +193,72 @@ async function flowercreditGet(interaction){
     return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
 }
 
-
 /**
- * sets credit score to a specific value
- * @param {*} interaction 
+ * sets a credit score
+ * @param {*} dbLogin 
+ * @param {*} targetId 
+ * @param {*} socialCredit 
  * @param {*} connection 
- * @param {*} setNumber 
  * @returns 
  */
-async function setCreditScore(interaction, connection, setNumber){
-    let freshConnection = false;
-    if(!connection){
-        connection = await oracledb.getConnection(interaction.client.dbLogin);
-        freshConnection = true;
-    }
-        
+async function setCreditScore(interaction, targetId, socialCredit, connection){
+    const dbLogin = interaction.client.dblogin;
 
-    let targetId = interaction.member.id;
-    if(interaction.options.getString('person_name'))
-        targetId = interaction.options.getString('person_name').replace(/[^0-9]/g, '');
+    let newConnection = false;
+    if(!connection){
+        connection = await oracledb.getConnection(dbLogin);
+        newConnection = true;
+    }
+
+    if(targetId)
+        targetId = targetId.replace(/[^0-9]/g, '');
 
     try{
         // check if user is admin
-        if(freshConnection){
+        if(newConnection){
             let adminFlag = await isAdmin(interaction, connection);
             if(!adminFlag)
-                return;
+                return null;
         }
 
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
-        result = await connection.execute(
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${setNumber}`);   
+
+        return connection.execute(
             `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
             WHEN MATCHED THEN UPDATE SET social_credit=:social_credit
             WHEN NOT MATCHED THEN INSERT
             VALUES(:discord_id, :social_credit)`, 
             {discord_id: targetId,
-            social_credit: setNumber}, {autoCommit: true});
-        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${interaction.user.username} to ${setNumber}`);
+            social_credit: socialCredit}, {autoCommit: true});
+        
 
-        if(freshConnection){
-            return interaction.reply({content: `<@${targetId}>'s social credit score set to ${setNumber}`, ephemeral: interaction.options.getBoolean('hide') ?? false});
-        }
     }
     catch(error){
         logDebug(interaction.client, error);
     }
     finally{
-        if(connection)
+        if(newConnection)
             connection.close();
     }
 }
+
+/**
+ * Responds to an interaction from getting credit score
+ * @param {*} interaction 
+ * @returns 
+ */
+async function flowercreditSet(interaction){
+    await setCreditScore(interaction, interaction.options.getString('person_name'), interaction.options.getNumber('credit_score'))
+
+    let respondText = `${interaction.options.getString('person_name')}'s social credit set to ${interaction.options.getNumber('credit_score')}`;
+
+    return interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? true });
+}
+
 
 /**
  * adds or removes credit score from someone
