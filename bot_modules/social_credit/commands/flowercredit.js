@@ -290,7 +290,7 @@ async function addCreditScore(interaction, targetId, toAdd){
  * @returns 
  */
 async function flowerfallcreditAdd(interaction){
-    const targetId = interaction.options.getString('person_name');
+    let targetId = interaction.options.getString('person_name');
     targetId = targetId.replace(/[^0-9]/g, '');
 
     const toAdd = interaction.options.getNumber('social_credit');
@@ -307,7 +307,7 @@ async function flowerfallcreditAdd(interaction){
  * @returns 
  */
 async function flowerfallcreditRemove(interaction){
-    const targetId = interaction.options.getString('person_name');
+    let targetId = interaction.options.getString('person_name');
     targetId = targetId.replace(/[^0-9]/g, '');
 
     const toAdd = -(interaction.options.getNumber('social_credit'));
