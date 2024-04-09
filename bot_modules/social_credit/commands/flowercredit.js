@@ -180,7 +180,9 @@ async function getCreditScore(dbLogin, targetId, connection){
  * @returns 
  */
 async function flowercreditGet(interaction){
-    const creditScore = await getCreditScore(interaction.client.dblogin, interaction.options.getString('person_name'));
+    let targetId = interaction.options.getString('person_name') ?? interaction.member.id;
+
+    const creditScore = await getCreditScore(interaction.client.dblogin, targetId);
 
     let respondText = "";
     if (creditScore) {
