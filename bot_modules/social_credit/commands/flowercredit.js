@@ -364,8 +364,6 @@ async function flowerfallRanking(interaction){
     for(let i = 0; i < Math.min(creditors.length, 20); i++){
         let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
         if(creditorMember){
-            console.log(`${i+1}. ${creditorMember.user.username}`);
-            console.log(`${creditors[i][1]} social credit`);
             embed.addFields({name: `${i+1}. ${creditorMember.user.username}`, value: `${creditors[i][1]} social credit`});
         }
     }
