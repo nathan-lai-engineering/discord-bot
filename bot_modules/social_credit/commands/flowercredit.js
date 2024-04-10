@@ -234,7 +234,7 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
         if(!targetMember)
             return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
 
-        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${targetMember.user.username} to ${socialCredit} social credit`);   
+        logDebug(interaction.client, `[Flowercredit] Updating credit score for ${targetMember.displayName} to ${socialCredit} social credit`);   
 
         return connection.execute(
             `MERGE INTO flowerfall_social_credit USING dual ON (discord_id =: discord_id)
@@ -364,14 +364,14 @@ async function flowerfallRanking(interaction){
 
     // create embed
     let embed = new Discord.EmbedBuilder();
-    embed.setTitle(`Flowerfall Best Citizens`);
+    embed.setTitle(`:cherry_blossom: :crown: Flowerfall Best Citizens :crown: :cherry_blossom:`);
     embed.setThumbnail('https://media.discordapp.net/attachments/1215912927970721854/1227103402719318029/BURNEVERYTHING.png?ex=66273019&is=6614bb19&hm=b9a3411dfdb5a5dcbf80e2c537297aa5b3f10ad5a86f500812e7553af34cf6e8&=&format=webp&quality=lossless');
     embed.setDescription(`Ranking of the top Flowerfall members!`);
 
     for(let i = 0; i < Math.min(creditors.length, 20); i++){
         let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
         if(creditorMember){
-            embed.addFields({name: `${i+1}. ${creditorMember.user.username}`, value: `${creditors[i][1]} social credit`});
+            embed.addFields({name: `${i+1}. ${creditorMember.displayName}`, value: `${creditors[i][1]} social credit`});
         }
     }
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
@@ -396,7 +396,7 @@ async function flowerfallMassReset(interaction){
         // prompt for confirmation message
         let respondText = `Are you sure you want to reset everyone's value as a human being? Type 'i am a stupid idiot' to confirm mass reset`;
         await interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
-        logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} prompted for a mass reset of social credit`);
+        logDebug(interaction.client, `[Flowercredit] ${interaction.displayName} prompted for a mass reset of social credit`);
 
         // filter messages to only interaction author and waiting for confirmation
         const textFilter = (m) => (!m.author.bot && interaction.user.id == m.author.id);
