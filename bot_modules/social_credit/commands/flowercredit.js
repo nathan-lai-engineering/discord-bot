@@ -396,7 +396,7 @@ async function flowerfallMassReset(interaction){
         logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} prompted for a mass reset of social credit`);
 
         // filter messages to only interaction author and waiting for confirmation
-        const textFilter = (m) => interaction.user.id === m.author.id;
+        const textFilter = (m) => (!m.author.bot && interaction.user.id == m.author.id);
         const collector = interaction.channel.createMessageCollector(textFilter, {time: 60000});
 
         let wrongConfirmations = 0;
