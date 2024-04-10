@@ -405,9 +405,11 @@ async function flowerfallMassReset(interaction){
         collector.on('collect', async (msg) => {
             if(msg.content.trim().toLowerCase() == confirmationText){
                 logDebug(interaction.client, `[Flowercredit] Confirmation received. Resetting all social credit`);
-                return await connection.execute(
+                await connection.execute(
                     "UPDATE flowerfall_social_credit SET social_credit=0",
                     {}, {autoCommit: true});
+                await interaction.reply({content: "Got it, now witness true social equality"});
+                return flowerfallRanking(interaction);
             }
             else {
                 wrongConfirmations++;
