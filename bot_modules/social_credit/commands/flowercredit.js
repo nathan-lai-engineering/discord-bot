@@ -397,7 +397,7 @@ async function flowerfallMassReset(interaction){
 
         // filter messages to only interaction author and waiting for confirmation
         const textFilter = (m) => (!m.author.bot && interaction.user.id == m.author.id);
-        const collector = interaction.channel.createMessageCollector({textFilter, time: 60000});
+        const collector = interaction.channel.createMessageCollector({filter: textFilter, time: 60000});
 
         let wrongConfirmations = 0;
 
