@@ -403,7 +403,6 @@ async function flowerfallMassReset(interaction){
 
         // listen for a confirmation message
         collector.on('collect', async (msg) => {
-            console.log(msg.content);
             if(msg.content.trim().toLowerCase() == confirmationText){
                 logDebug(interaction.client, `[Flowercredit] Confirmation received. Resetting all social credit`);
                 await connection.execute(
