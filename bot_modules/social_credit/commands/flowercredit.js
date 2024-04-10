@@ -376,7 +376,8 @@ async function flowerfallRanking(interaction){
     }
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
 
-    if(interaction.isRepliable())
+    let initialReply = await interaction.fetchReply();
+    if(!initialReply)
         return interaction.reply({embeds: [embed]});
     return interaction.followUp({embeds: [embed]});
 }
