@@ -397,7 +397,7 @@ async function flowerfallMassReset(interaction){
 
         // filter messages to only interaction author and waiting for confirmation
         const textFilter = (m) => (!m.author.bot && interaction.user.id == m.author.id);
-        const collector = interaction.channel.createMessageCollector(textFilter, {time: 60000});
+        const collector = interaction.channel.createMessageCollector({textFilter, time: 60000});
 
         let wrongConfirmations = 0;
 
@@ -409,7 +409,7 @@ async function flowerfallMassReset(interaction){
                 await connection.execute(
                     "UPDATE flowerfall_social_credit SET social_credit=0",
                     {}, {autoCommit: true});
-                await interaction.reply({content: "Got it, now witness true social equality"});
+                await interaction.channel.send("Understood, behold true social equality");
                 return flowerfallRanking(interaction);
             }
             else {
@@ -433,7 +433,7 @@ async function flowerfallMassReset(interaction){
         });
 
         // when the collector expires
-        collector.on('end', async (collected, reason) => interaction.reply({ content: "Alright, you probably didn't want to reset all that social credit anyways", ephemeral: interaction.options.getBoolean('hide') ?? false }));
+        collector.on('end', async (collected, reason) => interaction.channel.send("Alright, you probably didn't want to reset all that social credit anyways"));
 
 
     }
