@@ -387,7 +387,6 @@ async function flowerfallMassReset(interaction){
     try{
         // check for admin flag
         let adminFlag = await isAdmin(interaction, connection);
-        connection.close();
         if(!adminFlag)
             return;
 
@@ -406,12 +405,21 @@ async function flowerfallMassReset(interaction){
         collector.on('collect', async (msg) => {
             if(msg.content.trim().toLowerCase() == confirmationText){
                 logDebug(interaction.client, `[Flowercredit] Confirmation received. Resetting all social credit`);
-                connection = await oracledb.getConnection(interaction.client.dbLogin);
-                await connection.execute(
-                    "UPDATE flowerfall_social_credit SET social_credit=0",
-                    {}, {autoCommit: true});
-                await interaction.channel.send("Understood, behold true social equality");
-                return flowerfallRanking(interaction);
+                let freshConnection = await oracledb.getConnection(interaction.client.dbLogin);
+                try{
+                    await freshConnection.execute(
+                        "UPDATE flowerfall_social_credit SET social_credit=0",
+                        {}, {autoCommit: true});
+                    await interaction.channel.send("Understood, behold true social equality");
+                    return flowerfallRanking(interaction);
+                }
+                catch(error){
+                    logDebug(interaction.client, error);
+                }
+                finally{
+                    if(freshConnection)
+                        freshConnection.close();
+                }
             }
             else {
                 wrongConfirmations++;
