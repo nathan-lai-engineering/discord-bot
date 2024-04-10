@@ -413,6 +413,7 @@ async function flowerfallMassReset(interaction){
                     await freshConnection.execute(
                         "UPDATE flowerfall_social_credit SET social_credit=0",
                         {}, {autoCommit: true});
+                    collector.stop('confirmed');
                     await interaction.channel.send("Understood, behold true social equality");
                     return flowerfallRanking(interaction);
                 }
@@ -445,7 +446,10 @@ async function flowerfallMassReset(interaction){
         });
 
         // when the collector expires
-        collector.on('end', async (collected, reason) => interaction.channel.send("Alright, you probably didn't want to reset all that social credit anyways"));
+        collector.on('end', async (collected, reason) => {
+            if(!reason || reason != 'confirmed')
+                interaction.channel.send("Alright, you probably didn't want to reset all that social credit anyways")
+        });
 
 
     }
