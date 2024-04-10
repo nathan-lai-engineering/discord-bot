@@ -392,7 +392,7 @@ async function flowerfallMassReset(interaction){
 
         // prompt for confirmation message
         let respondText = `Are you sure you want to reset everyone's value as a human being? Type 'i am a stupid idiot' to confirm mass reset`;
-        interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
+        await interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
         logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} prompted for a mass reset of social credit`);
 
         // filter messages to only interaction author and waiting for confirmation
@@ -403,6 +403,7 @@ async function flowerfallMassReset(interaction){
 
         // listen for a confirmation message
         collector.on('collect', async (msg) => {
+            console.log(msg.content);
             if(msg.content.trim().toLowerCase() == confirmationText){
                 logDebug(interaction.client, `[Flowercredit] Confirmation received. Resetting all social credit`);
                 await connection.execute(
