@@ -83,8 +83,12 @@ module.exports = {
                         .setDescription('whether to hide the response message, hidden by default')))
         .addSubcommand(subcommand =>
             subcommand
-                .setName('fullreset')
-                .setDescription('resets everyones social credit to 0, admin only')),
+                .setName('massreset')
+                .setDescription('resets everyones social credit to 0, admin only')
+                .addBooleanOption(option => 
+                    option
+                        .setName('hide')
+                        .setDescription('whether to hide the response message, hidden by default'))),
 	async execute(interaction) {
             switch(interaction.options.getSubcommand()){
                 case 'add':
@@ -99,10 +103,11 @@ module.exports = {
                 case 'get':
                     flowercreditGet(interaction);
                     break;
-                case 'ranking': //TODO
+                case 'ranking':
                     flowerfallRanking(interaction);
                     break;
-                case 'fullreset': //TODO
+                case 'massreset':
+                    flowerfallMassReset(interaction);
                     break;
                 default:
                     interaction.reply({content:'What subcommand did you even try?', ephemeral: true});
@@ -222,7 +227,7 @@ async function setCreditScore(interaction, targetId, socialCredit, connection){
         if(newConnection){
             let adminFlag = await isAdmin(interaction, connection);
             if(!adminFlag)
-                return interaction.reply({content: `Can't find that FlowerFool`, ephemeral: true});
+                return;
         }
 
         let targetMember = await interaction.guild.members.fetch({user: targetId, force: true});
@@ -328,6 +333,8 @@ async function flowerfallcreditRemove(interaction){
 async function getTopSocialCredit(interaction){
     let connection = await oracledb.getConnection(interaction.client.dbLogin);
     try{
+        logDebug(interaction.client, `[Flowercredit] Getting ordered list of all social credit`);
+
         let result = await connection.execute(
             `SELECT *
             FROM flowerfall_social_credit
@@ -370,4 +377,68 @@ async function flowerfallRanking(interaction){
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
 
     return interaction.reply({embeds: [embed]});
+}
+
+async function flowerfallMassReset(interaction){
+    const confirmationText = 'i am a stupid idiot';
+
+    let connection = await oracledb.getConnection(interaction.client.dbLogin);
+
+    try{
+        // check for admin flag
+        let adminFlag = await isAdmin(interaction, connection);
+        if(!adminFlag)
+            return;
+
+        // prompt for confirmation message
+        let respondText = `Are you sure you want to reset everyone's value as a human being? Type 'i am a stupid idiot' to confirm mass reset`;
+        interaction.reply({ content: respondText, ephemeral: interaction.options.getBoolean('hide') ?? false });
+        logDebug(interaction.client, `[Flowercredit] ${interaction.user.username} prompted for a mass reset of social credit`);
+
+        // filter messages to only interaction author and waiting for confirmation
+        const textFilter = (m) => interaction.user.id === m.author.id;
+        const collector = interaction.channel.createMessageCollector(textFilter, {time: 60000});
+
+        let wrongConfirmations = 0;
+
+        // listen for a confirmation message
+        collector.on('collect', async (msg) => {
+            if(msg.content.trim().toLowerCase() == confirmationText){
+                logDebug(interaction.client, `[Flowercredit] Confirmation received. Resetting all social credit`);
+                return await connection.execute(
+                    "UPDATE flowerfall_social_credit SET social_credit=0",
+                    {}, {autoCommit: true});
+            }
+            else {
+                wrongConfirmations++;
+                let responseText = "";
+                switch(wrongConfirmations){
+                    case 1:
+                        responseText = `You really have to type '${confirmationText}'`;
+                        break;
+                    case 2:
+                        responseText = `Again, type '${confirmationText}', there's really no way around it`;
+                        break;
+                    case 3:
+                        responseText = `Look, you really have to be a stupid idiot to mess this up this many times, just type '${confirmationText}'`;
+                        break;
+                    default:
+                        collector.stop();
+                }
+                return msg.reply(responseText);
+            }
+        });
+
+        // when the collector expires
+        collector.on('end', async (collected, reason) => interaction.reply({ content: "Alright, you probably didn't want to reset all that social credit anyways", ephemeral: interaction.options.getBoolean('hide') ?? false }));
+
+
+    }
+    catch(error){
+        logDebug(interaction.client, error);
+    }
+    finally{
+        if(connection)
+            connection.close();
+    }
 }
