@@ -360,6 +360,8 @@ async function getTopSocialCredit(interaction){
  * @param {*} interaction 
  */
 async function flowerfallRanking(interaction){
+    if(!interaction.replied)
+        await interaction.deferReply();
     let creditors = await getTopSocialCredit(interaction);
 
     // create embed
@@ -377,7 +379,7 @@ async function flowerfallRanking(interaction){
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
     
     if(!interaction.replied){
-        return interaction.reply({embeds: [embed]})
+        return interaction.editReply({embeds: [embed]})
     }
     return interaction.followUp({embeds: [embed]});
 }
