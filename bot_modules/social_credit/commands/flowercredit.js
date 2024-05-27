@@ -372,7 +372,7 @@ async function flowerfallRanking(interaction){
 
     let i = 0;
     let rank = 1;
-    while(i < creditors.length || rank <= 20){
+    while(i < creditors.length && rank <= 20){
         try{
             let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
             if(creditorMember){
