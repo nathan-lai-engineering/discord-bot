@@ -370,11 +370,20 @@ async function flowerfallRanking(interaction){
     embed.setThumbnail('https://media.discordapp.net/attachments/1215912927970721854/1227103402719318029/BURNEVERYTHING.png?ex=66273019&is=6614bb19&hm=b9a3411dfdb5a5dcbf80e2c537297aa5b3f10ad5a86f500812e7553af34cf6e8&=&format=webp&quality=lossless');
     embed.setDescription(`Ranking of the top Flowerfall members!`);
 
-    for(let i = 0; i < Math.min(creditors.length, 20); i++){
-        let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
-        if(creditorMember){
-            embed.addFields({name: `${i+1}. ${creditorMember.displayName}`, value: `${creditors[i][1]} social credit`});
+    let i = 0;
+    let rank = 1;
+    while(i < creditors.length || rank <= 20){
+        try{
+            let creditorMember =  await interaction.guild.members.fetch({user: creditors[i][0], force: true});
+            if(creditorMember){
+                embed.addFields({name: `${rank}. ${creditorMember.displayName}`, value: `${creditors[i][1]} social credit`});
+                rank++;
+            }
         }
+        catch(e){
+            console.error(e);
+        }
+        i++;
     }
     embed.setFooter({text:"This is an evaluation of your self-worth as a human being. -Blazeris"});
     
