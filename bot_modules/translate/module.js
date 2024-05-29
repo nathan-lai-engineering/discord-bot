@@ -18,7 +18,8 @@ exports.load = (client) => {
         let taggedMessage = message.content;
         const regex = /<@[0-9]>{17-19}/g;
         const pings = taggedMessage.match(regex);
-        for (let ping of pings){
+        console.log(pings);
+        for (let [_, ping] of Object.entries(pings)){
             if(ping in taggedMessage){
                 taggedMessage.replace(ping, `<x>${ping}</x>`);
             }
