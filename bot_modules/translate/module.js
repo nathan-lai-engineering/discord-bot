@@ -22,9 +22,7 @@ exports.load = (client) => {
         console.log(pings);
         if(pings){
             for (let [_, ping] of Object.entries(pings)){
-                if(ping in taggedMessage){
-                    taggedMessage.replace(ping, `<x>${ping}</x>`);
-                }
+                taggedMessage.replace(ping, `<x>${ping}</x>`);
             }
         }
 
