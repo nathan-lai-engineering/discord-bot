@@ -16,7 +16,7 @@ exports.load = (client) => {
 
         const translator = new deepl.Translator(client.apiKeys['deepl']);
         let taggedMessage = message.content;
-        const regex = /<[@][0-9]{17-19}>/g;
+        const regex = /<@[0-9]{17,19}>/g;
         const pings = taggedMessage.match(regex);
         console.log(taggedMessage);
         console.log(pings);
