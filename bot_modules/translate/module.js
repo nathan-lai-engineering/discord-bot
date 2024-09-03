@@ -15,7 +15,18 @@ exports.load = (client) => {
             return message.reply("Indonesian → English: cat");
 
         const translator = new deepl.Translator(client.apiKeys['deepl']);
-        translator.translateText(message.content, null, 'en-US')
+        let taggedMessage = message.content;
+        const regex = /<@[0-9]{17,19}>/g;
+        const pings = taggedMessage.match(regex);
+        console.log(taggedMessage);
+        console.log(pings);
+        if(pings){
+            for (let [_, ping] of Object.entries(pings)){
+                taggedMessage.replace(ping, `<x>${ping}</x>`);
+            }
+        }
+
+        translator.translateText(taggedMessage, null, 'en-US', {ignoreTags: ['x']})
         .then(res => {
             logDebug(client, `[TRANSLATE] ${res.text} | ${res.detectedSourceLang}`);
             if(res){
