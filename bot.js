@@ -77,6 +77,7 @@ for (const filePath of commandsFullPaths) {
 		client.commands.set(command.data.name, command);
 	}
 }
+
 if(client.debugMode)
   console.log(client.commands.map((command) => command.data.name));
 
@@ -158,7 +159,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
  */
 async function deployCommands(client){
   const clientId = client.user.id;
-  const token = client.apiKeys['discord_flowerfall'];
+  const token = client.apiKeys['discord'];
 
   client.guilds.fetch().then((guilds)=>{
     log(`Started refreshing ${commandJSONs.length} application (/) commands.`);
