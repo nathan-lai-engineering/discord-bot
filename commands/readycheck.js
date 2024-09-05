@@ -114,7 +114,11 @@ module.exports = {
 
             }
         } catch (e) {
-            await readyCheck.edit({embeds: [editEmbedNotReady(embed)], components: []})
+            for(let member of Object.values(members)){
+                if(member.status == 0)
+                    member.status = -1
+            }
+            await readyCheck.edit({embeds: [editEmbedFields(editEmbedNotReady(embed), members)], components: []})
         }
     }
 }
