@@ -34,6 +34,7 @@ module.exports = {
                 "status": 0
             }
         }
+        
 
         for(let interactionOption of interaction.options.data){
             console.log(interactionOption.user.bot)
@@ -68,7 +69,12 @@ module.exports = {
 
         var row = new Discord.ActionRowBuilder()
             .addComponents(ready, notReady)
-
+        var pingString = ''
+        for(let userId of Object.keys(members)){
+            pingString += `<@${userId}>`
+        }
+        const pingMsg = await interaction.channel.send(pingString)
+        await pingMsg.delete()
         const readyCheck = await interaction.channel.send({embeds: [embed], components: [row]})
 
         try{
@@ -140,13 +146,13 @@ function editEmbedFields(embed, members){
         let statusString = ''
         switch(user.status){
             case -1:
-                statusString = `<:rednotready:1280723659933093970> ${user.user.username} is not ready! `
+                statusString = `<:rednotready:1280723659933093970> ${user.user.globalName} is not ready! `
                 break
             case 0:
-                statusString = `<:yellowquestion:1280723678882959485> ${user.user.username} is still deciding! `
+                statusString = `<:yellowquestion:1280723678882959485> ${user.user.globalName} is still deciding! `
                 break
             case 1:
-                statusString = `<:greenready:1280723636067504220> ${user.user.username} is ready! `
+                statusString = `<:greenready:1280723636067504220> ${user.user.globalName} is ready! `
                 break
             default:
         }
