@@ -87,20 +87,25 @@ module.exports = {
                 }
 
                 let statusSum = 0
+                let someoneStillDeciding = false
                 for(const [userId, user] of Object.entries(members)){
                     let userStatus = user['status']
-                    if(userStatus == -1){
-                        embed.setFields()
-                        await confirmation.update({embeds: [editEmbedFields(editEmbedNotReady(embed), members)], components: []})
-                        return
-                    }
+                    if(userStatus == 0)
+                        someoneStillDeciding = true
                     statusSum += userStatus
                 }
-                if(statusSum == Object.keys(members).length){
-                    await confirmation.update({embeds: [editEmbedFields(editEmbedReady(embed), members)], components: []})
-                    return
+                if(someoneStillDeciding){
+                    await confirmation.update({embeds: [editEmbedFields(editEmbedInProgress(embed), members)], components: [row]})
                 }
-                await confirmation.update({embeds: [editEmbedFields(editEmbedInProgress(embed), members)], components: [row]})
+                else{
+                    if(statusSum == Object.keys(members).length){
+                        return await confirmation.update({embeds: [editEmbedFields(editEmbedReady(embed), members)], components: []})
+                        
+                    }
+                    return await confirmation.update({embeds: [editEmbedFields(editEmbedNotReady(embed), members)], components: []})
+                }
+
+
             }
         } catch (e) {
             await readyCheck.edit({embeds: [editEmbedNotReady(embed)], components: []})
