@@ -5,6 +5,10 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('readycheck')
 		.setDescription('ready checks the specified people')
+        .addStringOption(option => 
+            option
+                .setName('ready_reason')
+                .setDescription('Reason for the ready check'))
         .addMentionableOption(option =>
             option
                 .setName('person1')
@@ -35,26 +39,30 @@ module.exports = {
             }
         }
         
+        var description = interaction.options.get('ready_reason').value
 
         for(let interactionOption of interaction.options.data){
-            console.log(interactionOption.user.bot)
-            if(interactionOption.user.bot != true)
-                members[interactionOption.user.id] = {
-                    "user": interactionOption.user,
-                    "status": 0
-                }
+            if(interactionOption.type == 9){
+                if(interactionOption.user.bot != true)
+                    members[interactionOption.user.id] = {
+                        "user": interactionOption.user,
+                        "status": 0
+                    }
+            }
         }
-        
-        console.log(members)
 
         interaction.reply({content: `Creating ready check...`, ephemeral:true})
         var embed = new Discord.EmbedBuilder()
-            .setTitle('Gamer Ready Check')
+            .setAuthor({name: 'Gamer Ready Check'})
             .setFooter({
                 text: 'Started by: ' + interaction.user.username, 
                 iconURL: interaction.user.displayAvatarURL()
             });
         
+            if(description)
+                embed.setTitle(description)
+
+
         embed = editEmbedFields(editEmbedInProgress(embed), members)
 
         var ready = new Discord.ButtonBuilder()
