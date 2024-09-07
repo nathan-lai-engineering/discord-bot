@@ -38,8 +38,9 @@ module.exports = {
                 "status": 0
             }
         }
-        
-        var description = interaction.options.get('ready_reason').value
+        var description = null
+        if(interaction.options.get('ready_reason'))
+            description = interaction.options.get('ready_reason').value
 
         for(let interactionOption of interaction.options.data){
             if(interactionOption.type == 9){
