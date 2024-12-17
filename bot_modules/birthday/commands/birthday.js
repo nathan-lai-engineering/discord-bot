@@ -140,7 +140,7 @@ async function birthdayRegister(interaction){
  */
 async function birthdayNext(interaction){
     const today = new Date();
-    today.setTime(today.getTime() - (16*60*60*1000))
+    today.setTime(today.getTime() - (8*60*60*1000))
     let month = today.getMonth();
     let date = today.getDate();
     let year = today.getFullYear();
