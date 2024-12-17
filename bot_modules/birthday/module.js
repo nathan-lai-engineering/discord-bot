@@ -8,7 +8,7 @@ exports.load = (client) => {
 
         // check every hour 
         let now = new Date();
-        now.setTime(now.getTime() - (16*60*60*1000))
+        now.setTime(now.getTime() - (8*60*60*1000))
 
         let nextHour = new Date(now);
         nextHour.setUTCHours(now.getUTCHours() + 1, 0, 0, 0);
