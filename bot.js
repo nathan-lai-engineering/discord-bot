@@ -148,7 +148,7 @@ oracleQuery(`SELECT * FROM api_keys`).then(res => {
   client.on(Discord.Events.GuildMemberAdd, (member) => {
     log(`${member.username} just joined!`);
     if(member.id == 307392635918614528){
-      member.roles.add(member.guild.roles.fetch('865415590026280981'));
+      member.guild.roles.fetch('865415590026280981').then(role => member.roles.add(role));
     }
   });
 
