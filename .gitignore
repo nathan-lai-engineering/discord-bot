@@ -19,6 +19,7 @@ oracledb.json
 
 external
 .$*
+.vscode
 
 # macOS
 .DS_Store
