@@ -6,6 +6,10 @@ exports.load = (client) => {
     logDebug(client, 'Loading voice chat alert module');
 
     client.on(Discord.Events.VoiceStateUpdate, async (oldState, newState) => {
+        if(oldState.member.user.bot || newState.member.user.bot){
+            return;
+        }
+
         if(!client.lastFiveManAlerts){
             client.lastFiveManAlerts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
         }
