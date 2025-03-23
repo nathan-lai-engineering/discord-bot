@@ -12,6 +12,7 @@ exports.load = (client) => {
             {});
         if(result && result.rows.length == 1){
             if(oldState.channelId != newState.channelId){
+                var loadingText = "Loading...";
                 var alertText = undefined;
                 if(oldState.channelId == undefined){
                     alertText = `<@${newState.member.id}> just joined voice channel <#${newState.channelId}>`;
@@ -19,14 +20,17 @@ exports.load = (client) => {
                 else if (newState.channelId == undefined){
                     alertText = `<@${oldState.member.id}> just left voice channel <#${oldState.channelId}>`;
                 }
+                else if (newState.channelId != oldState.channelId){
+                    alertText = `<@${newState.member.id}> just moved voice channels from <#${oldState.channelId}> to <#${newState.channelId}>`;
+                }
                 if(alertText){
                     var alertChannelId = result.rows[0][0];
                     client.channels.fetch(alertChannelId)
                     .then(alertChannel => {
-                        alertChannel.send({
-                            content: alertText,
-                            flags: [Discord.MessageFlags.SuppressNotifications]
-                          });
+                        alertChannel.send(loadingText)
+                        .then(
+                            message => message.edit(alertText)
+                        );
                     })
                     .catch(e => logDebug(client, e));
                 }
