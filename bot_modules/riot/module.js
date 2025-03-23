@@ -123,7 +123,7 @@ async function getRiotAccounts(client){
     let resRiotAccounts = await oracleQuery(
         `SELECT discord_id, riot_id, riot_tag, gametype, puuid, summoner_id
         FROM riot_accounts INNER JOIN puuids
-        USING(discord_id)`, [], {});
+        USING(discord_id)`, [], {}, client=client);
     if(resRiotAccounts != null && resRiotAccounts.rows.length > 0){
         for(let rowRiotAccount of resRiotAccounts.rows){
             let discordId = rowRiotAccount[0];
@@ -149,7 +149,7 @@ async function getRiotAccounts(client){
 async function getGuildChannels(client){
     let guildChannels = {};
     let resGuildChannels = await oracleQuery(
-        `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {});
+        `SELECT guild_id, channel_id FROM notification_channels WHERE notification_type='riot'`, {}, {}, client=client);
     if(resGuildChannels != null && resGuildChannels.rows.length > 0){
         for(let resGuildChannel of resGuildChannels.rows){
             let botGuilds = await client.guilds.fetch();
@@ -173,7 +173,7 @@ async function getSubscribedMembers(client){
         `SELECT guild_id, discord_id 
         FROM NOTIFICATION_MEMBERS 
         WHERE toggle=1 AND notification_type='riot'`
-        ,{},{});
+        ,{},{}, client=client);
     if(resSubscribedMembers != null && resSubscribedMembers.rows.length > 0){
         for(let resSubscribedMember of resSubscribedMembers.rows){
             if(!(resSubscribedMember[0] in subscribedMembers)){
@@ -432,7 +432,8 @@ async function getLastRank(client, puuid, queue){
         WHERE queue=:queue AND puuid=:puuid`, 
         {queue: queue,
         puuid: puuid}, 
-        {}
+        {},
+        client=client
     );
     if(res && res.rows.length > 0){
         return res.rows[0];

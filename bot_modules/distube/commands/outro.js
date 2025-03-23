@@ -140,7 +140,8 @@ module.exports = {
             FROM outros
             WHERE discord_id=:0`,
             [member.id],
-            {}
+            {},
+            client=client
         ).then(res => {
             if(res.rows.length > 0){
                 let url, start, duration, toggle;

@@ -124,7 +124,8 @@ async function birthdayRegister(interaction){
                 {discord_id: interaction.member.id,
                 month: month,
                 day: day},
-                {autoCommit:true});
+                {autoCommit:true},
+                client=client);
                 logDebug(interaction.client, "Birthday registered and updated to database");
                 return interaction.reply({content:'Birthday Registered!', ephemeral:true});
         }

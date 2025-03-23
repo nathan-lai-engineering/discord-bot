@@ -26,7 +26,8 @@ exports.load = (client) => {
                     `SELECT discord_id FROM discord_accounts WHERE birth_month=:month AND birth_day=:day`, 
                     {month: nextHour.getMonth(),
                     day: nextHour.getDate()}, 
-                    {});
+                    {},
+                    client=client);
                     if(result && result.rows.length > 0){
                         for(let row of result.rows){
                             guildChannel.send(`:partying_face: @everyone Today is <@${row[0]}>'s birthday! :partying_face:`);

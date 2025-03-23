@@ -84,7 +84,7 @@ if(client.debugMode)
 // =============================================================
 // BOT OPERATION
 // =============================================================
-oracleQuery(`SELECT * FROM api_keys`).then(res => {
+oracleQuery(`SELECT * FROM api_keys`, client=client).then(res => {
   // load api keys from database
   client.apiKeys = {};
   for(let apiKey of res.rows){
