@@ -11,8 +11,8 @@ module.exports = {oracleQuery, getOracleCredentials}
  * @param {*} config 
  * @returns 
  */
-async function oracleQuery(sqlString, binds=[], config={}){
-    const oracleLogin = getOracleCredentials();
+async function oracleQuery(sqlString, binds=[], config={}, client = null){
+    const oracleLogin = client ? client.dbLogin : getOracleCredentials();
     const connection = await oracledb.getConnection(oracleLogin);
 
     var result = null
@@ -28,6 +28,8 @@ async function oracleQuery(sqlString, binds=[], config={}){
     }
     return result;
 }
+
+
 
 /**
  * Uses either a local json file or the environment variables for Oracle login information
