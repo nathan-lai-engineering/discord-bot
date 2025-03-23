@@ -14,7 +14,7 @@ exports.load = (client) => {
             `SELECT channel_id FROM notification_channels WHERE guild_id=:guildId AND notification_type = 'vc'`, 
             {guildId: newState.guild.id}, 
             {},
-            client=client);
+            client);
         if(result && result.rows.length == 1){
             if(oldState.channelId != newState.channelId){
                 var loadingText, alertText = undefined;

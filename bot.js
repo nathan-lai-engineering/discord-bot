@@ -31,7 +31,7 @@ const client = new Discord.Client({
 // load login details for global usage
 client.dbLogin = getOracleCredentials();
 client.debugMode = true;
-client.enabledModules = ['riot', 'tiktok', 'holidays', 'birthday', 'translate', 'vc_alert'];
+client.enabledModules = ['riot', 'tiktok', 'holidays', 'birthday', 'translate', 'vc_alert', 'distube'];
 
 
 // =============================================================
@@ -84,7 +84,7 @@ if(client.debugMode)
 // =============================================================
 // BOT OPERATION
 // =============================================================
-oracleQuery(`SELECT * FROM api_keys`, client=client).then(res => {
+oracleQuery(`SELECT * FROM api_keys`, undefined, undefined, client).then(res => {
   // load api keys from database
   client.apiKeys = {};
   for(let apiKey of res.rows){

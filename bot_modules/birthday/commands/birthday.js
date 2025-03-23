@@ -125,7 +125,7 @@ async function birthdayRegister(interaction){
                 month: month,
                 day: day},
                 {autoCommit:true},
-                client=client);
+                client);
                 logDebug(interaction.client, "Birthday registered and updated to database");
                 return interaction.reply({content:'Birthday Registered!', ephemeral:true});
         }
