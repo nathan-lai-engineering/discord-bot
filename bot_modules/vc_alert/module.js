@@ -45,16 +45,18 @@ exports.load = (client) => {
                             }
                         }
                     }
-                    if(count == 5) {
+                    if(count > 0 && count <= 5){
                         if(new Date() - client.lastFiveManAlerts[count] > 1000 * 60 * 30){
-                            loadingText = alertText = "<@here> 🚨🚨🚨🚨🚨 THE FIVE MAN HAS BEEN ASSEMBLED! 🚨🚨🚨🚨🚨";
-                            client.lastFiveManAlerts[count] = new Date();
-                        }
-                    }
-
-                    else if(count > 0 && count < 5){
-                        if(new Date() - client.lastFiveManAlerts[count] > 1000 * 60 * 30){
-                            loadingText = alertText = `<@&1237190887231193108> ${count} of the 5-man has been assembled ❗❗❗`;
+                            if(count == 5){
+                                loadingText = alertText = "<@here> 🚨🚨🚨🚨🚨 THE FIVE MAN HAS BEEN ASSEMBLED! 🚨🚨🚨🚨🚨";
+                            }
+                            else if(count == 4){
+                                loadingText = alertText = `❗❗❗ <@&1237190887231193108> ❗❗❗ NEED ONE MORE FOR THE 5-MAN. ${count} of the 5-man has been assembled ❗❗❗`;
+                            }
+                            else {
+                                loadingText = alertText = `${count} of the 5-man has been assembled ❗❗❗`;
+                            }
+                            
                             client.lastFiveManAlerts[count] = new Date();
                         }
                     }
