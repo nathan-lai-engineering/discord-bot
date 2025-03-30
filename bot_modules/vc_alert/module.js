@@ -21,7 +21,7 @@ exports.load = (client) => {
             client);
         if(result && result.rows.length == 1){
             if(oldState.channelId != newState.channelId){
-                var loadingText, alertText = undefined;
+                var loadingText, alertText, fivemanText = undefined;
                 var username = newState.member.nickname ? newState.member.nickname : newState.member.user.username;
                 
                 if (newState.channelId == undefined){
@@ -48,19 +48,19 @@ exports.load = (client) => {
                     if(count > 0 && count <= 5){
                         if(new Date() - client.lastFiveManAlerts[count] > 1000 * 60 * 30){
                             if(count == 5){
-                                loadingText = alertText = "<@here> 🚨🚨🚨🚨🚨 THE FIVE MAN HAS BEEN ASSEMBLED! 🚨🚨🚨🚨🚨";
+                                fivemanText = "<@here> 🚨🚨🚨🚨🚨 THE FIVE MAN HAS BEEN ASSEMBLED! 🚨🚨🚨🚨🚨";
                             }
                             else if(count == 4){
-                                loadingText = alertText = `❗❗❗ <@&1237190887231193108> ❗❗❗ NEED ONE MORE FOR THE 5-MAN. ${count} of the 5-man has been assembled ❗❗❗`;
+                                fivemanText = `❗❗❗ <@&1237190887231193108> ❗❗❗ NEED ONE MORE FOR THE 5-MAN. ${count} of the 5-man has been assembled ❗❗❗`;
                             }
                             else {
-                                loadingText = alertText = `${count} of the 5-man has been assembled ❗❗❗`;
+                                fivemanText = `${count} of the 5-man has been assembled ❗❗❗`;
                             }
                             
                             client.lastFiveManAlerts[count] = new Date();
                         }
                     }
-                    else if(oldState.channelId == undefined){
+                    if(oldState.channelId == undefined){
                         loadingText = `${username} just joined voice channel <#${newState.channelId}>`;
                         alertText = `<@${newState.member.id}> just joined voice channel <#${newState.channelId}>`;
                     }
@@ -70,18 +70,23 @@ exports.load = (client) => {
                         alertText = `<@${newState.member.id}> just moved voice channels from <#${oldState.channelId}> to <#${newState.channelId}>`;
                     }
                 }
-                if(alertText){
+                if(alertText || fivemanText){
                     var alertChannelId = result.rows[0][0];
                     client.channels.fetch(alertChannelId)
                     .then(alertChannel => {
-                        alertChannel.send(loadingText)
-                        .then(
-                            message => {
-                                if(alertText != loadingText){
-                                    message.edit(alertText);
+                        if(fivemanText){
+                            alertChannel.send(fivemanText);
+                        }
+                        if(alertText){
+                            alertChannel.send(loadingText)
+                            .then(
+                                message => {
+                                    if(alertText != loadingText){
+                                        message.edit(alertText);
+                                    }
                                 }
-                            }
-                        );
+                            );
+                        }
                     })
                     .catch(e => logDebug(client, e));
                 }
