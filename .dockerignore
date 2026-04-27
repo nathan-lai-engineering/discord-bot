@@ -7,5 +7,6 @@ node_modules
 temp
 passwords
 oracledb.json
+oracle_wallet
 documentation
 assets/readme-images

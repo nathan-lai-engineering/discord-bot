@@ -44,12 +44,9 @@ function getOracleCredentials(){
     }
     else {
         log("[ORACLE] Using environment log in information");
-        dbLogin = { // using environment variables for HEROKU hosting
+        dbLogin = {
             "user": process.env.oracle_user,
             "password": process.env.oracle_password,
-            "configDir": process.env.oracle_directory,
-            "walletLocation": process.env.oracle_directory,
-            "walletPassword": process.env.oracle_wallet_password,
             "connectString": process.env.oracle_connect_string
         };
     }
