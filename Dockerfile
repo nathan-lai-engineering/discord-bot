@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    libtool \
+    autoconf \
+    automake \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
