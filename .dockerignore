@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+.idea
+.vscode
+*.md
+temp
+passwords
+oracledb.json
+documentation
+assets/readme-images
