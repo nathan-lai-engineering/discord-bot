@@ -11,6 +11,7 @@ const path = require("path");
 const Discord = require("discord.js");
 const {log, logDebug} = require('./utils/log');
 const {oracleQuery, getOracleCredentials} = require('./utils/oracle');
+import 'dotenv/config';
 
 // =============================================================
 // CLIENT INITIALIZATION
@@ -32,7 +33,14 @@ const client = new Discord.Client({
 client.dbLogin = getOracleCredentials();
 client.debugMode = true;
 client.enabledModules = ['riot', 'tiktok', 'holidays', 'birthday', 'translate', 'vc_alert', 'distube'];
-
+if("NATHANLAI_API_KEY" in process.env){
+  client.personalApiKey = process.env["NATHANLAI_API_KEY"];
+  logDebug(client, "Nathan Lai Personal API Key found.");
+}
+if("NATHANLAI_API_URL" in process.env){
+  client.personalApiUrl = process.env["NATHANLAI_API_URL"];
+  logDebug(client, "Nathan Lai Personal API URL found.");
+}
 
 // =============================================================
 // DYNAMIC CUSTOM MODULE HANDLING

@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
 const { oracleQuery } = require('../../../utils/oracle.js');
+import axios from 'axios';
 
 
 module.exports = {
@@ -140,35 +141,61 @@ async function birthdayRegister(interaction){
  * @param {} interaction 
  */
 async function birthdayNext(interaction){
+    const client = interaction.client;
+
     const today = new Date();
     today.setTime(today.getTime() - (8*60*60*1000))
     let month = today.getMonth();
     let date = today.getDate();
     let year = today.getFullYear();
-    const result = await oracleQuery(
-        `SELECT discord_id, birth_month, birth_day 
-        FROM discord_accounts
-        ORDER BY birth_month, birth_day`,
-        {},
-        {}
-    );
-    if(result && result.rows.length > 0){
-        let nextBirthdayRow = null;
-        for(let row of result.rows){
-            if((row[1] > month || (row[1] == month && row[2] > date)) 
-                && nextBirthdayRow == null){
-                nextBirthdayRow = row;
+
+    if(client.personalApiKey){
+        logDebug(interaction.client, "Using Nathan Lai Postgres DB");
+        const birthdayResponse = await axios.get(
+            `${client.personalApiUrl}/discord/accounts/birthdays`,
+            {
+                headers: {
+                    'x-api-key': client.personalApiKey,
+                },
             }
+        );
+        if(birthdayResponse){
+            const discordBirthdays = birthdayResponse.data;
+            const guildMembers = await interaction.guild.members.fetch();
+            const guildBirthdays = Object.fromEntries(
+                Object.entries(discordBirthdays).filter(([discordId]) => guildMembers.has(discordId))
+            );
+            console.log(guildBirthday);
+            //const sortedBirthdays = [];
         }
-        if(nextBirthdayRow == null){
-            nextBirthdayRow = result.rows[0];
-        }
-        let birthdate = new Date(year, nextBirthdayRow[1], nextBirthdayRow[2]);
-        let timeDiff = (birthdate - today) / (1000 * 60 * 60 * 24);
-        let dayDiff = Math.floor(timeDiff);
-        let hourDiff = Math.floor((timeDiff - dayDiff) * 24);
-        interaction.reply({content: `Next birthday is <@${nextBirthdayRow[0]}>'s in **${dayDiff} days** & **${hourDiff} hours**`, ephemeral: true});
     }
-    else
-        logDebug(interaction.client, 'Birthday next had no results');
+    else{
+        const result = await oracleQuery(
+            `SELECT discord_id, birth_month, birth_day 
+            FROM discord_accounts
+            ORDER BY birth_month, birth_day`,
+            {},
+            {}
+        );
+        if(result && result.rows.length > 0){
+            let nextBirthdayRow = null;
+            for(let row of result.rows){
+                if((row[1] > month || (row[1] == month && row[2] > date)) 
+                    && nextBirthdayRow == null){
+                    nextBirthdayRow = row;
+                }
+            }
+            if(nextBirthdayRow == null){
+                nextBirthdayRow = result.rows[0];
+            }
+            let birthdate = new Date(year, nextBirthdayRow[1], nextBirthdayRow[2]);
+            let timeDiff = (birthdate - today) / (1000 * 60 * 60 * 24);
+            let dayDiff = Math.floor(timeDiff);
+            let hourDiff = Math.floor((timeDiff - dayDiff) * 24);
+            interaction.reply({content: `Next birthday is <@${nextBirthdayRow[0]}>'s in **${dayDiff} days** & **${hourDiff} hours**`, ephemeral: true});
+        }
+        else {
+            logDebug(client, 'Birthday next had no results');
+        }
+    }
 }
