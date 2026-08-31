@@ -11,7 +11,7 @@ const path = require("path");
 const Discord = require("discord.js");
 const {log, logDebug} = require('./utils/log');
 const {oracleQuery, getOracleCredentials} = require('./utils/oracle');
-import 'dotenv/config';
+require('dotenv/config');
 
 // =============================================================
 // CLIENT INITIALIZATION

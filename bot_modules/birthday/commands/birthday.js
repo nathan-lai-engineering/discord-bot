@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 const {log, logDebug} = require('../../../utils/log.js');
 const oracledb = require('oracledb');
 const { oracleQuery } = require('../../../utils/oracle.js');
-import axios from 'axios';
+const axios = require('axios');
 
 
 module.exports = {
